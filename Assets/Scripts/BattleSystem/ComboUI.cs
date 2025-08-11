@@ -721,9 +721,9 @@ namespace BattleSystem
         {
             Debug.Log("ComboUI: Testing UI with dummy data...");
             
-            if (comboSystem != null && comboSystem.comboDatabase != null)
+            if (comboSystem != null && comboSystem.ComboDatabase != null)
             {
-                var testCombo = comboSystem.comboDatabase.AvailableCombos[0];
+                var testCombo = comboSystem.ComboDatabase.AvailableCombos[0];
                 OnComboStarted(testCombo);
                 
                 // 2秒後に進行更新をテスト

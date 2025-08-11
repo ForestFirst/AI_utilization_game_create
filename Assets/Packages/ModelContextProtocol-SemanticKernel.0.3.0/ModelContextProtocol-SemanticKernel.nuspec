@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>ModelContextProtocol-SemanticKernel</id>
+    <version>0.3.0</version>
+    <authors>Microsoft,Stef Heyenrath</authors>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <icon>icon.png</icon>
+    <readme>PackageReadme.md</readme>
+    <projectUrl>https://github.com/StefH/McpDotNet.Extensions.SemanticKernel</projectUrl>
+    <description>Microsoft SemanticKernel integration for the ModelContextProtocol (official C# SDK). Enables seamless use of MCP tools as AI functions.</description>
+    <releaseNotes># 0.3.0 (28 July 2025)
+- #35 Upgrade ModelContextProtocol to 0.3.0-preview.3 [enhancement]
+
+The full release notes can be found here: https://github.com/StefH/McpDotNet.Extensions.SemanticKernel/blob/main/ReleaseNotes.md</releaseNotes>
+    <copyright>Copyright © Stef Heyenrath</copyright>
+    <tags>mcp ai ModelContextProtocol LLM Microsoft-SemanticKernel SemanticKernel prompt</tags>
+    <repository type="git" url="https://github.com/StefH/McpDotNet.Extensions.SemanticKernel" commit="910057934e18049aae5ac0dc1325103bf7f4e835" />
+    <dependencies>
+      <group targetFramework="net8.0">
+        <dependency id="Corvus.Json.ExtendedTypes" version="4.3.17" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.SemanticKernel" version="1.61.0" exclude="Build,Analyzers" />
+        <dependency id="ModelContextProtocol" version="0.3.0-preview.3" exclude="Build,Analyzers" />
+        <dependency id="Stef.Validation.Options" version="0.2.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="Corvus.Json.ExtendedTypes" version="4.3.17" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.SemanticKernel" version="1.61.0" exclude="Build,Analyzers" />
+        <dependency id="ModelContextProtocol" version="0.3.0-preview.3" exclude="Build,Analyzers" />
+        <dependency id="Stef.Validation.Options" version="0.2.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>

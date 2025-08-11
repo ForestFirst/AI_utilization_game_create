@@ -144,6 +144,7 @@ namespace BattleSystem
         // プロパティ
         public int AdditionalActionsRemaining => additionalActionsRemaining;
         public List<ComboProgress> ActiveCombos => activeComboProgresses;
+        public ComboDatabase ComboDatabase => comboDatabase;
 
         private void Awake()
         {

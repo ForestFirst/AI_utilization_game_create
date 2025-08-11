@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>Corvus.UriTemplates</id>
+    <version>2.3.2</version>
+    <authors>Endjin Limited</authors>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <license type="expression">Apache-2.0</license>
+    <licenseUrl>https://licenses.nuget.org/Apache-2.0</licenseUrl>
+    <icon>PackageIcon.png</icon>
+    <description>Low allocation implementation of URI template functions conforming to http://tools.ietf.org/html/rfc6570.</description>
+    <copyright>Copyright (c) Endjin Limited 2023. All rights reserved.</copyright>
+    <repository type="git" url="https://github.com/corvus-dotnet/Corvus.UriTemplates" branch="refs/heads/tags/2.3.2" commit="9822bdd0bf55aa51366563034bbaea112599f6e9" />
+    <dependencies>
+      <group targetFramework="net8.0">
+        <dependency id="CommunityToolkit.HighPerformance" version="8.3.0" exclude="Build,Analyzers" />
+        <dependency id="Corvus.HighPerformance" version="1.0.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.ObjectPool" version="8.0.8" exclude="Build,Analyzers" />
+        <dependency id="System.Buffers" version="4.5.1" exclude="Build,Analyzers" />
+        <dependency id="System.Collections.Immutable" version="8.0.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="CommunityToolkit.HighPerformance" version="8.3.0" exclude="Build,Analyzers" />
+        <dependency id="Corvus.HighPerformance" version="1.0.0" exclude="Build,Analyzers" />
+        <dependency id="IndexRange" version="1.0.3" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.ObjectPool" version="8.0.8" exclude="Build,Analyzers" />
+        <dependency id="System.Buffers" version="4.5.1" exclude="Build,Analyzers" />
+        <dependency id="System.Collections.Immutable" version="8.0.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>

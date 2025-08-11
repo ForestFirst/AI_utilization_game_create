@@ -1,0 +1,1707 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Corvus.UriTemplates</name>
+    </assembly>
+    <members>
+        <member name="T:System.Diagnostics.CodeAnalysis.AllowNullAttribute">
+            <summary>Specifies that null is allowed as an input even if the corresponding type disallows it.</summary>
+        </member>
+        <member name="T:System.Diagnostics.CodeAnalysis.DisallowNullAttribute">
+            <summary>Specifies that null is disallowed as an input even if the corresponding type allows it.</summary>
+        </member>
+        <member name="T:System.Diagnostics.CodeAnalysis.MaybeNullAttribute">
+            <summary>Specifies that an output may be null even if the corresponding type disallows it.</summary>
+        </member>
+        <member name="T:System.Diagnostics.CodeAnalysis.NotNullAttribute">
+            <summary>Specifies that an output will not be null even if the corresponding type allows it. Specifies that an input argument was not null when the call returns.</summary>
+        </member>
+        <member name="T:System.Diagnostics.CodeAnalysis.MaybeNullWhenAttribute">
+            <summary>Specifies that when a method returns <see cref="P:System.Diagnostics.CodeAnalysis.MaybeNullWhenAttribute.ReturnValue"/>, the parameter may be null even if the corresponding type disallows it.</summary>
+        </member>
+        <member name="M:System.Diagnostics.CodeAnalysis.MaybeNullWhenAttribute.#ctor(System.Boolean)">
+            <summary>Initializes the attribute with the specified return value condition.</summary>
+            <param name="returnValue">
+            The return value condition. If the method returns this value, the associated parameter may be null.
+            </param>
+        </member>
+        <member name="P:System.Diagnostics.CodeAnalysis.MaybeNullWhenAttribute.ReturnValue">
+            <summary>Gets the return value condition.</summary>
+        </member>
+        <member name="T:System.Diagnostics.CodeAnalysis.NotNullWhenAttribute">
+            <summary>Specifies that when a method returns <see cref="P:System.Diagnostics.CodeAnalysis.NotNullWhenAttribute.ReturnValue"/>, the parameter will not be null even if the corresponding type allows it.</summary>
+        </member>
+        <member name="M:System.Diagnostics.CodeAnalysis.NotNullWhenAttribute.#ctor(System.Boolean)">
+            <summary>Initializes the attribute with the specified return value condition.</summary>
+            <param name="returnValue">
+            The return value condition. If the method returns this value, the associated parameter will not be null.
+            </param>
+        </member>
+        <member name="P:System.Diagnostics.CodeAnalysis.NotNullWhenAttribute.ReturnValue">
+            <summary>Gets the return value condition.</summary>
+        </member>
+        <member name="T:System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute">
+            <summary>Specifies that the output will be non-null if the named parameter is non-null.</summary>
+        </member>
+        <member name="M:System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute.#ctor(System.String)">
+            <summary>Initializes the attribute with the associated parameter name.</summary>
+            <param name="parameterName">
+            The associated parameter name.  The output will be non-null if the argument to the parameter specified is non-null.
+            </param>
+        </member>
+        <member name="P:System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute.ParameterName">
+            <summary>Gets the associated parameter name.</summary>
+        </member>
+        <member name="T:System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute">
+            <summary>Applied to a method that will never return under any circumstance.</summary>
+        </member>
+        <member name="T:System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute">
+            <summary>Specifies that the method will not return if the associated Boolean parameter is passed the specified value.</summary>
+        </member>
+        <member name="M:System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute.#ctor(System.Boolean)">
+            <summary>Initializes the attribute with the specified parameter value.</summary>
+            <param name="parameterValue">
+            The condition parameter value. Code after the method will be considered unreachable by diagnostics if the argument to
+            the associated parameter matches this value.
+            </param>
+        </member>
+        <member name="P:System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute.ParameterValue">
+            <summary>Gets the condition parameter value.</summary>
+        </member>
+        <member name="T:System.Diagnostics.CodeAnalysis.MemberNotNullAttribute">
+            <summary>Specifies that the method or property will ensure that the listed field and property members have not-null values.</summary>
+        </member>
+        <member name="M:System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.#ctor(System.String)">
+            <summary>Initializes the attribute with a field or property member.</summary>
+            <param name="member">
+            The field or property member that is promised to be not-null.
+            </param>
+        </member>
+        <member name="M:System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.#ctor(System.String[])">
+            <summary>Initializes the attribute with the list of field and property members.</summary>
+            <param name="members">
+            The list of field and property members that are promised to be not-null.
+            </param>
+        </member>
+        <member name="P:System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.Members">
+            <summary>Gets field or property member names.</summary>
+        </member>
+        <member name="T:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute">
+            <summary>Specifies that the method or property will ensure that the listed field and property members have not-null values when returning with the specified return value condition.</summary>
+        </member>
+        <member name="M:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute.#ctor(System.Boolean,System.String)">
+            <summary>Initializes the attribute with the specified return value condition and a field or property member.</summary>
+            <param name="returnValue">
+            The return value condition. If the method returns this value, the associated parameter will not be null.
+            </param>
+            <param name="member">
+            The field or property member that is promised to be not-null.
+            </param>
+        </member>
+        <member name="M:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute.#ctor(System.Boolean,System.String[])">
+            <summary>Initializes the attribute with the specified return value condition and list of field and property members.</summary>
+            <param name="returnValue">
+            The return value condition. If the method returns this value, the associated parameter will not be null.
+            </param>
+            <param name="members">
+            The list of field and property members that are promised to be not-null.
+            </param>
+        </member>
+        <member name="P:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute.ReturnValue">
+            <summary>Gets the return value condition.</summary>
+        </member>
+        <member name="P:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute.Members">
+            <summary>Gets field or property member names.</summary>
+        </member>
+        <member name="T:Corvus.UriTemplates.Internal.StringBuilderPool">
+            <summary>
+            A <see cref="T:System.Text.StringBuilder"/> provider.
+            </summary>
+        </member>
+        <member name="F:Corvus.UriTemplates.Internal.StringBuilderPool.Shared">
+            <summary>
+            Gets a shared <see cref="T:System.Text.StringBuilder"/> pool.
+            </summary>
+        </member>
+        <member name="T:Corvus.UriTemplates.ParameterCallback`1">
+            <summary>
+            A callback when a parameter is found, in which the match is identified with a <see cref="T:System.ReadOnlySpan`1"/>.
+            </summary>
+            <typeparam name="TState">The type of the state to pass.</typeparam>
+            <param name="reset">Whether to reset the parameters that we have seen so far.</param>
+            <param name="name">The name of the parameter.</param>
+            <param name="value">The string representation of the parameter.</param>
+            <param name="state">The state to pass.</param>
+        </member>
+        <member name="T:Corvus.UriTemplates.ParameterCallbackWithRange`1">
+            <summary>
+            A callback when a parameter is found, in which the match is identified with a <see cref="T:System.Range"/>.
+            </summary>
+            <typeparam name="TState">The type of the state to pass.</typeparam>
+            <param name="reset">Whether to reset the parameters that we have seen so far.</param>
+            <param name="nameHandle">Identifies the parameter name.</param>
+            <param name="valueRange">The range in the input URI string at which the parameter was found.</param>
+            <param name="state">The state to pass.</param>
+        </member>
+        <member name="T:Corvus.UriTemplates.IUriTemplateParser">
+            <summary>
+            The interface implemented by an URI parser.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.IUriTemplateParser.IsMatch(System.ReadOnlySpan{System.Char}@,System.Boolean)">
+            <summary>
+            Determines if the UriTemplate matches the given URI.
+            </summary>
+            <param name="uri">The URI to match.</param>
+            <param name="requiresRootedMatch">If true, then the template requires a rooted match and will not ignore prefixes. This is more efficient when using a fully-qualified template.</param>
+            <returns><see langword="true"/> if the template is a match for the URI.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.IUriTemplateParser.ParseUri``1(System.ReadOnlySpan{System.Char}@,Corvus.UriTemplates.ParameterCallback{``0},``0@,System.Boolean)">
+            <summary>
+            Parses the given URI, calling your parameter callback for each named parameter discovered.
+            </summary>
+            <typeparam name="TState">The type of the state to pass.</typeparam>
+            <param name="uri">The URI to parse.</param>
+            <param name="parameterCallback">Called by the parser for each parameter that is discovered.</param>
+            <param name="state">The state to pass to the callback.</param>
+            <param name="requiresRootedMatch">If true, then the template requires a rooted match and will not ignore prefixes. This is more efficient when using a fully-qualified template.</param>
+            <returns><see langword="true"/> if the uri was successfully parsed, otherwise false.</returns>
+            <remarks>
+            <para>
+            This is a low-allocation operation, but you should take care with your implementation of your
+            <see cref="T:Corvus.UriTemplates.ParameterCallback`1"/> if you wish to minimize allocation in your call tree.
+            </para>
+            <para>
+            The parameter callbacks occur as the parameters are matched. If the parse operation ultimately fails,
+            those parameters are invalid, and should be disregarded.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Corvus.UriTemplates.IUriTemplateParser.ParseUri``1(System.ReadOnlySpan{System.Char}@,Corvus.UriTemplates.ParameterCallbackWithRange{``0},``0@,System.Boolean)">
+            <summary>
+            Parses the given URI, calling your parameter callback for each named parameter discovered.
+            </summary>
+            <typeparam name="TState">The type of the state to pass.</typeparam>
+            <param name="uri">The URI to parse.</param>
+            <param name="parameterCallback">Called by the parser for each parameter that is discovered.</param>
+            <param name="state">The state to pass to the callback.</param>
+            <param name="requiresRootedMatch">If true, then the template requires a rooted match and will not ignore prefixes. This is more efficient when using a fully-qualified template.</param>
+            <returns><see langword="true"/> if the uri was successfully parsed, otherwise false.</returns>
+            <remarks>
+            <para>
+            This is a low-allocation operation, but you should take care with your implementation of your
+            <see cref="T:Corvus.UriTemplates.ParameterCallback`1"/> if you wish to minimize allocation in your call tree.
+            </para>
+            <para>
+            The parameter callbacks occur as the parameters are matched. If the parse operation ultimately fails,
+            those parameters are invalid, and should be disregarded.
+            </para>
+            </remarks>
+            <exception cref="T:System.NotImplementedException">
+            This method was added in 1.3, so libraries that depend on an older version, and which implement this
+            interface will not have this method available. In most cases, the implementation of this interface
+            will be supplied by this library, and so all methods will be available, but it is virtual to support
+            the rare case where someone has implemented their own version against an older version of the library.
+            This exception will be thrown if that is the case.
+            </exception>
+        </member>
+        <member name="M:Corvus.UriTemplates.IUriTemplateParser.IsMatch(System.String,System.Boolean)">
+            <summary>
+            Determines if the UriTemplate matches the given URI.
+            </summary>
+            <param name="uri">The URI to match.</param>
+            <param name="requiresRootedMatch">If true, then the template requires a rooted match and will not ignore prefixes. This is more efficient when using a fully-qualified template.</param>
+            <returns><see langword="true"/> if the template is a match for the URI.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.IUriTemplateParser.ParseUri``1(System.String,Corvus.UriTemplates.ParameterCallback{``0},``0@,System.Boolean)">
+            <summary>
+            Parses the given URI, calling your parameter callback for each named parameter discovered.
+            </summary>
+            <typeparam name="TState">The type of the state to pass.</typeparam>
+            <param name="uri">The URI to parse.</param>
+            <param name="parameterCallback">Called by the parser for each parameter that is discovered.</param>
+            <param name="state">The state to pass to the callback.</param>
+            <param name="requiresRootedMatch">If true, then the template requires a rooted match and will not ignore prefixes. This is more efficient when using a fully-qualified template.</param>
+            <returns><see langword="true"/> if the uri was successfully parsed, otherwise false.</returns>
+            <remarks>
+            <para>
+            This is a low-allocation operation, but you should take care with your implementation of your
+            <see cref="T:Corvus.UriTemplates.ParameterCallback`1"/> if you wish to minimize allocation in your call tree.
+            </para>
+            <para>
+            The parameter callbacks occur as the parameters are matched. If the parse operation ultimately fails,
+            those parameters are invalid, and should be disregarded.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Corvus.UriTemplates.IUriTemplateParser.ParseUri``1(System.String,Corvus.UriTemplates.ParameterCallbackWithRange{``0},``0@,System.Boolean)">
+            <summary>
+            Parses the given URI, calling your parameter callback for each named parameter discovered.
+            </summary>
+            <typeparam name="TState">The type of the state to pass.</typeparam>
+            <param name="uri">The URI to parse.</param>
+            <param name="parameterCallback">Called by the parser for each parameter that is discovered.</param>
+            <param name="state">The state to pass to the callback.</param>
+            <param name="requiresRootedMatch">If true, then the template requires a rooted match and will not ignore prefixes. This is more efficient when using a fully-qualified template.</param>
+            <returns><see langword="true"/> if the uri was successfully parsed, otherwise false.</returns>
+            <remarks>
+            <para>
+            This is a low-allocation operation, but you should take care with your implementation of your
+            <see cref="T:Corvus.UriTemplates.ParameterCallback`1"/> if you wish to minimize allocation in your call tree.
+            </para>
+            <para>
+            The parameter callbacks occur as the parameters are matched. If the parse operation ultimately fails,
+            those parameters are invalid, and should be disregarded.
+            </para>
+            </remarks>
+        </member>
+        <member name="T:Corvus.UriTemplates.ParameterName">
+            <summary>
+            Provides access to a parameter name.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterName.#ctor(System.String,System.Range)">
+            <summary>
+            Creates a <see cref="T:Corvus.UriTemplates.ParameterName"/>.
+            </summary>
+            <param name="escapedUriTemplate">The escaped URI template containing the parameter name.</param>
+            <param name="range">Range in the escaped URI template containing the parameter name.</param>
+        </member>
+        <member name="P:Corvus.UriTemplates.ParameterName.Span">
+            <summary>
+            Gets the parameter name.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterName.Equals(Corvus.UriTemplates.ParameterName)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterName.Equals(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterName.GetHashCode">
+            <inheritdoc/>
+        </member>
+        <member name="T:Corvus.UriTemplates.MatchWithVerb">
+            <summary>
+            Factory for <see cref="T:Corvus.UriTemplates.MatchWithVerb`1"/>.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.MatchWithVerb.CreateBuilder``1">
+            <summary>
+            Gets a new builder.
+            </summary>
+            <typeparam name="TMatch">The type of the match.</typeparam>
+            <returns>An instance of a builder for a verb matcher.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.MatchWithVerb.CreateBuilder``1(System.Int32)">
+            <summary>
+            Gets a new builder.
+            </summary>
+            <typeparam name="TMatch">The type of the match.</typeparam>
+            <param name="initialCapacity">The initial capacity of the dicionary.</param>
+            <returns>An instance of a builder for a verb matcher.</returns>
+        </member>
+        <member name="T:Corvus.UriTemplates.MatchWithVerb`1">
+            <summary>
+            A match result for <see cref="T:Corvus.UriTemplates.UriTemplateTable`1"/> with an additional verb.
+            </summary>
+            <typeparam name="TMatch">The type of the match result.</typeparam>
+        </member>
+        <member name="M:Corvus.UriTemplates.MatchWithVerb`1.TryMatch(System.String,`0@)">
+            <summary>
+            Try to match the given verb.
+            </summary>
+            <param name="verb">The verb to match.</param>
+            <param name="match">The match for the verb.</param>
+            <returns><see langword="true"/> if the verb was a match, otherwise false.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.MatchWithVerb`1.TryMatch(System.ReadOnlySpan{System.Char},`0@)">
+            <summary>
+            Try to match the given verb.
+            </summary>
+            <param name="verb">The verb to match.</param>
+            <param name="match">The match for the verb.</param>
+            <returns><see langword="true"/> if the verb was a match, otherwise false.</returns>
+        </member>
+        <member name="T:Corvus.UriTemplates.MatchWithVerb`1.Builder">
+            <summary>
+            A builder for a verb matcher.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.MatchWithVerb`1.Builder.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Corvus.UriTemplates.MatchWithVerb`1.Builder"/> class.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.MatchWithVerb`1.Builder.#ctor(System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Corvus.UriTemplates.MatchWithVerb`1.Builder"/> class.
+            </summary>
+            <param name="initialCapacity">The initial capacity for the matcher.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.MatchWithVerb`1.Builder.Add(System.String,`0)">
+            <summary>
+            Add a verb to the matcher.
+            </summary>
+            <param name="verb">The verb to add.</param>
+            <param name="match">The match.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.MatchWithVerb`1.Builder.ToMatchWithVerb">
+            <summary>
+            Convert the builder to an instance of a matcher.
+            </summary>
+            <returns>The instance of the matcher created from the builder.</returns>
+        </member>
+        <member name="T:Corvus.UriTemplates.ParameterByNameAndRangeCache">
+            <summary>
+            A cache for parameters extracted from a URI template.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterByNameAndRangeCache.EnumerateParameters``1(Corvus.UriTemplates.IUriTemplateParser,System.ReadOnlySpan{System.Char},System.Int32,Corvus.UriTemplates.EnumerateParametersCallbackWithRange{``0},``0@)">
+            <summary>
+            Enumerate the parameters in the parser.
+            </summary>
+            <typeparam name="TState">The type of the state for the callback.</typeparam>
+            <param name="parser">The parser to use.</param>
+            <param name="uri">The uri to parse.</param>
+            <param name="initialCapacity">The initial cache size, which should be greater than or equal to the expected number of parameters.
+            It also provides the increment for the cache size should it be exceeded.</param>
+            <param name="callback">The callback to receive the enumerated parameters.</param>
+            <param name="state">The state for the callback.</param>
+            <returns><see langword="true"/> if the parser was successful, otherwise <see langword="false"/>.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterByNameAndRangeCache.TryGetUriTemplateParameters(Corvus.UriTemplates.IUriTemplateParser,System.ReadOnlySpan{System.Char},System.Int32,System.Boolean,Corvus.UriTemplates.UriTemplateParameters@)">
+            <summary>
+            Gets the parameters from the URI template.
+            </summary>
+            <param name="parser">The parser to use.</param>
+            <param name="uri">The uri to parse.</param>
+            <param name="initialCapacity">The initial cache size, which should be greater than or equal to the expected number of parameters.
+            It also provides the increment for the cache size should it be exceeded.</param>
+            <param name="requiresRootedMatch">If true, then the template requires a rooted match and will not ignore prefixes. This is more efficient when using a fully-qualified template.</param>
+            <param name="templateParameters">A <see cref="T:Corvus.UriTemplates.UriTemplateParameters"/>.</param>
+            <returns><see langword="true"/> if parsing succeeded.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterByNameAndRangeCache.Rent(System.Int32)">
+            <summary>
+            Rent an instance of a parameter cache.
+            </summary>
+            <param name="initialCapacity">The initial capacity of the cache.</param>
+            <returns>An instance of a parameter cache.</returns>
+            <remarks>When you have finished with the cache, call <see cref="M:Corvus.UriTemplates.ParameterByNameAndRangeCache.Return"/> to relinquish any internal resources.</remarks>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterByNameAndRangeCache.Return(Corvus.UriTemplates.ParameterValue[])">
+            <summary>
+            Frees a <see cref="T:Corvus.UriTemplates.ParameterValue"/> array either as part of normal usage, or
+            when it was returned by <see cref="M:Corvus.UriTemplates.ParameterByNameAndRangeCache.Detach"/> and the new owner is done with it.
+            </summary>
+            <param name="items">The rented array to return.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterByNameAndRangeCache.TryMatch(Corvus.UriTemplates.IUriTemplateParser,System.ReadOnlySpan{System.Char})">
+            <summary>
+            Tries to match the URI using the parser.
+            </summary>
+            <param name="parser">The uri template parser with which to match.</param>
+            <param name="uri">The URI to match.</param>
+            <returns><see langword="true"/> if the uri matches the template.</returns>
+            <remarks>
+            The parameter cache will contain the matched parameters if the parser matched successfully.
+            </remarks>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterByNameAndRangeCache.TryGetParameter(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char},System.Range@)">
+            <summary>
+            Try to get a parameter from the cache.
+            </summary>
+            <param name="uriTemplate">The URI template from which this cache was built.</param>
+            <param name="name">The name of the parameter.</param>
+            <param name="range">The range of the parameter.</param>
+            <returns><see langword="true"/> if the parameter exists, otherwise false.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterByNameAndRangeCache.Reset">
+            <summary>
+            Reset the items written.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterByNameAndRangeCache.EnumerateParameters``1(Corvus.UriTemplates.EnumerateParametersCallbackWithRange{``0},``0@)">
+            <summary>
+            Enumerate the parameters in the cache.
+            </summary>
+            <typeparam name="TState">The type of the state for enumeration.</typeparam>
+            <param name="callback">The callback that will be passed the parameters to enumerate.</param>
+            <param name="state">The initial state.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterByNameAndRangeCache.Return">
+            <summary>
+            Return the resources used by the cache.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterByNameAndRangeCache.HandleParameters(System.Boolean,Corvus.UriTemplates.ParameterName,System.Range,Corvus.UriTemplates.ParameterByNameAndRangeCache@)">
+            <summary>
+            A parameter handler for <see cref="T:Corvus.UriTemplates.IUriTemplateParser"/>.
+            </summary>
+            <param name="reset">Indicates whether to reset the parameter cache, ignoring any parameters that have been seen.</param>
+            <param name="name">The name of the parameter.</param>
+            <param name="range">The range of the parameter value in the URI being matches to the URI template.</param>
+            <param name="state">The parameter cache.</param>
+            <remarks>Pass this to <see cref="M:Corvus.UriTemplates.IUriTemplateParser.ParseUri``1(System.ReadOnlySpan{System.Char}@,Corvus.UriTemplates.ParameterCallback{``0},``0@,System.Boolean)"/>, as the callback.</remarks>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterByNameAndRangeCache.Detach">
+            <summary>
+            Hands the ownership of the <see cref="T:Corvus.UriTemplates.ParameterValue"/> array over to a newly-created
+            <see cref="T:Corvus.UriTemplates.UriTemplateParameters"/>.
+            </summary>
+            <returns>
+            The <see cref="T:Corvus.UriTemplates.UriTemplateParameters"/> that now owns the cached data.
+            </returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterByNameAndRangeCache.Add(Corvus.UriTemplates.ParameterName,System.Range)">
+            <summary>
+            Add a parameter to the cache.
+            </summary>
+            <param name="name">The name of the parameter to add.</param>
+            <param name="range">The range of the parameter value in the URI being matches to the URI template.</param>
+        </member>
+        <member name="T:Corvus.UriTemplates.ParameterCache">
+            <summary>
+            A cache for parameters extracted from a URI template.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterCache.EnumerateParameters``1(Corvus.UriTemplates.IUriTemplateParser,System.ReadOnlySpan{System.Char},System.Int32,Corvus.UriTemplates.EnumerateParametersCallback{``0},``0@)">
+            <summary>
+            Enumerate the parameters in the parser.
+            </summary>
+            <typeparam name="TState">The type of the state for the callback.</typeparam>
+            <param name="parser">The parser to use.</param>
+            <param name="uri">The uri to parse.</param>
+            <param name="initialCapacity">The initial cache size, which should be greater than or equal to the expected number of parameters.
+            It also provides the increment for the cache size should it be exceeded.</param>
+            <param name="callback">The callback to receive the enumerated parameters.</param>
+            <param name="state">The state for the callback.</param>
+            <returns><see langword="true"/> if the parser was successful, otherwise <see langword="false"/>.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterCache.Rent(System.Int32)">
+            <summary>
+            Rent an instance of a parameter cache.
+            </summary>
+            <param name="initialCapacity">The initial capacity of the cache.</param>
+            <returns>An instance of a parameter cache.</returns>
+            <remarks>When you have finished with the cache, call <see cref="M:Corvus.UriTemplates.ParameterCache.Return"/> to relinquish any internal resources.</remarks>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterCache.TryMatch(Corvus.UriTemplates.IUriTemplateParser,System.ReadOnlySpan{System.Char})">
+            <summary>
+            Tries to match the URI using the parser.
+            </summary>
+            <param name="parser">The uri template parser with which to match.</param>
+            <param name="uri">The URI to match.</param>
+            <returns><see langword="true"/> if the uri matches the template.</returns>
+            <remarks>
+            The parameter cache will contain the matched parameters if the parser matched successfully.
+            </remarks>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterCache.TryGetParameter(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char}@)">
+            <summary>
+            Try to get a parameter from the cache.
+            </summary>
+            <param name="name">The name of the parameter.</param>
+            <param name="value">The value of the parameter.</param>
+            <returns><see langword="true"/> if the parameter exists, otherwise false.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterCache.Reset">
+            <summary>
+            Reset the items written.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterCache.EnumerateParameters``1(Corvus.UriTemplates.EnumerateParametersCallback{``0},``0@)">
+            <summary>
+            Enumerate the parameters in the cache.
+            </summary>
+            <typeparam name="TState">The type of the state for enumeration.</typeparam>
+            <param name="callback">The callback that will be passed the parameters to enumerate.</param>
+            <param name="state">The initial state.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterCache.Return">
+            <summary>
+            Return the resources used by the cache.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterCache.HandleParameters(System.Boolean,System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char},Corvus.UriTemplates.ParameterCache@)">
+            <summary>
+            A parameter handler for <see cref="T:Corvus.UriTemplates.IUriTemplateParser"/>.
+            </summary>
+            <param name="reset">Indicates whether to reset the parameter cache, ignoring any parameters that have been seen.</param>
+            <param name="name">The name of the parameter.</param>
+            <param name="value">The value of the parameter.</param>
+            <param name="state">The parameter cache.</param>
+            <remarks>Pass this to <see cref="M:Corvus.UriTemplates.IUriTemplateParser.ParseUri``1(System.ReadOnlySpan{System.Char}@,Corvus.UriTemplates.ParameterCallback{``0},``0@,System.Boolean)"/>, as the callback.</remarks>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterCache.Add(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})">
+            <summary>
+            Add a parameter to the cache.
+            </summary>
+            <param name="name">The name of the parameter to add.</param>
+            <param name="value">The value of the parameter to add.</param>
+        </member>
+        <member name="T:Corvus.UriTemplates.ParameterValue">
+            <summary>
+            A parameter value.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterValue.#ctor(Corvus.UriTemplates.ParameterName,System.Range)">
+            <summary>
+            A parameter value.
+            </summary>
+        </member>
+        <member name="P:Corvus.UriTemplates.ParameterValue.Name">
+            <summary>
+            Gets the parameter name.
+            </summary>
+        </member>
+        <member name="P:Corvus.UriTemplates.ParameterValue.ValueRange">
+            <summary>
+            Gets the range in the input URI string at which the parameter was found.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterValue.GetValue(System.ReadOnlySpan{System.Char})">
+            <summary>
+            Gets the value of the parameter.
+            </summary>
+            <param name="uri">
+            The URI containing this parameter value. This must be the same URI that was used
+            to parse the parameter.
+            </param>
+            <returns>The parameter value.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.ParameterValue.GetValue(System.ReadOnlyMemory{System.Char})">
+            <summary>
+            Gets the value of the parameter.
+            </summary>
+            <param name="uri">
+            The URI containing this parameter value. This must be the same URI that was used
+            to parse the parameter.
+            </param>
+            <returns>The parameter value.</returns>
+        </member>
+        <member name="T:Corvus.UriTemplates.ReadOnlySpanCallback`3">
+            <summary>
+            A callback for receiving data from a <see cref="T:System.ReadOnlySpan`1"/>.
+            </summary>
+            <typeparam name="TItem">The span item type.</typeparam>
+            <typeparam name="TState">The type of the state to pass.</typeparam>
+            <typeparam name="TResult">The return type.</typeparam>
+            <param name="state">An argument providing whatever state the callback requires.</param>
+            <param name="span">The span.</param>
+            <returns>Whatever information the callback wishes to return.</returns>
+        </member>
+        <member name="T:Corvus.UriTemplates.TavisApi.DictionaryTemplateParameterProvider">
+            <summary>
+            Implements a parameter provider over a JsonAny.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.DictionaryTemplateParameterProvider.ProcessVariable(Corvus.UriTemplates.TemplateParameterProviders.VariableSpecification@,System.Collections.Generic.IDictionary{System.String,System.Object}@,Corvus.HighPerformance.ValueStringBuilder@)">
+            <summary>
+            Process the given variable.
+            </summary>
+            <param name="variableSpecification">The specification for the variable.</param>
+            <param name="parameters">The parameters.</param>
+            <param name="output">The output to which to format the parameter.</param>
+            <returns>
+                <see cref="F:Corvus.UriTemplates.TemplateParameterProviders.VariableProcessingState.Success"/> if the variable was successfully processed,
+                <see cref="F:Corvus.UriTemplates.TemplateParameterProviders.VariableProcessingState.NotProcessed"/> if the parameter was not present, or
+                <see cref="F:Corvus.UriTemplates.TemplateParameterProviders.VariableProcessingState.Failure"/> if the parmeter could not be processed because it was incompatible with the variable specification in the template.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.DictionaryTemplateParameterProvider.AppendArray(Corvus.HighPerformance.ValueStringBuilder@,Corvus.UriTemplates.TemplateParameterProviders.OperatorInfo@,System.Boolean,System.ReadOnlySpan{System.Char},System.Collections.IList@)">
+            <summary>
+            Append an array to the result.
+            </summary>
+            <param name="output">The output buffer.</param>
+            <param name="op">The operator info.</param>
+            <param name="explode">Whether to explode the array.</param>
+            <param name="variable">The variable name.</param>
+            <param name="array">The array to add.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.DictionaryTemplateParameterProvider.AppendObject(Corvus.HighPerformance.ValueStringBuilder@,Corvus.UriTemplates.TemplateParameterProviders.OperatorInfo@,System.Boolean,System.Collections.Generic.IDictionary{System.String,System.String}@)">
+            <summary>
+            Append an object to the output.
+            </summary>
+            <param name="output">The output buffer.</param>
+            <param name="op">The operator info.</param>
+            <param name="explode">Whether to explode the object.</param>
+            <param name="instance">The object instance to append.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.DictionaryTemplateParameterProvider.WriteEncodedPropertyName(System.ReadOnlySpan{System.Char},Corvus.HighPerformance.ValueStringBuilder@,System.Boolean,System.Boolean@)">
+            <summary>
+            Encoded and write the property name to the output.
+            </summary>
+            <param name="name">The name to write.</param>
+            <param name="output">The output buffer.</param>
+            <param name="allowReserved">A value indicating whether to allow reserved characters.</param>
+            <param name="result">Whether the value was written successfully.</param>
+            <returns><see langword="true"/> if the value was written successfully.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.DictionaryTemplateParameterProvider.AppendName(Corvus.HighPerformance.ValueStringBuilder@,System.ReadOnlySpan{System.Char},System.String,System.Boolean)">
+            <summary>
+            Append a variable to the result.
+            </summary>
+            <param name="output">The output buffer to which the URI template is written.</param>
+            <param name="variable">The variable name.</param>
+            <param name="ifEmpty">The string to apply if the value is empty.</param>
+            <param name="valueIsEmpty">True if the value is empty.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.DictionaryTemplateParameterProvider.AppendNameAndStringValue(Corvus.HighPerformance.ValueStringBuilder@,System.ReadOnlySpan{System.Char},System.String,System.String,System.Int32,System.Boolean)">
+            <summary>
+            Appends a value to the result.
+            </summary>
+            <param name="output">The output buffer to which to write the value.</param>
+            <param name="variable">The variable name.</param>
+            <param name="ifEmpty">The string to add if the value is empty.</param>
+            <param name="value">The value to append.</param>
+            <param name="prefixLength">The prefix length.</param>
+            <param name="allowReserved">Whether to allow reserved characters.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.DictionaryTemplateParameterProvider.AppendValue(Corvus.HighPerformance.ValueStringBuilder@,System.String,System.Int32,System.Boolean)">
+            <summary>
+            Appends a value to the result.
+            </summary>
+            <param name="output">The output buffer to which to write the value.</param>
+            <param name="value">The value to append.</param>
+            <param name="prefixLength">The prefix length.</param>
+            <param name="allowReserved">Whether to allow reserved characters.</param>
+        </member>
+        <member name="T:Corvus.UriTemplates.TavisApi.DictionaryUriTemplateResolver">
+            <summary>
+            A wrapper around <see cref="T:Corvus.UriTemplates.UriTemplateResolver`2"/>
+            for a <see cref="T:Corvus.UriTemplates.TavisApi.DictionaryTemplateParameterProvider"/>.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.DictionaryUriTemplateResolver.TryResolveResult``1(System.ReadOnlySpan{System.Char},System.Boolean,System.Collections.Generic.IDictionary{System.String,System.Object}@,Corvus.UriTemplates.ParameterNameCallback{``0},Corvus.UriTemplates.ResolvedUriTemplateCallback{``0},``0@)">
+            <summary>
+            Resolve the template into an output result.
+            </summary>
+            <typeparam name="TState">The type of the state passed to the callback.</typeparam>
+            <param name="template">The template to resolve.</param>
+            <param name="resolvePartially">If <see langword="true"/> then partially resolve the result.</param>
+            <param name="parameters">The parameters to apply to the template.</param>
+            <param name="parameterNameCallback">An optional callback which is provided each parameter name as they are discovered.</param>
+            <param name="callback">The callback which is provided with the resolved template.</param>
+            <param name="state">The state passed to the callback(s).</param>
+            <returns><see langword="true"/> if the URI matched the template, and the parameters were resolved successfully.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.DictionaryUriTemplateResolver.TryResolveResult``1(System.ReadOnlySpan{System.Char},System.Boolean,System.Collections.Generic.IDictionary{System.String,System.Object}@,Corvus.UriTemplates.ResolvedUriTemplateCallback{``0},``0@)">
+            <summary>
+            Resolve the template into an output result.
+            </summary>
+            <typeparam name="TState">The type of the state passed to the callback.</typeparam>
+            <param name="template">The template to resolve.</param>
+            <param name="resolvePartially">If <see langword="true"/> then partially resolve the result.</param>
+            <param name="parameters">The parameters to apply to the template.</param>
+            <param name="callback">The callback which is provided with the resolved template.</param>
+            <param name="state">The state passed to the callback(s).</param>
+            <returns><see langword="true"/> if the URI matched the template, and the parameters were resolved successfully.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.DictionaryUriTemplateResolver.TryResolveResult(System.ReadOnlySpan{System.Char},Corvus.HighPerformance.ValueStringBuilder@,System.Boolean,System.Collections.Generic.IDictionary{System.String,System.Object}@)">
+            <summary>
+            Resolve the template into an output result.
+            </summary>
+            <param name="template">The template to resolve.</param>
+            <param name="output">The output buffer into which to resolve the template.</param>
+            <param name="resolvePartially">If <see langword="true"/> then partially resolve the result.</param>
+            <param name="parameters">The parameters to apply to the template.</param>
+            <returns><see langword="true"/> if the URI matched the template, and the parameters were resolved successfully.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.DictionaryUriTemplateResolver.TryGetParameterNames``1(System.ReadOnlySpan{System.Char},Corvus.UriTemplates.ParameterNameCallback{``0},``0@)">
+            <summary>
+            Get the parameter names from the template.
+            </summary>
+            <typeparam name="TState">The type of the state for the callback.</typeparam>
+            <param name="template">The template for the callback.</param>
+            <param name="callback">The callback provided with the parameter names.</param>
+            <param name="state">The state for the callback.</param>
+            <returns><see langword="true"/> if the URI matched the template, and the parameters were resolved successfully.</returns>
+        </member>
+        <member name="T:Corvus.UriTemplates.TavisApi.QueryStringParameterOrder">
+            <summary>
+            Determines the parameter ordering in query string parameters.
+            </summary>
+        </member>
+        <member name="F:Corvus.UriTemplates.TavisApi.QueryStringParameterOrder.Strict">
+            <summary>
+            Strict ordering as per the template.
+            </summary>
+        </member>
+        <member name="F:Corvus.UriTemplates.TavisApi.QueryStringParameterOrder.Any">
+            <summary>
+            Arbitrary ordering.
+            </summary>
+        </member>
+        <member name="T:Corvus.UriTemplates.TavisApi.TemplateMatch">
+            <summary>
+            A template match.
+            </summary>
+        </member>
+        <member name="P:Corvus.UriTemplates.TavisApi.TemplateMatch.Key">
+            <summary>
+            Gets or sets the match key.
+            </summary>
+        </member>
+        <member name="P:Corvus.UriTemplates.TavisApi.TemplateMatch.Template">
+            <summary>
+            Gets or sets the matched template.
+            </summary>
+        </member>
+        <member name="P:Corvus.UriTemplates.TavisApi.TemplateMatch.Parameters">
+            <summary>
+            Gets or sets the matched parameters.
+            </summary>
+        </member>
+        <member name="T:Corvus.UriTemplates.TavisApi.QueryStringParameterCallback`1">
+            <summary>
+            A delegate for recieving query string parameters.
+            </summary>
+            <typeparam name="TState">The type of the state for the callback.</typeparam>
+            <param name="name">The name of the parameter.</param>
+            <param name="value">The value of the parameter.</param>
+            <param name="state">The state for the callback.</param>
+        </member>
+        <member name="T:Corvus.UriTemplates.TavisApi.UriExtensions">
+            <summary>
+            Extension methods for converting a URI into a URI template.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriExtensions.MakeTemplate(System.Uri)">
+            <summary>
+            Make a template from a URI, by templatizing the existing query string parameters.
+            </summary>
+            <param name="uri">The URI for which to make a template.</param>
+            <returns>The URI template, with templatized query string, and parameters populated from the values in the query string.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriExtensions.MakeTemplate(System.Uri,System.Collections.Generic.IDictionary{System.String,System.Object})">
+            <summary>
+            Make a template from a URI and an ordered set of parameters, removing the query string and fragment,
+            and replacing the query with the parameter names from the dictionary.
+            </summary>
+            <param name="uri">The base URI.</param>
+            <param name="parameters">The parameters to apply.</param>
+            <returns>The URI template, with templatized query string, and parameters populated from the values provided.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriExtensions.GetQueryStringParameters(System.Uri)">
+            <summary>
+            Get the query string parameters from the given URI.
+            </summary>
+            <param name="target">The target URI for which to recover the query string parameters.</param>
+            <returns>A map of the query string parameters.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriExtensions.GetQueryStringParameters``1(System.Uri,Corvus.UriTemplates.TavisApi.QueryStringParameterCallback{``0},``0@)">
+            <summary>
+            Get the query string parameters from the given URI.
+            </summary>
+            <typeparam name="TState">The type of the state for the callback.</typeparam>
+            <param name="target">The target URI for which to recover the query string parameters.</param>
+            <param name="callback">The callback to receieve the query parameters.</param>
+            <param name="state">The state for the callback.</param>
+        </member>
+        <member name="T:Corvus.UriTemplates.TavisApi.UriTemplate">
+            <summary>
+            A UriTemplate conforming (broadly!) to the Tavis API.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplate.#ctor(System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Corvus.UriTemplates.TavisApi.UriTemplate"/> class.
+            </summary>
+            <param name="template">The URI template.</param>
+            <param name="resolvePartially">Indicates whether to allow partial resolution.</param>
+            <param name="caseInsensitiveParameterNames">Indicates whether to use case insensitive parameter names.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplate.CreateMatchingRegex(System.String)">
+            <summary>
+            Create a matching regular expression for the uri template.
+            </summary>
+            <param name="uriTemplate">The uri template for which to get the regular expression.</param>
+            <returns>The matching regular expression.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplate.CreateMatchingRegex2(System.String)">
+            <summary>
+            Create a matching regular expression for the uri template.
+            </summary>
+            <param name="uriTemplate">The uri template for which to get the regular expression.</param>
+            <returns>The matching regular expression.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplate.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplate.SetParameter(System.String,System.Object)">
+            <summary>
+            Set a parameter.
+            </summary>
+            <param name="name">The name of the parameter to set.</param>
+            <param name="value">The value of the parameter.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplate.ClearParameter(System.String)">
+            <summary>
+            Clears the parameter with the given name.
+            </summary>
+            <param name="name">The name of the parameter to clear.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplate.SetParameter(System.String,System.String)">
+            <summary>
+            Set a parameter.
+            </summary>
+            <param name="name">The name of the parameter to set.</param>
+            <param name="value">The value of the parameter.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplate.SetParameter(System.String,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Set a parameter.
+            </summary>
+            <param name="name">The name of the parameter to set.</param>
+            <param name="value">The value of the parameter.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplate.SetParameter(System.String,System.Collections.Generic.IDictionary{System.String,System.String})">
+            <summary>
+            Set a parameter.
+            </summary>
+            <param name="name">The name of the parameter to set.</param>
+            <param name="value">The value of the parameter.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplate.GetParameterNames">
+            <summary>
+            Get the names of the parameters in the template.
+            </summary>
+            <returns>The parameters in the template.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplate.Resolve">
+            <summary>
+            Applies the parameters to the template and returns the result.
+            </summary>
+            <returns>The resulting URI or partially-resolved template.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplate.GetParameters(System.Uri,Corvus.UriTemplates.TavisApi.QueryStringParameterOrder)">
+            <summary>
+            Gets the parameters from the given URI.
+            </summary>
+            <param name="uri">The URI from which to get the parameters.</param>
+            <param name="order">Whether to apply strict or relaxed query parameter ordering.</param>
+            <returns>The parameters decomposed from the Uri.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplate.IsMatch(System.Uri,Corvus.UriTemplates.TavisApi.QueryStringParameterOrder)">
+            <summary>
+            Matches the given URI against the template.
+            </summary>
+            <param name="uri">The URI to match.</param>
+            <param name="order">Whether query string ordering is strict.</param>
+            <returns><see langword="true"/> if the uri matches the template.</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">The parameter order was not understood.</exception>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplate.GetParameterNamesHashSet">
+            <summary>
+            Get the names of the parameters in the template.
+            </summary>
+            <returns>The parameters in the template.</returns>
+        </member>
+        <member name="T:Corvus.UriTemplates.TavisApi.UriTemplateExtensions">
+            <summary>
+            Extension methods for URI templates.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplateExtensions.CreateMatchingRegex(System.String)">
+            <summary>
+            Create a matching regular expression for the uri template.
+            </summary>
+            <param name="uriTemplate">The uri template for which to get the regular expression.</param>
+            <returns>The matching regular expression.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplateExtensions.CreateMatchingRegex2(System.String)">
+            <summary>
+            Create a matching regular expression for the uri template.
+            </summary>
+            <param name="uriTemplate">The uri template for which to get the regular expression.</param>
+            <returns>The matching regular expression.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplateExtensions.AddParameter(Corvus.UriTemplates.TavisApi.UriTemplate,System.String,System.Object)">
+            <summary>
+            Add a parameter to a UriTemplate.
+            </summary>
+            <param name="template">The template to which to add the parameter.</param>
+            <param name="name">The name of the parameter.</param>
+            <param name="value">The value to add.</param>
+            <returns>The updated UriTemplate.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplateExtensions.AddParameters(Corvus.UriTemplates.TavisApi.UriTemplate,System.Object)">
+            <summary>
+            Adds parameters to a UriTemplate.
+            </summary>
+            <param name="template">The template to which to add the parameter.</param>
+            <param name="parametersObject">The object whose public instance properties represent the parameters to add.</param>
+            <returns>The updated UriTemplate.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplateExtensions.AddParameters(Corvus.UriTemplates.TavisApi.UriTemplate,System.Collections.Generic.IDictionary{System.String,System.Object})">
+            <summary>
+            Adds parameters to a UriTemplate.
+            </summary>
+            <param name="uriTemplate">The template to which to add the parameter.</param>
+            <param name="linkParameters">The dictionary whose key value pairs represent the parameters to add.</param>
+            <returns>The updated UriTemplate.</returns>
+        </member>
+        <member name="T:Corvus.UriTemplates.TavisApi.UriTemplateTable">
+            <summary>
+            A Uri Template table.
+            </summary>
+        </member>
+        <member name="P:Corvus.UriTemplates.TavisApi.UriTemplateTable.Item(System.String)">
+            <summary>
+            Get the URI template with the specified key.
+            </summary>
+            <param name="key">The key for which to retrieve the URI template.</param>
+            <returns>The URI template with the given key, or null if no template is found.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplateTable.Add(System.String,Corvus.UriTemplates.TavisApi.UriTemplate)">
+            <summary>
+            Adds a URI template to the table.
+            </summary>
+            <param name="key">The key in the table.</param>
+            <param name="template">The template to add.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.TavisApi.UriTemplateTable.Match(System.Uri,Corvus.UriTemplates.TavisApi.QueryStringParameterOrder)">
+            <summary>
+            Match a URL to the table.
+            </summary>
+            <param name="url">The URL to match.</param>
+            <param name="order">The (option) query string parameter ordering constraint.</param>
+            <returns>The matched template, or null if no template was matched.</returns>
+        </member>
+        <member name="T:Corvus.UriTemplates.TemplateMatchResult`1">
+            <summary>
+            A result from matching a template in a template table.
+            </summary>
+            <typeparam name="T">The type of the result.</typeparam>
+        </member>
+        <member name="M:Corvus.UriTemplates.TemplateMatchResult`1.#ctor(`0,Corvus.UriTemplates.IUriTemplateParser)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Corvus.UriTemplates.TemplateMatchResult`1"/> struct.
+            </summary>
+            <param name="result">The user-specified result for the match.</param>
+            <param name="parser">The URI template parser that matched.</param>
+        </member>
+        <member name="P:Corvus.UriTemplates.TemplateMatchResult`1.Result">
+            <summary>
+            Gets the match result.
+            </summary>
+        </member>
+        <member name="P:Corvus.UriTemplates.TemplateMatchResult`1.Parser">
+            <summary>
+            Gets the <see cref="T:Corvus.UriTemplates.IUriTemplateParser"/>.
+            </summary>
+        </member>
+        <member name="T:Corvus.UriTemplates.TemplateParameterProviders.ITemplateParameterProvider`1">
+            <summary>
+            Supplies parameters to the <see cref="T:Corvus.UriTemplates.UriTemplateResolver`2"/>.
+            </summary>
+            <typeparam name="TParameterPayload">The type of the parameter.</typeparam>
+            <remarks>
+            This allows us to abstract our parameter provision mechanism to
+            efficiently format parameters into our output.
+            </remarks>
+        </member>
+        <member name="M:Corvus.UriTemplates.TemplateParameterProviders.ITemplateParameterProvider`1.ProcessVariable(Corvus.UriTemplates.TemplateParameterProviders.VariableSpecification@,`0@,Corvus.HighPerformance.ValueStringBuilder@)">
+            <summary>
+            Process the given variable.
+            </summary>
+            <param name="variableSpecification">The specification for the variable.</param>
+            <param name="parameters">The parameters.</param>
+            <param name="output">The output to which to format the parameter.</param>
+            <returns>
+                <see cref="F:Corvus.UriTemplates.TemplateParameterProviders.VariableProcessingState.Success"/> if the variable was successfully processed,
+                <see cref="F:Corvus.UriTemplates.TemplateParameterProviders.VariableProcessingState.NotProcessed"/> if the parameter was not present, or
+                <see cref="F:Corvus.UriTemplates.TemplateParameterProviders.VariableProcessingState.Failure"/> if the parameter could not be processed because it was incompatible with the variable specification in the template.</returns>
+        </member>
+        <member name="T:Corvus.UriTemplates.TemplateParameterProviders.OperatorInfo">
+            <summary>
+            Gets the operator info for a variable specification.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.TemplateParameterProviders.OperatorInfo.#ctor(System.Boolean,System.Char,System.Char,System.Boolean,System.String,System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Corvus.UriTemplates.TemplateParameterProviders.OperatorInfo"/> struct.
+            </summary>
+            <param name="default">The defualt value.</param>
+            <param name="first">If this is the first parameter.</param>
+            <param name="separator">The separator.</param>
+            <param name="named">If this is a named parameter.</param>
+            <param name="ifEmpty">The value to use if empty.</param>
+            <param name="allowReserved">Whether to allow reserved characters.</param>
+        </member>
+        <member name="P:Corvus.UriTemplates.TemplateParameterProviders.OperatorInfo.Default">
+            <summary>
+            Gets a value indicating whether this is default.
+            </summary>
+        </member>
+        <member name="P:Corvus.UriTemplates.TemplateParameterProviders.OperatorInfo.First">
+            <summary>
+            Gets the first element.
+            </summary>
+        </member>
+        <member name="P:Corvus.UriTemplates.TemplateParameterProviders.OperatorInfo.Separator">
+            <summary>
+            Gets the separator.
+            </summary>
+        </member>
+        <member name="P:Corvus.UriTemplates.TemplateParameterProviders.OperatorInfo.Named">
+            <summary>
+            Gets a value indicating whether this is named.
+            </summary>
+        </member>
+        <member name="P:Corvus.UriTemplates.TemplateParameterProviders.OperatorInfo.IfEmpty">
+            <summary>
+            Gets the string to use if empty.
+            </summary>
+        </member>
+        <member name="P:Corvus.UriTemplates.TemplateParameterProviders.OperatorInfo.AllowReserved">
+            <summary>
+            Gets a value indicating whether this allows reserved symbols.
+            </summary>
+        </member>
+        <member name="T:Corvus.UriTemplates.TemplateParameterProviders.TemplateParameterProvider">
+            <summary>
+            Provides helpers for implementers of a <see cref="T:Corvus.UriTemplates.TemplateParameterProviders.ITemplateParameterProvider`1"/>.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.TemplateParameterProviders.TemplateParameterProvider.Encode(Corvus.HighPerformance.ValueStringBuilder@,System.ReadOnlySpan{System.Char},System.Boolean)">
+            <summary>
+            Encode a value to the output.
+            </summary>
+            <param name="output">The output buffer.</param>
+            <param name="value">The value to encode.</param>
+            <param name="allowReserved">A value indicating whether to allow reserved symbols.</param>
+        </member>
+        <member name="T:Corvus.UriTemplates.TemplateParameterProviders.VariableProcessingState">
+            <summary>
+            Used by <see cref="T:Corvus.UriTemplates.TemplateParameterProviders.ITemplateParameterProvider`1"/> to determine
+            the result of processing a variable with a set of parameters.
+            </summary>
+        </member>
+        <member name="F:Corvus.UriTemplates.TemplateParameterProviders.VariableProcessingState.Success">
+            <summary>
+            Processing succeeded.
+            </summary>
+        </member>
+        <member name="F:Corvus.UriTemplates.TemplateParameterProviders.VariableProcessingState.NotProcessed">
+            <summary>
+            The parameter was not present.
+            </summary>
+        </member>
+        <member name="F:Corvus.UriTemplates.TemplateParameterProviders.VariableProcessingState.Failure">
+            <summary>
+            The parameter was not valid for the given variable.
+            </summary>
+        </member>
+        <member name="T:Corvus.UriTemplates.TemplateParameterProviders.VariableSpecification">
+            <summary>
+            A variable specification.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.TemplateParameterProviders.VariableSpecification.#ctor(Corvus.UriTemplates.TemplateParameterProviders.OperatorInfo,System.ReadOnlySpan{System.Char},System.Boolean,System.Int32,System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Corvus.UriTemplates.TemplateParameterProviders.VariableSpecification"/> struct.
+            </summary>
+            <param name="operatorInfo">The operator info.</param>
+            <param name="variableName">The variable name.</param>
+            <param name="explode">Whether to explode the variable.</param>
+            <param name="prefixLength">The prefix length.</param>
+            <param name="first">Whether this is the first variable in the template.</param>
+        </member>
+        <member name="P:Corvus.UriTemplates.TemplateParameterProviders.VariableSpecification.OperatorInfo">
+            <summary>
+            Gets the operation info.
+            </summary>
+        </member>
+        <member name="P:Corvus.UriTemplates.TemplateParameterProviders.VariableSpecification.VarName">
+            <summary>
+            Gets or sets the variable name.
+            </summary>
+        </member>
+        <member name="P:Corvus.UriTemplates.TemplateParameterProviders.VariableSpecification.Explode">
+            <summary>
+            Gets or sets a value indicating whether this variable is exploded.
+            </summary>
+        </member>
+        <member name="P:Corvus.UriTemplates.TemplateParameterProviders.VariableSpecification.PrefixLength">
+            <summary>
+            Gets or sets the prefix length for the variable.
+            </summary>
+        </member>
+        <member name="P:Corvus.UriTemplates.TemplateParameterProviders.VariableSpecification.First">
+            <summary>
+            Gets or sets a value indicating whether this is the first variable in the template.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.TemplateParameterProviders.VariableSpecification.CopyTo(Corvus.HighPerformance.ValueStringBuilder@)">
+            <summary>
+            Copy the result to the output span.
+            </summary>
+            <param name="output">The span to which to copy the result.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.TemplateParameterProviders.VariableSpecification.ToString">
+            <summary>
+            Gets the variable as a string.
+            </summary>
+            <returns>The variable specification as a string.</returns>
+        </member>
+        <member name="T:Corvus.UriTemplates.UriTemplateAndVerbTable">
+            <summary>
+            Extensions to support <see cref="T:Corvus.UriTemplates.UriTemplateTable`1"/> matching with UriTemplate and Verb.
+            </summary>
+            <remarks>
+            This uses <see cref="T:Corvus.UriTemplates.MatchWithVerb`1"/> as the result type of the UriTemplateTable match to provide an
+            additional indirection through a verb.
+            </remarks>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateAndVerbTable.CreateBuilder``1">
+            <summary>
+            Creates an instance of the <see cref="T:Corvus.UriTemplates.UriTemplateAndVerbTable`1.Builder"/>.
+            </summary>
+            <typeparam name="TMatch">The type of the match result.</typeparam>
+            <returns>An instance of a <see cref="T:Corvus.UriTemplates.UriTemplateAndVerbTable`1.Builder"/>.</returns>
+        </member>
+        <member name="T:Corvus.UriTemplates.UriTemplateAndVerbTable`1">
+            <summary>
+            Matches a URI against a table of URI templates and returns a result value.
+            </summary>
+            <typeparam name="TMatch">The type of the match result.</typeparam>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateAndVerbTable`1.TryMatch(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char},Corvus.UriTemplates.TemplateMatchResult{`0}@,System.Boolean)">
+            <summary>
+            Try to match the uri against the URI templates in the table.
+            </summary>
+            <param name="uri">The URI to match.</param>
+            <param name="verb">The verb to match.</param>
+            <param name="match">The matched result.</param>
+            <param name="requiresRootedMatch">If true, then the template requires a rooted match and will not ignore prefixes. This is more efficient when using a fully-qualified template.</param>
+            <returns><see langword="true"/> if the URI matched a value in the table.</returns>
+            <remarks>
+            <para>
+            This will find the first match in the table.
+            </para>
+            <para>
+            While the <paramref name="match"/> result is <see cref="T:System.IDisposable"/> you need only dispose it if the method returned <see langword="true"/>.
+            It is, however, safe to dispose in either case.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateAndVerbTable`1.TryMatch(System.String,System.String,Corvus.UriTemplates.TemplateMatchResult{`0}@,System.Boolean)">
+            <summary>
+            Try to match the uri against the URI templates in the table.
+            </summary>
+            <param name="uri">The URI to match.</param>
+            <param name="verb">The verb to match.</param>
+            <param name="match">The matched result.</param>
+            <param name="requiresRootedMatch">If true, then the template requires a rooted match and will not ignore prefixes. This is more efficient when using a fully-qualified template.</param>
+            <returns><see langword="true"/> if the URI matched a value in the table.</returns>
+            <remarks>
+            <para>
+            This will find the first match in the table.
+            </para>
+            <para>
+            While the <paramref name="match"/> result is <see cref="T:System.IDisposable"/> you need only dispose it if the method returned <see langword="true"/>.
+            It is, however, safe to dispose in either case.
+            </para>
+            </remarks>
+        </member>
+        <member name="T:Corvus.UriTemplates.UriTemplateAndVerbTable`1.Builder">
+            <summary>
+            A factory for creating <see cref="T:Corvus.UriTemplates.UriTemplateAndVerbTable`1"/> instances.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateAndVerbTable`1.Builder.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Corvus.UriTemplates.UriTemplateAndVerbTable`1.Builder"/> class.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateAndVerbTable`1.Builder.Add(System.ReadOnlySpan{System.Char},System.String,`0)">
+            <summary>
+            Add a match for a uriTemplate and verb.
+            </summary>
+            <param name="uriTemplate">The URI template for which to add the match.</param>
+            <param name="verb">The verb for which to add the match.</param>
+            <param name="match">The match to add for this combination.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateAndVerbTable`1.Builder.Add(System.String,System.String,`0)">
+            <summary>
+            Add a match for a uriTemplate and verb.
+            </summary>
+            <param name="uriTemplate">The URI template for which to add the match.</param>
+            <param name="verb">The verb for which to add the match.</param>
+            <param name="match">The match to add for this combination.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateAndVerbTable`1.Builder.Add(Corvus.UriTemplates.IUriTemplateParser,System.String,`0)">
+            <summary>
+            Add a match for a uriTemplate and verb.
+            </summary>
+            <param name="uriTemplate">The URI template for which to add the match.</param>
+            <param name="verb">The verb for which to add the match.</param>
+            <param name="match">The match to add for this combination.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateAndVerbTable`1.Builder.ToTable">
+            <summary>
+            Converts the builder into a table.
+            </summary>
+            <returns>The <see cref="T:Corvus.UriTemplates.UriTemplateAndVerbTable`1"/>.</returns>
+        </member>
+        <member name="T:Corvus.UriTemplates.UriTemplateParameters">
+            <summary>
+            A collection of parameters extracted from a URI template.
+            </summary>
+            <remarks>
+            This avoids allocating individual strings for the parameter names and values.
+            </remarks>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParameters.#ctor(Corvus.UriTemplates.ParameterValue[])">
+            <summary>
+            Creates a <see cref="T:Corvus.UriTemplates.UriTemplateParameters"/>.
+            </summary>
+            <param name="items">
+            The parameter value array, which has been rented. Ownership passes to this instance,
+            which is why <see cref="M:Corvus.UriTemplates.UriTemplateParameters.Dispose"/> has to return it.
+            </param>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParameters.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParameters.Has(System.ReadOnlySpan{System.Char})">
+            <summary>
+            Tests whether a parameter with the specified name is present.
+            </summary>
+            <param name="name">The parameter name.</param>
+            <returns>True if the named parameter was found.</returns>
+            <exception cref="T:System.ObjectDisposedException">
+            Thrown if <see cref="M:Corvus.UriTemplates.UriTemplateParameters.Dispose"/> has already been called.
+            </exception>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParameters.TryGet(System.ReadOnlySpan{System.Char},Corvus.UriTemplates.ParameterValue@)">
+            <summary>
+            Retrieves the value of a parameter.
+            </summary>
+            <param name="name">The parameter name.</param>
+            <param name="value">The parameter value.</param>
+            <returns>True if the named parameter was found.</returns>
+            <exception cref="T:System.ObjectDisposedException">
+            Thrown if <see cref="M:Corvus.UriTemplates.UriTemplateParameters.Dispose"/> has already been called.
+            </exception>
+        </member>
+        <member name="T:Corvus.UriTemplates.EnumerateParametersCallback`1">
+            <summary>
+            A callback for enumerating parameters from the cache.
+            </summary>
+            <typeparam name="TState">The type of the state for the callback.</typeparam>
+            <param name="name">The name of the parameter.</param>
+            <param name="value">The value of the parameter.</param>
+            <param name="state">The state for the callback.</param>
+        </member>
+        <member name="T:Corvus.UriTemplates.EnumerateParametersCallbackWithRange`1">
+            <summary>
+            A callback for enumerating parameters from the cache.
+            </summary>
+            <typeparam name="TState">The type of the state for the callback.</typeparam>
+            <param name="name">The parameter name.</param>
+            <param name="valueRange">The range in the input URI string at which the parameter was found.</param>
+            <param name="state">The state for the callback.</param>
+        </member>
+        <member name="T:Corvus.UriTemplates.UriTemplateParserExtensions">
+            <summary>
+            Extension methods for <see cref="T:Corvus.UriTemplates.IUriTemplateParser"/>.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserExtensions.EnumerateParameters``1(Corvus.UriTemplates.IUriTemplateParser,System.ReadOnlySpan{System.Char},Corvus.UriTemplates.EnumerateParametersCallback{``0},``0@,System.Int32)">
+            <summary>
+            Enumerate the parameters in the parser.
+            </summary>
+            <typeparam name="TState">The type of the state for the callback.</typeparam>
+            <param name="parser">The parser to use.</param>
+            <param name="uri">The uri to parse.</param>
+            <param name="callback">The callback to receive the enumerated parameters.</param>
+            <param name="state">The state for the callback.</param>
+            <param name="initialCapacity">The initial cache size, which should be greater than or equal to the expected number of parameters.
+            It also provides the increment for the cache size should it be exceeded.</param>
+            <returns><see langword="true"/> if the parser was successful, otherwise <see langword="false"/>.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserExtensions.EnumerateParameters``1(Corvus.UriTemplates.IUriTemplateParser,System.String,Corvus.UriTemplates.EnumerateParametersCallback{``0},``0@,System.Int32)">
+            <summary>
+            Enumerate the parameters in the parser.
+            </summary>
+            <typeparam name="TState">The type of the state for the callback.</typeparam>
+            <param name="parser">The parser to use.</param>
+            <param name="uri">The uri to parse.</param>
+            <param name="callback">The callback to receive the enumerated parameters.</param>
+            <param name="state">The state for the callback.</param>
+            <param name="initialCapacity">The initial cache size, which should be greater than or equal to the expected number of parameters.
+            It also provides the increment for the cache size should it be exceeded.</param>
+            <returns><see langword="true"/> if the parser was successful, otherwise <see langword="false"/>.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserExtensions.EnumerateParameters``1(Corvus.UriTemplates.IUriTemplateParser,System.ReadOnlySpan{System.Char},Corvus.UriTemplates.EnumerateParametersCallbackWithRange{``0},``0@,System.Int32)">
+            <summary>
+            Enumerate the parameters in the parser.
+            </summary>
+            <typeparam name="TState">The type of the state for the callback.</typeparam>
+            <param name="parser">The parser to use.</param>
+            <param name="uri">The uri to parse.</param>
+            <param name="callback">The callback to receive the enumerated parameters.</param>
+            <param name="state">The state for the callback.</param>
+            <param name="initialCapacity">The initial cache size, which should be greater than or equal to the expected number of parameters.
+            It also provides the increment for the cache size should it be exceeded.</param>
+            <returns><see langword="true"/> if the parser was successful, otherwise <see langword="false"/>.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserExtensions.EnumerateParameters``1(Corvus.UriTemplates.IUriTemplateParser,System.String,Corvus.UriTemplates.EnumerateParametersCallbackWithRange{``0},``0@,System.Int32)">
+            <summary>
+            Enumerate the parameters in the parser.
+            </summary>
+            <typeparam name="TState">The type of the state for the callback.</typeparam>
+            <param name="parser">The parser to use.</param>
+            <param name="uri">The uri to parse.</param>
+            <param name="callback">The callback to receive the enumerated parameters.</param>
+            <param name="state">The state for the callback.</param>
+            <param name="initialCapacity">The initial cache size, which should be greater than or equal to the expected number of parameters.
+            It also provides the increment for the cache size should it be exceeded.</param>
+            <returns><see langword="true"/> if the parser was successful, otherwise <see langword="false"/>.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserExtensions.TryGetUriTemplateParameters(Corvus.UriTemplates.IUriTemplateParser,System.ReadOnlySpan{System.Char},System.Int32,Corvus.UriTemplates.UriTemplateParameters@)">
+            <summary>
+            Gets the parameters from the URI template.
+            </summary>
+            <param name="parser">The parser to use.</param>
+            <param name="uri">The uri to parse.</param>
+            <param name="initialCapacity">The initial cache size, which should be greater than or equal to the expected number of parameters.
+            It also provides the increment for the cache size should it be exceeded.</param>
+            <param name="templateParameters">A <see cref="T:Corvus.UriTemplates.UriTemplateParameters"/>.</param>
+            <returns><see langword="true"/> if parsing succeeded.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserExtensions.TryGetUriTemplateParameters(Corvus.UriTemplates.IUriTemplateParser,System.ReadOnlySpan{System.Char},System.Int32,System.Boolean,Corvus.UriTemplates.UriTemplateParameters@)">
+            <summary>
+            Gets the parameters from the URI template.
+            </summary>
+            <param name="parser">The parser to use.</param>
+            <param name="uri">The uri to parse.</param>
+            <param name="initialCapacity">The initial cache size, which should be greater than or equal to the expected number of parameters.
+            It also provides the increment for the cache size should it be exceeded.</param>
+            <param name="requiresRootedMatch">If true, then the template requires a rooted match and will not ignore prefixes. This is more efficient when using a fully-qualified template.</param>
+            <param name="templateParameters">A <see cref="T:Corvus.UriTemplates.UriTemplateParameters"/>.</param>
+            <returns><see langword="true"/> if parsing succeeded.</returns>
+        </member>
+        <member name="T:Corvus.UriTemplates.UriTemplateParserFactory">
+            <summary>
+            Parses a UriTemplate.
+            </summary>
+        </member>
+        <member name="T:Corvus.UriTemplates.UriTemplateParserFactory.IUriTemplatePatternElement">
+            <summary>
+            A pattern element in a URI template.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserFactory.IUriTemplatePatternElement.Consume``1(System.String,System.ReadOnlySpan{System.Char},System.Int32@,Corvus.UriTemplates.ParameterCallback{``0},Corvus.UriTemplates.UriTemplateParserFactory.Consumer@,``0@)">
+            <summary>
+            Non-greedily consume the given segment.
+            </summary>
+            <typeparam name="TState">The type of the state from the caller.</typeparam>
+            <param name="escapedTemplate">The escaped URI template. (Enables us to avoid making copies of parameter names.)</param>
+            <param name="segment">The segment to consume.</param>
+            <param name="charsConsumed">The number of characters consumed.</param>
+            <param name="parameterCallback">The callback when a parameter is discovered.</param>
+            <param name="tail">The tail for this segment.</param>
+            <param name="state">The state from the caller.</param>
+            <returns>True if the segment was consumed successfully, otherwise false.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserFactory.IUriTemplatePatternElement.Consume``1(System.String,System.ReadOnlySpan{System.Char},System.Int32,System.Int32@,Corvus.UriTemplates.ParameterCallbackWithRange{``0},Corvus.UriTemplates.UriTemplateParserFactory.Consumer@,``0@)">
+            <summary>
+            Non-greedily consume the given segment.
+            </summary>
+            <typeparam name="TState">The type of the state from the caller.</typeparam>
+            <param name="escapedTemplate">The escaped URI template. (Enables us to avoid making copies of parameter names.)</param>
+            <param name="segment">The segment to consume.</param>
+            <param name="segmentOffset">The offset in the original URI at which <paramref name="segment"/> starts.</param>
+            <param name="charsConsumed">The number of characters consumed.</param>
+            <param name="parameterCallback">The callback when a parameter is discovered.</param>
+            <param name="tail">The tail for this segment.</param>
+            <param name="state">The state from the caller.</param>
+            <returns>True if the segment was consumed successfully, otherwise false.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserFactory.CreateParser(System.ReadOnlySpan{System.Char})">
+            <summary>
+            Create a URI parser for a URI template.
+            </summary>
+            <param name="uriTemplate">The URI template for which to create the parser.</param>
+            <returns>An instance of a parser for the given URI template.</returns>
+            <remarks>
+            Note that this operation allocates memory, but <see cref="M:Corvus.UriTemplates.IUriTemplateParser.ParseUri``1(System.ReadOnlySpan{System.Char}@,Corvus.UriTemplates.ParameterCallback{``0},``0@,System.Boolean)"/>
+            is a low-allocation method. Ideally, you should cache the results of calling this method for a given URI template.
+            </remarks>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserFactory.CreateParser(System.String)">
+            <summary>
+            Create a URI parser for a URI template.
+            </summary>
+            <param name="uriTemplate">The URI template for which to create the parser.</param>
+            <returns>An instance of a parser for the given URI template.</returns>
+            <remarks>
+            Note that this operation allocates memory, but <see cref="M:Corvus.UriTemplates.IUriTemplateParser.ParseUri``1(System.ReadOnlySpan{System.Char}@,Corvus.UriTemplates.ParameterCallback{``0},``0@,System.Boolean)"/>
+            is a low-allocation method. Ideally, you should cache the results of calling this method for a given URI template.
+            </remarks>
+        </member>
+        <member name="T:Corvus.UriTemplates.UriTemplateParserFactory.UriParser">
+            <summary>
+            Parses a uri using a set of <see cref="T:Corvus.UriTemplates.UriTemplateParserFactory.IUriTemplatePatternElement"/>.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserFactory.UriParser.IsMatch(System.ReadOnlySpan{System.Char}@,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserFactory.UriParser.IsMatch(System.String,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserFactory.UriParser.ParseUri``1(System.String,Corvus.UriTemplates.ParameterCallback{``0},``0@,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserFactory.UriParser.ParseUri``1(System.String,Corvus.UriTemplates.ParameterCallbackWithRange{``0},``0@,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserFactory.UriParser.ParseUri``1(System.ReadOnlySpan{System.Char}@,Corvus.UriTemplates.ParameterCallbackWithRange{``0},``0@,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserFactory.UriParser.ParseUri``1(System.ReadOnlySpan{System.Char}@,Corvus.UriTemplates.ParameterCallback{``0},``0@,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Corvus.UriTemplates.UriTemplateParserFactory.LiteralSequence">
+            <summary>
+            Represents a literal sequence in a URI template.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserFactory.LiteralSequence.Consume``1(System.String,System.ReadOnlySpan{System.Char},System.Int32@,Corvus.UriTemplates.ParameterCallback{``0},Corvus.UriTemplates.UriTemplateParserFactory.Consumer@,``0@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserFactory.LiteralSequence.Consume``1(System.String,System.ReadOnlySpan{System.Char},System.Int32,System.Int32@,Corvus.UriTemplates.ParameterCallbackWithRange{``0},Corvus.UriTemplates.UriTemplateParserFactory.Consumer@,``0@)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Corvus.UriTemplates.UriTemplateParserFactory.ExpressionSequence">
+            <summary>
+            Represents an expression sequence in a URI template.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserFactory.ExpressionSequence.Consume``1(System.String,System.ReadOnlySpan{System.Char},System.Int32@,Corvus.UriTemplates.ParameterCallback{``0},Corvus.UriTemplates.UriTemplateParserFactory.Consumer@,``0@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserFactory.ExpressionSequence.Consume``1(System.String,System.ReadOnlySpan{System.Char},System.Int32,System.Int32@,Corvus.UriTemplates.ParameterCallbackWithRange{``0},Corvus.UriTemplates.UriTemplateParserFactory.Consumer@,``0@)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Corvus.UriTemplates.UriTemplateParserFactory.QueryExpressionSequence">
+            <summary>
+            Represents a query expression sequence in a URI template.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserFactory.QueryExpressionSequence.Consume``1(System.String,System.ReadOnlySpan{System.Char},System.Int32@,Corvus.UriTemplates.ParameterCallback{``0},Corvus.UriTemplates.UriTemplateParserFactory.Consumer@,``0@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateParserFactory.QueryExpressionSequence.Consume``1(System.String,System.ReadOnlySpan{System.Char},System.Int32,System.Int32@,Corvus.UriTemplates.ParameterCallbackWithRange{``0},Corvus.UriTemplates.UriTemplateParserFactory.Consumer@,``0@)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Corvus.UriTemplates.UriTemplateRegexBuilder">
+            <summary>
+            Builds a regular expression that can parse the parameters from a UriTemplate.
+            </summary>
+            <remarks>
+            Note that we have a non-regex-based (low-allocation) equivalent to this in <see cref="T:Corvus.UriTemplates.UriTemplateParserFactory"/>.
+            This is provided for applications that specifically require a regex.
+            </remarks>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateRegexBuilder.CreateMatchingRegex(System.ReadOnlySpan{System.Char})">
+            <summary>
+            Creates a regular expression matching the given URI template.
+            </summary>
+            <param name="uriTemplate">The uri template.</param>
+            <returns>The regular expression string matching the URI template.</returns>
+            <remarks>
+            As this is an allocation-heavy operation, you should ensure that you cache
+            the results in some way. Ideally, this can be done at code generation/compile time
+            for URI templates that can be discovered at the time (e.g. when processing OpenAPI documents.)
+            </remarks>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateRegexBuilder.CreateMatchingRegex(System.String)">
+            <summary>
+            Creates a regular expression matching the given URI template.
+            </summary>
+            <param name="uriTemplate">The uri template.</param>
+            <returns>The regular expression string matching the URI template.</returns>
+            <remarks>
+            As this is an allocation-heavy operation, you should ensure that you cache
+            the results in some way. Ideally, this can be done at code generation/compile time
+            for URI templates that can be discovered at the time (e.g. when processing OpenAPI documents.)
+            </remarks>
+        </member>
+        <member name="T:Corvus.UriTemplates.ParameterNameCallback`1">
+            <summary>
+            A delegate for a callback providing parameter names as they are discovered.
+            </summary>
+            <typeparam name="TState">The type of the state.</typeparam>
+            <param name="name">The parameter name.</param>
+            <param name="state">The state passed by the caller.</param>
+        </member>
+        <member name="T:Corvus.UriTemplates.ResolvedUriTemplateCallback`1">
+            <summary>
+            A delegate for a callback providing a resolved template.
+            </summary>
+            <typeparam name="TState">The type of the state.</typeparam>
+            <param name="resolvedTemplate">The resolved template.</param>
+            <param name="state">The state passed by the caller.</param>
+        </member>
+        <member name="T:Corvus.UriTemplates.UriTemplateResolver`2">
+            <summary>
+            Resolves a UriTemplate by (optionally, partially) applying parameters to the template, to create a URI (if fully resolved), or a partially resolved URI template.
+            </summary>
+            <typeparam name="TParameterProvider">The type of the template parameter provider.</typeparam>
+            <typeparam name="TParameterPayload">The type of the parameter payload.</typeparam>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateResolver`2.TryResolveResult``1(`0,System.ReadOnlySpan{System.Char},System.Boolean,`1@,Corvus.UriTemplates.ResolvedUriTemplateCallback{``0},Corvus.UriTemplates.ParameterNameCallback{``0},``0@)">
+            <summary>
+            Resolve the template into an output result.
+            </summary>
+            <typeparam name="TState">The type of the state to pass to the callback.</typeparam>
+            <param name="parameterProvider">An instance of the parameter provider.</param>
+            <param name="template">The template to resolve.</param>
+            <param name="resolvePartially">If <see langword="true"/> then partially resolve the result.</param>
+            <param name="parameters">The parameters to apply to the template.</param>
+            <param name="callback">The callback which is provided with the resolved template.</param>
+            <param name="parameterNameCallback">An optional callback which is provided each parameter name as they are discovered.</param>
+            <param name="state">The state to pass to the callback.</param>
+            <returns><see langword="true"/> if the URI matched the template, and the parameters were resolved successfully.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateResolver`2.TryResolveResult``1(`0,System.ReadOnlySpan{System.Char},Corvus.HighPerformance.ValueStringBuilder@,System.Boolean,`1@,Corvus.UriTemplates.ParameterNameCallback{``0},``0@)">
+            <summary>
+            Resolve the template into an output result.
+            </summary>
+            <typeparam name="TState">The type of the callback state.</typeparam>
+            <param name="parameterProvider">The parameter provider.</param>
+            <param name="template">The template to resolve.</param>
+            <param name="output">The output buffer into which to resolve the template.</param>
+            <param name="resolvePartially">If <see langword="true"/> then partially resolve the result.</param>
+            <param name="parameters">The parameters to apply to the template.</param>
+            <param name="parameterNameCallback">An optional callback which is provided each parameter name as they are discovered.</param>
+            <param name="state">The callback state.</param>
+            <returns><see langword="true"/> if the URI matched the template, and the parameters were resolved successfully.</returns>
+        </member>
+        <member name="T:Corvus.UriTemplates.UriTemplateTable">
+            <summary>
+            Create builders for a <see cref="T:Corvus.UriTemplates.UriTemplateTable`1"/>.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateTable.CreateBuilder``1">
+            <summary>
+            Create an instance of a URI template table builder.
+            </summary>
+            <typeparam name="TMatch">The type of the match values.</typeparam>
+            <returns>A builder for a URI template table.</returns>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateTable.CreateBuilder``1(System.Int32)">
+            <summary>
+            Create an instance of a URI template table builder.
+            </summary>
+            <typeparam name="TMatch">The type of the match values.</typeparam>
+            <param name="initialCapacity">The initial capacity of the table.</param>
+            <returns>A builder for a URI template table.</returns>
+        </member>
+        <member name="T:Corvus.UriTemplates.UriTemplateTable`1">
+            <summary>
+            Matches a URI against a table of URI templates and returns a result value.
+            </summary>
+            <typeparam name="TMatch">The type of the value to be matched.</typeparam>
+        </member>
+        <member name="P:Corvus.UriTemplates.UriTemplateTable`1.Length">
+            <summary>
+            Gets the number of entries in the table.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateTable`1.TryMatch(System.String,Corvus.UriTemplates.TemplateMatchResult{`0}@,System.Boolean@)">
+            <summary>
+            Try to match the uri against the URI templates in the table.
+            </summary>
+            <param name="uri">The URI to match.</param>
+            <param name="match">The matched result.</param>
+            <param name="requiresRootedMatch">If true, then the template requires a rooted match and will not ignore prefixes. This is more efficient when using a fully-qualified template.</param>
+            <returns><see langword="true"/> if the URI matched a value in the table.</returns>
+            <remarks>
+            <para>
+            This will find the first match in the table.
+            </para>
+            <para>
+            While the <paramref name="match"/> result is <see cref="T:System.IDisposable"/> you need only dispose it if the method returned <see langword="true"/>.
+            It is, however, safe to dispose in either case.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateTable`1.TryMatch(System.ReadOnlySpan{System.Char},Corvus.UriTemplates.TemplateMatchResult{`0}@,System.Boolean@)">
+            <summary>
+            Try to match the uri against the URI templates in the table.
+            </summary>
+            <param name="uri">The URI to match.</param>
+            <param name="match">The matched result.</param>
+            <param name="requiresRootedMatch">If true, then the template requires a rooted match and will not ignore prefixes. This is more efficient when using a fully-qualified template.</param>
+            <returns><see langword="true"/> if the URI matched a value in the table.</returns>
+            <remarks>
+            <para>
+            This will find the first match in the table.
+            </para>
+            <para>
+            While the <paramref name="match"/> result is <see cref="T:System.IDisposable"/> you need only dispose it if the method returned <see langword="true"/>.
+            It is, however, safe to dispose in either case.
+            </para>
+            </remarks>
+        </member>
+        <member name="T:Corvus.UriTemplates.UriTemplateTable`1.Builder">
+            <summary>
+            A builder for a <see cref="T:Corvus.UriTemplates.UriTemplateTable`1"/>.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateTable`1.Builder.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Corvus.UriTemplates.UriTemplateTable`1.Builder"/> struct.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateTable`1.Builder.#ctor(System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Corvus.UriTemplates.UriTemplateTable`1.Builder"/> struct.
+            </summary>
+            <param name="initialCapacity">The initial capacity of the table.</param>
+            <remarks>
+            Provide the initial capacity of the table if known. This helps minimize
+            the overhead of re-allocation.
+            </remarks>
+        </member>
+        <member name="P:Corvus.UriTemplates.UriTemplateTable`1.Builder.Count">
+            <summary>
+            Gets the length of the table builder.
+            </summary>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateTable`1.Builder.Add(System.String,`0)">
+            <summary>
+            Add a uri template and its corresponding match.
+            </summary>
+            <param name="uriTemplate">The URI template to add.</param>
+            <param name="match">The corresponding match to provide if the parser matches.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateTable`1.Builder.Add(System.ReadOnlySpan{System.Char},`0)">
+            <summary>
+            Add a uri template and its corresponding match.
+            </summary>
+            <param name="uriTemplate">The URI template to add.</param>
+            <param name="match">The corresponding match to provide if the parser matches.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateTable`1.Builder.Add(Corvus.UriTemplates.IUriTemplateParser,`0)">
+            <summary>
+            Add a parser and its corresponding match.
+            </summary>
+            <param name="parser">The parser to add.</param>
+            <param name="match">The corresponding match to provide if the parser matches.</param>
+        </member>
+        <member name="M:Corvus.UriTemplates.UriTemplateTable`1.Builder.ToTable">
+            <summary>
+            Convert the builder into a table.
+            </summary>
+            <returns>The resulting table.</returns>
+        </member>
+    </members>
+</doc>

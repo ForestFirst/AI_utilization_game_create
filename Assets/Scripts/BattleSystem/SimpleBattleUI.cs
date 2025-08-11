@@ -683,8 +683,20 @@ namespace BattleSystem
             handSystem = FindObjectOfType<HandSystem>();
             if (handSystem == null)
             {
-                Debug.LogWarning("HandSystem not found! 予告ダメージ表示が動作しません。");
-                return;
+                Debug.LogWarning("HandSystem not found! Attempting to create one...");
+                
+                // HandSystemを自動作成
+                var battleManager = FindObjectOfType<BattleManager>();
+                if (battleManager != null)
+                {
+                    handSystem = battleManager.gameObject.AddComponent<HandSystem>();
+                    Debug.Log("✓ HandSystem created and connected for damage preview");
+                }
+                else
+                {
+                    Debug.LogWarning("❌ BattleManager not found! 予告ダメージ表示が動作しません。");
+                    return;
+                }
             }
             
             // HandSystemのイベントを購読（正しいイベント名を使用）
@@ -1498,7 +1510,16 @@ namespace BattleSystem
                 }
                 else
                 {
-                    Debug.LogError("❌ AutoBattleUICreator also not found! Cannot create HandUI.");
+                    Debug.LogWarning("❌ AutoBattleUICreator not found, creating one manually...");
+                    
+                    // AutoBattleUICreatorを手動で作成
+                    GameObject uiCreatorObj = new GameObject("AutoBattleUICreator");
+                    AutoBattleUICreator uiCreator = uiCreatorObj.AddComponent<AutoBattleUICreator>();
+                    
+                    Debug.Log("✓ AutoBattleUICreator created manually");
+                    
+                    // 少し待ってからHandUIを再度探す
+                    StartCoroutine(DelayedHandUICheck());
                 }
             }
             
@@ -1510,7 +1531,22 @@ namespace BattleSystem
             }
             else
             {
-                Debug.LogWarning("❌ HandSystem not found!");
+                Debug.LogWarning("❌ HandSystem not found, creating one manually...");
+                
+                // HandSystemを手動で作成
+                var battleManager = FindObjectOfType<BattleManager>();
+                if (battleManager != null)
+                {
+                    HandSystem newHandSystem = battleManager.gameObject.AddComponent<HandSystem>();
+                    Debug.Log("✓ HandSystem created manually and attached to BattleManager");
+                    
+                    // 作成後の手札生成を試行
+                    StartCoroutine(DelayedHandGeneration());
+                }
+                else
+                {
+                    Debug.LogError("❌ BattleManager not found! Cannot create HandSystem.");
+                }
             }
         }
         
@@ -1533,11 +1569,12 @@ namespace BattleSystem
                 Debug.Log($"Can take action: {handSystem.CanTakeAction}");
                 
                 // HandSystemに手札生成を依頼
-                var result = handSystem.GenerateHand();
+                handSystem.GenerateHand();
                 
-                if (result.isSuccess)
+                // 手札生成後の成功確認は HandSystem の CurrentHand をチェック
+                if (handSystem.CurrentHand != null && handSystem.CurrentHand.Length > 0)
                 {
-                    Debug.Log($"✓ Hand generated successfully! Cards: {result.generatedCards?.Length ?? 0}");
+                    Debug.Log($"✓ Hand generated successfully! Cards: {handSystem.CurrentHand.Length}");
                     
                     // 手札UIの強制更新
                     yield return new WaitForSeconds(0.1f); // UI更新のための短い遅延
@@ -1550,11 +1587,11 @@ namespace BattleSystem
                     }
                     
                     // 生成されたカードの詳細をログ出力
-                    if (result.generatedCards != null)
+                    if (handSystem.CurrentHand != null)
                     {
-                        for (int i = 0; i < result.generatedCards.Length; i++)
+                        for (int i = 0; i < handSystem.CurrentHand.Length; i++)
                         {
-                            var card = result.generatedCards[i];
+                            var card = handSystem.CurrentHand[i];
                             if (card != null)
                             {
                                 Debug.Log($"  Card {i + 1}: {card.displayName} (Power: {card.weaponData.basePower})");
@@ -1564,20 +1601,20 @@ namespace BattleSystem
                 }
                 else
                 {
-                    Debug.LogWarning($"❌ Failed to generate hand: {result.message}");
+                    Debug.LogWarning("❌ Failed to generate hand");
                     
                     // 失敗した場合のリトライ処理
                     yield return new WaitForSeconds(1f);
                     Debug.Log("Retrying hand generation...");
                     
-                    var retryResult = handSystem.GenerateHand();
-                    if (retryResult.isSuccess)
+                    handSystem.GenerateHand();
+                    if (handSystem.CurrentHand != null && handSystem.CurrentHand.Length > 0)
                     {
                         Debug.Log("✓ Hand generation succeeded on retry");
                     }
                     else
                     {
-                        Debug.LogError($"❌ Hand generation failed on retry: {retryResult.message}");
+                        Debug.LogError("❌ Hand generation failed on retry");
                     }
                 }
             }
@@ -1607,14 +1644,14 @@ namespace BattleSystem
                         // 短い遅延で初期化を待つ
                         yield return new WaitForSeconds(0.5f);
                         
-                        var result = handSystem.GenerateHand();
-                        if (result.isSuccess)
+                        handSystem.GenerateHand();
+                        if (handSystem.CurrentHand != null && handSystem.CurrentHand.Length > 0)
                         {
                             Debug.Log("✓ Hand generation succeeded with newly created HandSystem");
                         }
                         else
                         {
-                            Debug.LogError($"❌ Hand generation failed with newly created HandSystem: {result.message}");
+                            Debug.LogError("❌ Hand generation failed with newly created HandSystem");
                         }
                     }
                 }
@@ -1683,20 +1720,28 @@ namespace BattleSystem
                 if (handSystem.CurrentHand == null || handSystem.CurrentHand.Length == 0)
                 {
                     Debug.Log("Hand is empty, attempting regeneration...");
-                    var result = handSystem.GenerateHand();
-                    if (result.isSuccess)
+                    handSystem.GenerateHand();
+                    if (handSystem.CurrentHand != null && handSystem.CurrentHand.Length > 0)
                     {
                         Debug.Log("✓ Hand regenerated successfully during verification");
                     }
                     else
                     {
-                        Debug.LogWarning($"❌ Hand regeneration failed during verification: {result.message}");
+                        Debug.LogWarning("❌ Hand regeneration failed during verification");
                     }
                 }
             }
             else
             {
-                Debug.LogWarning("❌ HandSystem not found during verification!");
+                Debug.LogWarning("❌ HandSystem not found during verification! Attempting to create...");
+                
+                // 検証時にもHandSystemがない場合は作成を試行
+                var battleManager = FindObjectOfType<BattleManager>();
+                if (battleManager != null)
+                {
+                    HandSystem newHandSystem = battleManager.gameObject.AddComponent<HandSystem>();
+                    Debug.Log("✓ HandSystem created during verification");
+                }
             }
             
             Debug.Log("=== Hand UI Verification Completed ===");
@@ -2161,14 +2206,14 @@ namespace BattleSystem
             // 手札生成も強制実行
             if (handSystem != null)
             {
-                var result = handSystem.GenerateHand();
-                if (result.isSuccess)
+                handSystem.GenerateHand();
+                if (handSystem.CurrentHand != null && handSystem.CurrentHand.Length > 0)
                 {
-                    Debug.Log($"✓ Hand force generated: {result.generatedCards?.Length ?? 0} cards");
+                    Debug.Log($"✓ Hand force generated: {handSystem.CurrentHand.Length} cards");
                 }
                 else
                 {
-                    Debug.LogWarning($"❌ Hand force generation failed: {result.message}");
+                    Debug.LogWarning("❌ Hand force generation failed");
                 }
             }
             
@@ -2187,6 +2232,53 @@ namespace BattleSystem
             }
             
             Debug.Log("✅ Force Show Hand UI Complete!");
+        }
+
+        /// <summary>
+        /// 遅延HandUI確認コルーチン
+        /// </summary>
+        private System.Collections.IEnumerator DelayedHandUICheck()
+        {
+            yield return new WaitForSeconds(0.5f);
+            
+            HandUI handUI = FindObjectOfType<HandUI>();
+            if (handUI != null)
+            {
+                handUI.SetHandUIVisible(true);
+                Debug.Log("✓ DelayedHandUICheck: HandUI found and shown");
+            }
+            else
+            {
+                Debug.LogWarning("❌ DelayedHandUICheck: HandUI still not found");
+            }
+        }
+
+        /// <summary>
+        /// 遅延手札生成コルーチン
+        /// </summary>
+        private System.Collections.IEnumerator DelayedHandGeneration()
+        {
+            yield return new WaitForSeconds(1.0f);
+            
+            HandSystem handSystem = FindObjectOfType<HandSystem>();
+            if (handSystem != null)
+            {
+                Debug.Log("✓ DelayedHandGeneration: Attempting hand generation...");
+                handSystem.GenerateHand();
+                
+                if (handSystem.CurrentHand != null && handSystem.CurrentHand.Length > 0)
+                {
+                    Debug.Log($"✓ DelayedHandGeneration: Hand generated successfully! Cards: {handSystem.CurrentHand.Length}");
+                }
+                else
+                {
+                    Debug.LogWarning("❌ DelayedHandGeneration: Hand generation failed");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("❌ DelayedHandGeneration: HandSystem still not found");
+            }
         }
     }
 }
