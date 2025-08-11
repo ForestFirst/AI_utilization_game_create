@@ -1315,28 +1315,36 @@ namespace BattleSystem
             // BattleManagerにターン終了を通知
             if (battleManager != null)
             {
-                try
+                // 予告ダメージがある場合は適用
+                if (HasPendingDamage)
                 {
-                    // 予告ダメージがある場合は適用
-                    if (HasPendingDamage)
+                    try
                     {
                         ApplyPendingDamage();
                     }
-                    
-                    // テスト用: 自動ターン終了後、すぐに行動回数をリセットして継続テスト可能にする
-                    LogDebug("自動ターン終了完了 - テスト用に行動回数リセット中...");
-                    
-                    // テスト用: 即座行動回数をリセット
-                    yield return new WaitForSeconds(1f); // 1秒待ってからリセット
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"予告ダメージ適用エラー: {ex.Message}");
+                    }
+                }
+                
+                // テスト用: 自動ターン終了後、すぐに行動回数をリセットして継続テスト可能にする
+                LogDebug("自動ターン終了完了 - テスト用に行動回数リセット中...");
+                
+                // テスト用: 1秒待ってから行動回数をリセット
+                yield return new WaitForSeconds(1f);
+                
+                try
+                {
                     ResetActionsForContinuousTesting();
-                    
-                    // 敵ターンに移行はスキップして、プレイヤーターンを継続
-                    // battleManager.EndPlayerTurn(TurnEndReason.ActionCompleted); // コメントアウト
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"自動ターン終了エラー: {ex.Message}");
+                    Debug.LogError($"行動回数リセットエラー: {ex.Message}");
                 }
+                
+                // 敵ターンに移行はスキップして、プレイヤーターンを継続
+                // battleManager.EndPlayerTurn(TurnEndReason.ActionCompleted); // コメントアウト
             }
         }
         
