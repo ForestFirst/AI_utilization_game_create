@@ -980,5 +980,129 @@ namespace BattleSystem
             
             Debug.Log("HandUI: Force refresh completed");
         }
+        
+        // === HandSystemイベントハンドラー ===
+        
+        /// <summary>
+        /// HandSystemの手札生成イベントハンドラー
+        /// </summary>
+        void OnHandGenerated(CardData[] newHand)
+        {
+            Debug.Log($"HandUI: OnHandGenerated - {newHand?.Length ?? 0} cards");
+            
+            // 選択状態をリセット
+            selectedCardIndex = -1;
+            Debug.Log("HandUI: Selection reset due to hand generation");
+            
+            // currentHandを更新
+            currentHand.Clear();
+            if (newHand != null)
+            {
+                foreach(var card in newHand)
+                {
+                    if (card != null)
+                        currentHand.Add(card);
+                }
+            }
+            
+            // 表示を更新
+            UpdateHandDisplay();
+            SetHandInteractable(true);
+            UpdateInstructionText("カードをクリックして攻撃を選択してください");
+            
+            Debug.Log($"✅ HandUI: Hand display updated - {currentHand.Count} cards, selection reset");
+        }
+        
+        /// <summary>
+        /// カード使用イベントハンドラー
+        /// </summary>
+        void OnCardPlayed(CardData card)
+        {
+            Debug.Log($"HandUI: OnCardPlayed - {card?.displayName}");
+            // 使用されたカードの視覚効果などを追加可能
+        }
+        
+        /// <summary>
+        /// 手札状態変更イベントハンドラー
+        /// </summary>
+        void OnHandStateChanged(HandState newState)
+        {
+            Debug.Log($"HandUI: OnHandStateChanged - {newState}");
+            
+            switch (newState)
+            {
+                case HandState.Generated:
+                    UpdateHandStatusText("手札: 準備完了");
+                    UpdateInstructionText("カードをクリックして攻撃を選択してください");
+                    SetHandInteractable(true);
+                    break;
+                case HandState.CardUsed:
+                    UpdateHandStatusText("手札: カード使用済み");
+                    break;
+                case HandState.TurnEnded:
+                    UpdateHandStatusText("手札: ターン終了");
+                    SetHandInteractable(false);
+                    break;
+                case HandState.Empty:
+                    UpdateHandStatusText("手札: 空");
+                    SetHandInteractable(false);
+                    break;
+            }
+        }
+        
+        /// <summary>
+        /// 手札クリアイベントハンドラー
+        /// </summary>
+        void OnHandCleared()
+        {
+            Debug.Log("HandUI: OnHandCleared");
+            selectedCardIndex = -1;
+            currentHand.Clear();
+            UpdateHandDisplay();
+        }
+        
+        /// <summary>
+        /// 行動回数変更イベントハンドラー
+        /// </summary>
+        void OnActionsChanged(int remaining, int max)
+        {
+            Debug.Log($"HandUI: OnActionsChanged - {remaining}/{max}");
+            UpdateActionsRemainingText(remaining, max);
+        }
+        
+        /// <summary>
+        /// 行動回数0イベントハンドラー
+        /// </summary>
+        void OnActionsExhausted()
+        {
+            Debug.Log("HandUI: OnActionsExhausted - Disabling hand interaction");
+            SetHandInteractable(false);
+            UpdateInstructionText("行動回数を消費しました。ターン終了中...");
+        }
+        
+        /// <summary>
+        /// 自動ターン終了イベントハンドラー
+        /// </summary>
+        void OnAutoTurnEnd()
+        {
+            Debug.Log("HandUI: OnAutoTurnEnd - Turn ending automatically");
+            SetHandInteractable(false);
+            UpdateInstructionText("自動ターン終了中...");
+        }
+        
+        /// <summary>
+        /// 手札の操作可能性を設定
+        /// </summary>
+        void SetHandInteractable(bool interactable)
+        {
+            for (int i = 0; i < cardButtons.Length; i++)
+            {
+                if (cardButtons[i] != null)
+                {
+                    cardButtons[i].interactable = interactable;
+                }
+            }
+            Debug.Log($"HandUI: Hand interactable set to {interactable}");
+        }
     }
 }

@@ -1398,16 +1398,18 @@ namespace BattleSystem
             // 行動回数をリセット
             remainingActions = maxActionsPerTurn;
             
-            // 手札状態をGeneratedに戻す（カードが再度使用可能に）
-            if (currentHandState == HandState.CardUsed || currentHandState == HandState.TurnEnded)
-            {
-                ChangeHandState(HandState.Generated);
-            }
+            // 手札を完全に再生成（使用済みカードを復元）
+            LogDebug("手札を完全再生成中...");
+            GenerateHand();
+            
+            // 手札状態をGeneratedに確実に設定
+            ChangeHandState(HandState.Generated);
             
             // イベント発火
             OnActionsChanged?.Invoke(remainingActions, maxActionsPerTurn);
             
             LogDebug($"✅ テスト用リセット完了: 行動回数 {remainingActions}/{maxActionsPerTurn}, 手札状態: {currentHandState}");
+            LogDebug($"✅ 手札枚数: {RemainingCards}, 使用可能カード: {GetUsableCards().Length}");
             LogDebug("✅ カードクリックテストを継続できます!");
         }
         
