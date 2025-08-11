@@ -413,30 +413,45 @@ namespace BattleSystem
         /// <returns>使用結果</returns>
         public CardPlayResult PlayCard(int handIndex)
         {
+            Debug.Log($"=== HandSystem.PlayCard START: handIndex {handIndex} ===");
             var result = new CardPlayResult();
+            
+            Debug.Log($"Current remainingActions: {remainingActions}");
+            Debug.Log($"Current maxActionsPerTurn: {maxActionsPerTurn}");
+            Debug.Log($"Current currentHandState: {currentHandState}");
+            Debug.Log($"BattleManager currentState: {battleManager?.CurrentState}");
             
             try
             {
                 // 基本妥当性チェック
+                Debug.Log($"Starting ValidateCardPlay for handIndex {handIndex}");
                 if (!ValidateCardPlay(handIndex, out string errorMessage))
                 {
+                    Debug.LogWarning($"❌ ValidateCardPlay failed: {errorMessage}");
                     result.isSuccess = false;
                     result.message = errorMessage;
                     return result;
                 }
+                Debug.Log($"✅ ValidateCardPlay passed for handIndex {handIndex}");
 
                 CardData card = currentHand[handIndex];
+                Debug.Log($"Card to play: {card?.displayName ?? "NULL"}");
                 
                 // 攻撃実行
+                Debug.Log($"Starting ExecuteCardAttack for {card?.displayName}");
                 bool attackSuccess = ExecuteCardAttack(card, out int damageDealt);
+                Debug.Log($"ExecuteCardAttack result: {attackSuccess}, damage: {damageDealt}");
                 
                 if (attackSuccess)
                 {
+                    Debug.Log($"✅ Attack successful, processing successful card play");
                     // 成功時の処理
                     result = HandleSuccessfulCardPlay(card, handIndex, damageDealt);
+                    Debug.Log($"HandleSuccessfulCardPlay result: {result.isSuccess}, turnEnded: {result.turnEnded}");
                 }
                 else
                 {
+                    Debug.LogWarning($"❌ Attack failed for {card?.displayName}");
                     // 失敗時の処理
                     result.isSuccess = false;
                     result.message = "攻撃実行に失敗しました";
@@ -445,13 +460,17 @@ namespace BattleSystem
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Error playing card: {ex.Message}");
+                Debug.LogError($"❌ Error playing card: {ex.Message}");
+                Debug.LogError($"Stack trace: {ex.StackTrace}");
                 result.isSuccess = false;
                 result.message = "カード使用中にエラーが発生しました";
             }
             
+            Debug.Log($"Final result: isSuccess={result.isSuccess}, message={result.message}");
+            
             // 結果イベント発火
             OnCardPlayResult?.Invoke(result);
+            Debug.Log($"=== HandSystem.PlayCard END: handIndex {handIndex} ===");
             return result;
         }
 
@@ -460,16 +479,21 @@ namespace BattleSystem
         /// </summary>
         private bool ValidateCardPlay(int handIndex, out string errorMessage)
         {
+            Debug.Log($"=== ValidateCardPlay START: handIndex {handIndex} ===");
             errorMessage = "";
             
-            // ゲーム状態チェック
-            if (battleManager.CurrentState != GameState.PlayerTurn)
+            // ゲーム状態チェック（Victory状態でもテスト用に許可）
+            Debug.Log($"Checking battleManager.CurrentState: {battleManager?.CurrentState}");
+            if (battleManager.CurrentState != GameState.PlayerTurn && battleManager.CurrentState != GameState.Victory)
             {
-                errorMessage = "プレイヤーのターンではありません";
+                errorMessage = "プレイヤーのターンまたは勝利状態ではありません";
+                Debug.LogWarning($"❌ Wrong game state: {battleManager.CurrentState}");
                 return false;
             }
+            Debug.Log($"✅ Game state check passed: {battleManager.CurrentState} (PlayerTurn or Victory allowed)");
             
             // 手札インデックスチェック
+            Debug.Log($"Checking handIndex {handIndex} against handSize {handSize}");
             if (handIndex < 0 || handIndex >= handSize)
             {
                 errorMessage = "無効な手札インデックスです";
@@ -477,42 +501,58 @@ namespace BattleSystem
             }
             
             // カード存在チェック
+            Debug.Log($"Checking if currentHand[{handIndex}] exists: {currentHand[handIndex] != null}");
             if (currentHand[handIndex] == null)
             {
                 errorMessage = "選択された位置にカードがありません";
+                Debug.LogWarning($"❌ No card at index {handIndex}");
                 return false;
             }
+            Debug.Log($"✅ Card exists at index {handIndex}: {currentHand[handIndex].displayName}");
             
             // 手札状態チェック
+            Debug.Log($"Checking currentHandState: {currentHandState} (should be Generated)");
             if (currentHandState != HandState.Generated)
             {
                 errorMessage = "手札が使用可能な状態ではありません";
+                Debug.LogWarning($"❌ Wrong hand state: {currentHandState}");
                 return false;
             }
+            Debug.Log($"✅ Hand state check passed: {currentHandState}");
             
             CardData card = currentHand[handIndex];
             
             // ターゲット妥当性チェック
+            Debug.Log($"Checking IsCardTargetValid for {card.displayName}");
             if (!IsCardTargetValid(card))
             {
                 errorMessage = "カードのターゲットが無効です";
+                Debug.LogWarning($"❌ Invalid target for card {card.displayName}");
                 return false;
             }
+            Debug.Log($"✅ Card target valid for {card.displayName}");
             
             // クールダウンチェック
+            Debug.Log($"Checking IsWeaponUsable for {card.displayName}");
             if (!IsWeaponUsable(card))
             {
                 errorMessage = "武器がクールダウン中です";
+                Debug.LogWarning($"❌ Weapon on cooldown: {card.displayName}");
                 return false;
             }
+            Debug.Log($"✅ Weapon usable: {card.displayName}");
             
             // 行動回数チェック
+            Debug.Log($"Checking remainingActions: {remainingActions} (should be > 0)");
             if (remainingActions <= 0)
             {
                 errorMessage = "行動回数が残っていません";
+                Debug.LogWarning($"❌ No actions remaining: {remainingActions}");
                 return false;
             }
+            Debug.Log($"✅ Actions remaining: {remainingActions}");
             
+            Debug.Log($"=== ValidateCardPlay END: ALL CHECKS PASSED ===");
             return true;
         }
 
@@ -1283,10 +1323,15 @@ namespace BattleSystem
                         ApplyPendingDamage();
                     }
                     
-                    // 敵ターンに移行（行動回数使い切りによる自動終了）
-                    battleManager.EndPlayerTurn(TurnEndReason.ActionCompleted);
+                    // テスト用: 自動ターン終了後、すぐに行動回数をリセットして継続テスト可能にする
+                    LogDebug("自動ターン終了完了 - テスト用に行動回数リセット中...");
                     
-                    LogDebug("自動ターン終了完了");
+                    // テスト用: 即座行動回数をリセット
+                    yield return new WaitForSeconds(1f); // 1秒待ってからリセット
+                    ResetActionsForContinuousTesting();
+                    
+                    // 敵ターンに移行はスキップして、プレイヤーターンを継続
+                    // battleManager.EndPlayerTurn(TurnEndReason.ActionCompleted); // コメントアウト
                 }
                 catch (Exception ex)
                 {
@@ -1333,6 +1378,38 @@ namespace BattleSystem
         public string GetActionInfo()
         {
             return $"行動回数: {remainingActions}/{maxActionsPerTurn} (ベース: {baseActionsPerTurn}, ボーナス: {actionBonus})";
+        }
+        
+        /// <summary>
+        /// テスト用: 継続テストのための行動回数リセット
+        /// </summary>
+        private void ResetActionsForContinuousTesting()
+        {
+            LogDebug("テスト用: 行動回数をリセット中...");
+            
+            // 行動回数をリセット
+            remainingActions = maxActionsPerTurn;
+            
+            // 手札状態をGeneratedに戻す（カードが再度使用可能に）
+            if (currentHandState == HandState.CardUsed || currentHandState == HandState.TurnEnded)
+            {
+                ChangeHandState(HandState.Generated);
+            }
+            
+            // イベント発火
+            OnActionsChanged?.Invoke(remainingActions, maxActionsPerTurn);
+            
+            LogDebug($"✅ テスト用リセット完了: 行動回数 {remainingActions}/{maxActionsPerTurn}, 手札状態: {currentHandState}");
+            LogDebug("✅ カードクリックテストを継続できます!");
+        }
+        
+        /// <summary>
+        /// テスト用: 手動で行動回数をリセット（デバッグ用）
+        /// </summary>
+        [ContextMenu("Reset Actions for Testing")]
+        public void ManualResetActionsForTesting()
+        {
+            ResetActionsForContinuousTesting();
         }
         
         #endregion

@@ -875,14 +875,16 @@ namespace BattleSystem
                 return;
             }
             
-            // 列に敵を配置（テスト用パターン）
+            // 列に敵を配置（テスト用パターン - 最低3体配置）
+            Debug.Log("最低3体の敵を配置中...");
+            
             // 列0: 機械兵士を前列に配置
             if (enemyDB.Enemies.Length > 0)
             {
                 EnemyData soldier = enemyDB.Enemies[0]; // 機械兵士
                 EnemyInstance soldierInstance = new EnemyInstance(soldier, 0, 0);
                 battleManager.BattleField.PlaceEnemy(soldierInstance, new GridPosition(0, 0));
-                Debug.Log($"Placed {soldier.enemyName} at (0, 0)");
+                Debug.Log($"✅ Placed {soldier.enemyName} at (0, 0)");
             }
             
             // 列1: 機械警備を後列に配置
@@ -891,13 +893,19 @@ namespace BattleSystem
                 EnemyData guard = enemyDB.Enemies[1]; // 機械警備
                 EnemyInstance guardInstance = new EnemyInstance(guard, 1, 1);
                 battleManager.BattleField.PlaceEnemy(guardInstance, new GridPosition(1, 1));
-                Debug.Log($"Placed {guard.enemyName} at (1, 1)");
+                Debug.Log($"✅ Placed {guard.enemyName} at (1, 1)");
             }
             
-            // 列2: 空き（ゲート攻撃テスト用）
-            Debug.Log("Column 2 left empty for gate attack testing");
+            // 列2: 3体目の敵を配置（前列）
+            if (enemyDB.Enemies.Length > 0)
+            {
+                EnemyData thirdEnemy = enemyDB.Enemies[0]; // 機械兵士を再利用
+                EnemyInstance thirdInstance = new EnemyInstance(thirdEnemy, 2, 0);
+                battleManager.BattleField.PlaceEnemy(thirdInstance, new GridPosition(2, 0));
+                Debug.Log($"✅ Placed {thirdEnemy.enemyName} at (2, 0) - 3rd enemy");
+            }
             
-            Debug.Log("テスト用敵の配置完了!");
+            Debug.Log("✅ テスト用敵の配置完了! (3体配置済み)");
         }
         
         /// <summary>

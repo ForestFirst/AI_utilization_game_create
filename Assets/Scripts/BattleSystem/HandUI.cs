@@ -655,7 +655,10 @@ namespace BattleSystem
         /// </summary>
         void OnCardClicked(int cardIndex)
         {
-            Debug.Log($"HandUI: Card {cardIndex + 1} clicked");
+            Debug.Log($"=== HandUI: Card {cardIndex + 1} clicked (Start Debug) ===");
+            Debug.Log($"Current selectedCardIndex: {selectedCardIndex}");
+            Debug.Log($"battleManager null check: {battleManager == null}");
+            Debug.Log($"handSystem null check: {handSystem == null}");
             
             if (battleManager == null || handSystem == null)
             {
@@ -663,12 +666,20 @@ namespace BattleSystem
                 return;
             }
             
-            // ターン状態確認
-            if (battleManager.CurrentState != GameState.PlayerTurn)
+            // 詳細状態ログ
+            Debug.Log($"BattleManager CurrentState: {battleManager.CurrentState}");
+            Debug.Log($"HandSystem CurrentHandState: {handSystem.CurrentHandState}");
+            Debug.Log($"HandSystem RemainingActions: {handSystem.RemainingActions}");
+            Debug.Log($"HandSystem CanTakeAction: {handSystem.CanTakeAction}");
+            Debug.Log($"currentHand.Count: {currentHand.Count}");
+            
+            // ターン状態確認（Victory状態でもテスト用に許可）
+            if (battleManager.CurrentState != GameState.PlayerTurn && battleManager.CurrentState != GameState.Victory)
             {
                 Debug.LogWarning($"HandUI: Cannot use card during {battleManager.CurrentState}");
                 return;
             }
+            Debug.Log($"✅ Game state check passed: {battleManager.CurrentState} (PlayerTurn or Victory allowed)");
             
             // 手札状態確認
             if (handSystem.CurrentHandState != HandState.Generated)
@@ -680,23 +691,28 @@ namespace BattleSystem
             // カードインデックス確認
             if (cardIndex < 0 || cardIndex >= currentHand.Count)
             {
-                Debug.LogError($"HandUI: Invalid card index {cardIndex}");
+                Debug.LogError($"HandUI: Invalid card index {cardIndex}, currentHand.Count: {currentHand.Count}");
                 return;
             }
             
             // カード選択状態更新
+            Debug.Log($"Comparing cardIndex {cardIndex} with selectedCardIndex {selectedCardIndex}");
             if (selectedCardIndex == cardIndex)
             {
+                Debug.Log($"=== 2回目クリック検出: Card {cardIndex + 1} → 攻撃実行 ===");
                 // 同じカードをクリック（2回目） → カード実行
                 UseSelectedCard(cardIndex);
             }
             else
             {
+                Debug.Log($"=== 1回目クリック検出: Card {cardIndex + 1} → 選択 & プレビュー ===");
                 // 別のカードをクリック（1回目） → 選択変更＆予告ダメージ計算・表示
                 selectedCardIndex = cardIndex;
+                Debug.Log($"selectedCardIndex updated to: {selectedCardIndex}");
                 UpdateHandDisplay();
                 
                 CardData selectedCard = currentHand[cardIndex];
+                Debug.Log($"Selected card: {selectedCard?.displayName ?? "NULL"}");
                 
                 // 【新機能】1回目クリックで予告ダメージ計算・表示
                 CalculateAndDisplayPreviewDamage(selectedCard);
@@ -704,6 +720,7 @@ namespace BattleSystem
                 UpdateInstructionText($"選択中: {selectedCard.displayName} (再度クリックで実行)");
                 Debug.Log($"HandUI: Card selected with preview damage - {selectedCard.displayName}");
             }
+            Debug.Log($"=== HandUI: Card {cardIndex + 1} clicked (End Debug) ===");
         }
         
         /// <summary>
@@ -711,20 +728,33 @@ namespace BattleSystem
         /// </summary>
         void UseSelectedCard(int cardIndex)
         {
-            Debug.Log($"HandUI: Using card {cardIndex + 1}");
+            Debug.Log($"=== UseSelectedCard START: Card {cardIndex + 1} ===");
+            Debug.Log($"HandSystem check: {handSystem != null}");
+            Debug.Log($"HandSystem RemainingActions before PlayCard: {handSystem?.RemainingActions}");
+            Debug.Log($"HandSystem CurrentHandState before PlayCard: {handSystem?.CurrentHandState}");
             
             // HandSystemに対してカードの使用を要求
             var result = handSystem.PlayCard(cardIndex);
             
+            Debug.Log($"PlayCard result - isSuccess: {result.isSuccess}, message: {result.message}");
+            Debug.Log($"PlayCard result - damageDealt: {result.damageDealt}, turnEnded: {result.turnEnded}");
+            Debug.Log($"HandSystem RemainingActions after PlayCard: {handSystem?.RemainingActions}");
+            Debug.Log($"HandSystem CurrentHandState after PlayCard: {handSystem?.CurrentHandState}");
+            
             if (result.isSuccess)
             {
-                Debug.Log($"HandUI: Card used successfully! Damage: {result.damageDealt}");
+                Debug.Log($"✅ HandUI: Card used successfully! Damage: {result.damageDealt}");
+                if (result.turnEnded)
+                {
+                    Debug.Log($"✅ Turn ended automatically due to actions exhausted");
+                }
             }
             else
             {
-                Debug.LogWarning($"HandUI: Failed to use card - {result.message}"); // 修正: errorMessage -> message
+                Debug.LogWarning($"❌ HandUI: Failed to use card - {result.message}");
                 UpdateInstructionText($"エラー: {result.message}");
             }
+            Debug.Log($"=== UseSelectedCard END: Card {cardIndex + 1} ===");
         }
         
         /// <summary>
@@ -761,15 +791,31 @@ namespace BattleSystem
         /// </summary>
         void CalculateAndDisplayPreviewDamage(CardData card)
         {
-            if (handSystem == null || card == null) return;
+            Debug.Log($"=== CalculateAndDisplayPreviewDamage START: {card?.displayName ?? "NULL"} ===");
+            Debug.Log($"handSystem null check: {handSystem == null}");
+            Debug.Log($"card null check: {card == null}");
+            
+            if (handSystem == null || card == null)
+            {
+                Debug.LogWarning("⚠️ handSystem or card is null, cannot calculate preview damage");
+                return;
+            }
             
             try
             {
+                Debug.Log($"Calling handSystem.CalculatePreviewDamage for {card.displayName}");
                 // HandSystemの予告ダメージ計算メソッドを呼び出し
                 var previewDamage = handSystem.CalculatePreviewDamage(card);
                 
+                Debug.Log($"CalculatePreviewDamage result: {previewDamage != null}");
                 if (previewDamage != null)
                 {
+                    Debug.Log($"✅ Preview damage calculated successfully:");
+                    Debug.Log($"  - Description: {previewDamage.description}");
+                    Debug.Log($"  - Damage: {previewDamage.calculatedDamage}");
+                    Debug.Log($"  - Target enemies: {previewDamage.targetEnemies?.Count ?? 0}");
+                    Debug.Log($"  - Target gates: {previewDamage.targetGates?.Count ?? 0}");
+                    
                     // 予告ダメージ表示をSimpleBattleUIに通知
                     // （OnPendingDamageCalculatedイベントは実際の実行時のみ発火させる）
                     Debug.Log($"HandUI: Preview damage calculated - {previewDamage.description}, Damage: {previewDamage.calculatedDamage}");
@@ -780,11 +826,13 @@ namespace BattleSystem
                     // もしイベントが発火されない場合は、HandSystem側の実装を確認する必要がある
                     
                     // UI側での簡易表示（フォールバック）
-                    UpdateInstructionText($"選択中: {card.displayName} - 予告ダメージ: {previewDamage.calculatedDamage} (再度クリックで実行)");
+                    string displayText = $"選択中: {card.displayName} - 予告ダメージ: {previewDamage.calculatedDamage} (再度クリックで実行)";
+                    Debug.Log($"Updating instruction text: {displayText}");
+                    UpdateInstructionText(displayText);
                 }
                 else
                 {
-                    Debug.LogWarning($"HandUI: Failed to calculate preview damage for {card.displayName}");
+                    Debug.LogWarning($"❌ HandUI: Failed to calculate preview damage for {card.displayName}");
                     UpdateInstructionText($"エラー: {card.displayName}の予告ダメージ計算に失敗");
                 }
             }
