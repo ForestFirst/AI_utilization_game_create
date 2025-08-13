@@ -1284,23 +1284,23 @@ namespace BattleSystem
         }
         
         /// <summary>
-        /// コンボ進行状況表示の作成（右側中央エリア）
+        /// コンボ進行状況表示の作成（左下エリア）
         /// </summary>
         void CreateComboProgressDisplay(float scale, float screenWidth, float screenHeight)
         {
             Debug.Log("Creating Combo Progress Display...");
             
-            // コンボ進行状況パネルの作成（敵情報パネルの下）
+            // コンボ進行状況パネルの作成（左下）
             float panelWidth = 280 * scale;
             float panelHeight = 300 * scale;
             comboProgressPanel = CreateUIPanel("コンボ進行パネル", 
-                new Vector2(screenWidth * 0.25f, -screenHeight * 0.1f),
+                new Vector2(-screenWidth * 0.32f, -screenHeight * 0.35f),
                 new Vector2(panelWidth, panelHeight), 
                 new Color(0.1f, 0.1f, 0.3f, 0.8f));
             
             // コンボ進行状況タイトル
             comboProgressTitle = CreateUIText("コンボ進行タイトル", 
-                new Vector2(screenWidth * 0.25f, -screenHeight * 0.02f), 
+                new Vector2(-screenWidth * 0.32f, -screenHeight * 0.18f), 
                 new Vector2(panelWidth - 20 * scale, 30 * scale), 
                 "=== コンボ進行 ===", 
                 Mathf.RoundToInt(16 * scale));
@@ -1309,17 +1309,17 @@ namespace BattleSystem
             // 各コンボ進行アイテムを作成（最大5つ）
             for (int i = 0; i < 5; i++)
             {
-                float yOffset = -screenHeight * 0.08f - (i * 50 * scale);
+                float yOffset = -screenHeight * 0.24f - (i * 50 * scale);
                 
                 // コンボアイテムパネル
                 comboProgressItems[i] = CreateUIPanel($"コンボアイテム_{i}", 
-                    new Vector2(screenWidth * 0.25f, yOffset), 
+                    new Vector2(-screenWidth * 0.32f, yOffset), 
                     new Vector2(panelWidth - 20 * scale, 45 * scale),
                     new Color(0.2f, 0.2f, 0.4f, 0.7f));
                 
                 // コンボ名
                 comboNameTexts[i] = CreateUIText($"コンボ名_{i}", 
-                    new Vector2(screenWidth * 0.16f, yOffset + 15 * scale), 
+                    new Vector2(-screenWidth * 0.41f, yOffset + 15 * scale), 
                     new Vector2(120 * scale, 15 * scale), 
                     "", 
                     Mathf.RoundToInt(11 * scale));
@@ -1328,13 +1328,13 @@ namespace BattleSystem
                 
                 // 進行率バー（スライダー）
                 GameObject sliderObj = CreateUISlider($"進行率バー_{i}", 
-                    new Vector2(screenWidth * 0.16f, yOffset), 
+                    new Vector2(-screenWidth * 0.41f, yOffset), 
                     new Vector2(90 * scale, 15 * scale));
                 comboProgressBars[i] = sliderObj.GetComponent<Slider>();
                 
                 // ステップ表示（現在/必要）
                 comboStepTexts[i] = CreateUIText($"ステップ表示_{i}", 
-                    new Vector2(screenWidth * 0.29f, yOffset + 15 * scale), 
+                    new Vector2(-screenWidth * 0.18f, yOffset + 15 * scale), 
                     new Vector2(35 * scale, 15 * scale), 
                     "", 
                     Mathf.RoundToInt(10 * scale));
@@ -1343,7 +1343,7 @@ namespace BattleSystem
                 
                 // タイマー表示（残りターン）
                 comboTimerTexts[i] = CreateUIText($"タイマー表示_{i}", 
-                    new Vector2(screenWidth * 0.29f, yOffset), 
+                    new Vector2(-screenWidth * 0.18f, yOffset), 
                     new Vector2(35 * scale, 15 * scale), 
                     "", 
                     Mathf.RoundToInt(9 * scale));
@@ -1352,7 +1352,7 @@ namespace BattleSystem
                 
                 // 中断耐性表示
                 comboResistanceTexts[i] = CreateUIText($"中断耐性表示_{i}", 
-                    new Vector2(screenWidth * 0.29f, yOffset - 10 * scale), 
+                    new Vector2(-screenWidth * 0.18f, yOffset - 10 * scale), 
                     new Vector2(35 * scale, 10 * scale), 
                     "", 
                     Mathf.RoundToInt(8 * scale));
