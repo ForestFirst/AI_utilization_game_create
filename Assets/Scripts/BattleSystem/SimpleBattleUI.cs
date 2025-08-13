@@ -920,6 +920,12 @@ namespace BattleSystem
             }
             
             Debug.Log("✅ テスト用敵の配置完了! (3体配置済み)");
+            
+            // UI表示を更新
+            UpdateEnemyDisplay();
+            UpdateBattleFieldDisplay();
+            
+            Debug.Log("UI表示更新完了");
         }
         
         /// <summary>
@@ -1049,6 +1055,117 @@ namespace BattleSystem
             enemiesField?.SetValue(enemyDB, defaultEnemies);
             
             Debug.Log($"Added {defaultEnemies.Length} default enemies to existing EnemyDatabase");
+        }
+        
+        /// <summary>
+        /// 敵情報表示を更新
+        /// </summary>
+        void UpdateEnemyDisplay()
+        {
+            Debug.Log("Updating enemy display...");
+            
+            if (battleManager?.BattleField == null)
+            {
+                Debug.LogWarning("BattleField is null, cannot update enemy display");
+                return;
+            }
+            
+            // BattleFieldから全敵を取得
+            var allEnemies = battleManager.BattleField.GetAllEnemies();
+            Debug.Log($"Found {allEnemies.Count} enemies on battlefield");
+            
+            // 敵情報タイトルを更新
+            if (enemyInfoTitle != null)
+            {
+                enemyInfoTitle.text = $"敵情報 ({allEnemies.Count}体)";
+                Debug.Log($"Updated enemy info title: {allEnemies.Count} enemies");
+            }
+            
+            // 敵HP表示を更新
+            for (int i = 0; i < enemyHpTexts.Length; i++)
+            {
+                if (enemyHpTexts[i] != null)
+                {
+                    if (i < allEnemies.Count && allEnemies[i] != null)
+                    {
+                        var enemy = allEnemies[i];
+                        enemyHpTexts[i].text = $"{enemy.enemyData.enemyName}\nHP: {enemy.currentHp}/{enemy.enemyData.baseHp}";
+                        enemyHpTexts[i].color = enemy.IsAlive() ? Color.white : Color.gray;
+                        Debug.Log($"Updated enemy {i}: {enemy.enemyData.enemyName} HP: {enemy.currentHp}");
+                    }
+                    else
+                    {
+                        enemyHpTexts[i].text = "";
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 戦場グリッド表示を更新
+        /// </summary>
+        void UpdateBattleFieldDisplay()
+        {
+            Debug.Log("Updating battlefield display...");
+            
+            if (battleManager?.BattleField == null)
+            {
+                Debug.LogWarning("BattleField is null, cannot update battlefield display");
+                return;
+            }
+            
+            // 全グリッド位置をクリア
+            for (int i = 0; i < enemyTexts.Length; i++)
+            {
+                if (enemyTexts[i] != null)
+                {
+                    enemyTexts[i].text = "";
+                }
+            }
+            
+            // BattleFieldから敵位置情報を取得して表示
+            for (int col = 0; col < 3; col++)
+            {
+                for (int row = 0; row < 2; row++)
+                {
+                    var position = new GridPosition(col, row);
+                    var enemy = battleManager.BattleField.GetEnemyAt(position);
+                    
+                    int enemyIndex = col * 2 + row;
+                    if (enemyIndex < enemyTexts.Length && enemyTexts[enemyIndex] != null)
+                    {
+                        if (enemy != null && enemy.IsAlive())
+                        {
+                            enemyTexts[enemyIndex].text = $"{enemy.enemyData.enemyName}\n{enemy.currentHp}HP";
+                            enemyTexts[enemyIndex].color = Color.red;
+                            Debug.Log($"Updated grid ({col},{row}): {enemy.enemyData.enemyName}");
+                        }
+                        else
+                        {
+                            enemyTexts[enemyIndex].text = "";
+                        }
+                    }
+                }
+            }
+            
+            Debug.Log("Battlefield display update completed");
+        }
+        
+        /// <summary>
+        /// 定期的に敵情報表示を更新するコルーチン
+        /// </summary>
+        System.Collections.IEnumerator UpdateEnemyDisplayPeriodically()
+        {
+            while (isBattleStarted)
+            {
+                yield return new WaitForSeconds(1.0f); // 1秒ごとに更新
+                
+                if (battleManager != null && battleManager.BattleField != null)
+                {
+                    UpdateEnemyDisplay();
+                    UpdateBattleFieldDisplay();
+                }
+            }
         }
         
         /// <summary>
@@ -1611,6 +1728,10 @@ namespace BattleSystem
                 // 戦闘をリセットして新しい戦闘を開始
                 battleManager.ResetBattle();
                 Debug.Log("✓ Battle system initialized");
+                
+                // 敵を配置してUI表示を更新
+                CreateTestEnemiesOnBattleField();
+                Debug.Log("✓ Enemies placed and UI updated");
             }
             
             // 🔧 手札生成のタイミングを短縮（即座表示のため）
@@ -1618,6 +1739,9 @@ namespace BattleSystem
             
             // 🔧 追加: 手札UIの再確認処理
             StartCoroutine(VerifyHandUIAfterDelay(1f));
+            
+            // リアルタイム敵情報更新を開始
+            StartCoroutine(UpdateEnemyDisplayPeriodically());
             
             Debug.Log("✓ Battle started successfully!");
         }
