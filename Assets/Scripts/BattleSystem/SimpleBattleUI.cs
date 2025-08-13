@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -2244,7 +2245,6 @@ namespace BattleSystem
                 case AttackAttribute.Thunder: return "雷";
                 case AttackAttribute.Wind: return "風";
                 case AttackAttribute.Earth: return "土";
-                case AttackAttribute.Water: return "水";
                 case AttackAttribute.Light: return "光";
                 case AttackAttribute.Dark: return "闇";
                 case AttackAttribute.None: return "無";
@@ -2263,10 +2263,10 @@ namespace BattleSystem
                 case WeaponType.Axe: return "斧";
                 case WeaponType.Spear: return "槍";
                 case WeaponType.Bow: return "弓";
-                case WeaponType.Staff: return "杖";
-                case WeaponType.Dagger: return "短";
-                case WeaponType.Mace: return "鎚";
-                case WeaponType.Whip: return "鞭";
+                case WeaponType.Gun: return "銃";
+                case WeaponType.Shield: return "盾";
+                case WeaponType.Magic: return "魔";
+                case WeaponType.Tool: return "道";
                 default: return "？";
             }
         }
