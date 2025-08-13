@@ -872,8 +872,21 @@ namespace BattleSystem
             
             if (enemyDB?.Enemies == null || enemyDB.Enemies.Length == 0)
             {
-                Debug.LogWarning("No enemy data available");
-                return;
+                Debug.LogWarning("No enemy data available, creating default enemies...");
+                
+                // EnemyDatabaseが存在しない場合は自動作成
+                if (enemyDB == null)
+                {
+                    enemyDB = CreateDefaultEnemyDatabase();
+                    SetEnemyDatabaseToBattleManager(enemyDB);
+                    Debug.Log("Created default EnemyDatabase");
+                }
+                else if (enemyDB.Enemies == null || enemyDB.Enemies.Length == 0)
+                {
+                    // EnemyDatabaseは存在するが敵データがない場合
+                    Debug.LogWarning("EnemyDatabase exists but has no enemy data, adding default enemies");
+                    AddDefaultEnemiesToDatabase(enemyDB);
+                }
             }
             
             // 列に敵を配置（テスト用パターン - 最低3体配置）
@@ -907,6 +920,135 @@ namespace BattleSystem
             }
             
             Debug.Log("✅ テスト用敵の配置完了! (3体配置済み)");
+        }
+        
+        /// <summary>
+        /// デフォルトのEnemyDatabaseを作成
+        /// </summary>
+        EnemyDatabase CreateDefaultEnemyDatabase()
+        {
+            EnemyDatabase enemyDB = ScriptableObject.CreateInstance<EnemyDatabase>();
+            
+            // デフォルト敵データを作成
+            var defaultEnemies = new List<EnemyData>
+            {
+                // 機械兵士
+                new EnemyData
+                {
+                    enemyName = "機械兵士",
+                    category = EnemyCategory.Attacker,
+                    enemyId = 1,
+                    baseHp = 3000,
+                    attackPower = 1200,
+                    defense = 100,
+                    actionPriority = 2,
+                    primaryAction = EnemyActionType.Attack,
+                    secondaryAction = EnemyActionType.NoAction,
+                    specialAbility = "突撃攻撃",
+                    abilityValue = 150,
+                    canBeSummoned = true,
+                    summonWeight = 100
+                },
+                
+                // 機械警備
+                new EnemyData
+                {
+                    enemyName = "機械警備",
+                    category = EnemyCategory.Vanguard,
+                    enemyId = 2,
+                    baseHp = 4500,
+                    attackPower = 800,
+                    defense = 300,
+                    actionPriority = 1,
+                    primaryAction = EnemyActionType.DefendAlly,
+                    secondaryAction = EnemyActionType.Attack,
+                    specialAbility = "防御強化",
+                    abilityValue = 200,
+                    canBeSummoned = true,
+                    summonWeight = 80
+                },
+                
+                // 機械砲撃手
+                new EnemyData
+                {
+                    enemyName = "機械砲撃手",
+                    category = EnemyCategory.Attacker,
+                    enemyId = 3,
+                    baseHp = 2500,
+                    attackPower = 1800,
+                    defense = 50,
+                    actionPriority = 3,
+                    primaryAction = EnemyActionType.Attack,
+                    secondaryAction = EnemyActionType.NoAction,
+                    specialAbility = "遠距離砲撃",
+                    abilityValue = 300,
+                    canBeSummoned = true,
+                    summonWeight = 90
+                }
+            };
+            
+            // リフレクションでenemiesフィールドにアクセス
+            var enemiesField = typeof(EnemyDatabase).GetField("enemies", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            enemiesField?.SetValue(enemyDB, defaultEnemies.ToArray());
+            
+            Debug.Log($"Created default EnemyDatabase with {defaultEnemies.Count} enemies");
+            return enemyDB;
+        }
+        
+        /// <summary>
+        /// BattleManagerにEnemyDatabaseを設定
+        /// </summary>
+        void SetEnemyDatabaseToBattleManager(EnemyDatabase enemyDB)
+        {
+            var enemyDBField = typeof(BattleManager).GetField("enemyDatabase", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            enemyDBField?.SetValue(battleManager, enemyDB);
+            Debug.Log("EnemyDatabase set to BattleManager");
+        }
+        
+        /// <summary>
+        /// 既存のEnemyDatabaseにデフォルト敵を追加
+        /// </summary>
+        void AddDefaultEnemiesToDatabase(EnemyDatabase enemyDB)
+        {
+            var defaultEnemies = new EnemyData[]
+            {
+                new EnemyData
+                {
+                    enemyName = "機械兵士",
+                    category = EnemyCategory.Attacker,
+                    enemyId = 1,
+                    baseHp = 3000,
+                    attackPower = 1200,
+                    defense = 100
+                },
+                new EnemyData
+                {
+                    enemyName = "機械警備",
+                    category = EnemyCategory.Vanguard,
+                    enemyId = 2,
+                    baseHp = 4500,
+                    attackPower = 800,
+                    defense = 300
+                },
+                new EnemyData
+                {
+                    enemyName = "機械砲撃手",
+                    category = EnemyCategory.Attacker,
+                    enemyId = 3,
+                    baseHp = 2500,
+                    attackPower = 1800,
+                    defense = 50
+                }
+            };
+            
+            // リフレクションで敵データを設定
+            var enemiesField = typeof(EnemyDatabase).GetField("enemies", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            enemiesField?.SetValue(enemyDB, defaultEnemies);
+            
+            Debug.Log($"Added {defaultEnemies.Length} default enemies to existing EnemyDatabase");
         }
         
         /// <summary>
