@@ -232,62 +232,43 @@ namespace BattleSystem
                     }
                 }
                 
-                // ステップ表示更新
+                // 手数と残り手数表示（改良版）
                 if (comboStepTexts[displayIndex] != null)
                 {
-                    comboStepTexts[displayIndex].text = $"{combo.currentStep}/{combo.comboData.requiredWeaponCount}";
+                    int totalSteps = combo.comboData.requiredWeaponCount;
+                    int currentSteps = combo.currentStep;
+                    int remainingSteps = totalSteps - currentSteps;
+                    comboStepTexts[displayIndex].text = $"{currentSteps}/{totalSteps} 残{remainingSteps}";
+                    
+                    // 残り手数に応じて色変更
+                    if (remainingSteps <= 1)
+                    {
+                        comboStepTexts[displayIndex].color = Color.red; // 完成間近
+                    }
+                    else if (remainingSteps <= 2)
+                    {
+                        comboStepTexts[displayIndex].color = Color.yellow; // もうすぐ完成
+                    }
+                    else
+                    {
+                        comboStepTexts[displayIndex].color = Color.white; // 通常
+                    }
                 }
                 
-                // タイマー表示更新（残りターン）
+                // 次の手表示（改良版）
                 if (comboTimerTexts[displayIndex] != null)
                 {
-                    int maxTurnInterval = combo.comboData.condition.maxTurnInterval;
-                    if (maxTurnInterval > 0 && battleManager != null)
-                    {
-                        int turnsSinceStart = battleManager.CurrentTurn - combo.startTurn;
-                        int remainingTurns = maxTurnInterval - turnsSinceStart;
-                        comboTimerTexts[displayIndex].text = $"T:{remainingTurns}";
-                        
-                        // 残りターンに応じて色変更
-                        if (remainingTurns <= 1)
-                        {
-                            comboTimerTexts[displayIndex].color = Color.red;
-                        }
-                        else if (remainingTurns <= 2)
-                        {
-                            comboTimerTexts[displayIndex].color = Color.yellow;
-                        }
-                        else
-                        {
-                            comboTimerTexts[displayIndex].color = Color.orange;
-                        }
-                    }
-                    else
-                    {
-                        comboTimerTexts[displayIndex].text = "無制限";
-                        comboTimerTexts[displayIndex].color = Color.orange;
-                    }
+                    string nextMoveText = GetNextRequiredMove(combo);
+                    comboTimerTexts[displayIndex].text = $"次:{nextMoveText}";
+                    comboTimerTexts[displayIndex].color = Color.cyan;
                 }
                 
-                // 中断耐性表示更新
+                // 必要な残り手順表示（改良版）
                 if (comboResistanceTexts[displayIndex] != null)
                 {
-                    float resistance = combo.comboData.interruptResistance;
-                    comboResistanceTexts[displayIndex].text = $"R:{resistance:P0}";
-                    
-                    // 中断耐性に応じて色変更
-                    if (resistance >= 0.8f)
-                    {
-                        comboResistanceTexts[displayIndex].color = Color.green; // 高耐性
-                    }
-                    else if (resistance >= 0.5f)
-                    {
-                        comboResistanceTexts[displayIndex].color = Color.yellow; // 中耐性
-                    }
-                    else
-                    {
-                        comboResistanceTexts[displayIndex].color = Color.red; // 低耐性
-                    }
+                    string remainingMovesText = GetRemainingRequiredMoves(combo);
+                    comboResistanceTexts[displayIndex].text = remainingMovesText;
+                    comboResistanceTexts[displayIndex].color = Color.green;
                 }
                 
                 displayIndex++;
@@ -2172,6 +2153,121 @@ namespace BattleSystem
             if (pendingDamageText != null)
             {
                 pendingDamageText.text = "";
+            }
+        }
+        
+        /// <summary>
+        /// コンボの次に必要な手を取得
+        /// </summary>
+        string GetNextRequiredMove(ComboProgress combo)
+        {
+            if (combo?.comboData?.condition == null) return "？";
+            
+            var condition = combo.comboData.condition;
+            
+            // 属性コンボの場合
+            if (condition.comboType == ComboType.AttributeCombo && condition.requiredAttackAttributes != null)
+            {
+                // 使用済み属性を除外して次の属性を表示
+                var usedAttributes = combo.usedAttackAttributes ?? new List<AttackAttribute>();
+                var remainingAttributes = condition.requiredAttackAttributes
+                    .Where(attr => !usedAttributes.Contains(attr))
+                    .ToArray();
+                
+                if (remainingAttributes.Length > 0)
+                {
+                    return GetAttributeShortName(remainingAttributes[0]);
+                }
+            }
+            
+            // 武器コンボの場合
+            if (condition.comboType == ComboType.WeaponCombo && condition.requiredWeaponTypes != null)
+            {
+                var usedWeaponTypes = combo.usedWeaponTypes ?? new List<WeaponType>();
+                var remainingWeaponTypes = condition.requiredWeaponTypes
+                    .Where(type => !usedWeaponTypes.Contains(type))
+                    .ToArray();
+                
+                if (remainingWeaponTypes.Length > 0)
+                {
+                    return GetWeaponTypeShortName(remainingWeaponTypes[0]);
+                }
+            }
+            
+            return "任意";
+        }
+        
+        /// <summary>
+        /// コンボに必要な残りの手順を全て取得
+        /// </summary>
+        string GetRemainingRequiredMoves(ComboProgress combo)
+        {
+            if (combo?.comboData?.condition == null) return "";
+            
+            var condition = combo.comboData.condition;
+            var result = "";
+            
+            // 属性コンボの場合
+            if (condition.comboType == ComboType.AttributeCombo && condition.requiredAttackAttributes != null)
+            {
+                var usedAttributes = combo.usedAttackAttributes ?? new List<AttackAttribute>();
+                var remainingAttributes = condition.requiredAttackAttributes
+                    .Where(attr => !usedAttributes.Contains(attr))
+                    .ToArray();
+                
+                result = string.Join("", remainingAttributes.Select(GetAttributeShortName));
+            }
+            
+            // 武器コンボの場合
+            if (condition.comboType == ComboType.WeaponCombo && condition.requiredWeaponTypes != null)
+            {
+                var usedWeaponTypes = combo.usedWeaponTypes ?? new List<WeaponType>();
+                var remainingWeaponTypes = condition.requiredWeaponTypes
+                    .Where(type => !usedWeaponTypes.Contains(type))
+                    .ToArray();
+                
+                result = string.Join("", remainingWeaponTypes.Select(GetWeaponTypeShortName));
+            }
+            
+            return result.Length > 0 ? $"要:{result}" : "完成可";
+        }
+        
+        /// <summary>
+        /// 属性を一文字で表現
+        /// </summary>
+        string GetAttributeShortName(AttackAttribute attribute)
+        {
+            switch (attribute)
+            {
+                case AttackAttribute.Fire: return "炎";
+                case AttackAttribute.Ice: return "氷";
+                case AttackAttribute.Thunder: return "雷";
+                case AttackAttribute.Wind: return "風";
+                case AttackAttribute.Earth: return "土";
+                case AttackAttribute.Water: return "水";
+                case AttackAttribute.Light: return "光";
+                case AttackAttribute.Dark: return "闇";
+                case AttackAttribute.None: return "無";
+                default: return "？";
+            }
+        }
+        
+        /// <summary>
+        /// 武器タイプを一文字で表現
+        /// </summary>
+        string GetWeaponTypeShortName(WeaponType weaponType)
+        {
+            switch (weaponType)
+            {
+                case WeaponType.Sword: return "剣";
+                case WeaponType.Axe: return "斧";
+                case WeaponType.Spear: return "槍";
+                case WeaponType.Bow: return "弓";
+                case WeaponType.Staff: return "杖";
+                case WeaponType.Dagger: return "短";
+                case WeaponType.Mace: return "鎚";
+                case WeaponType.Whip: return "鞭";
+                default: return "？";
             }
         }
         
