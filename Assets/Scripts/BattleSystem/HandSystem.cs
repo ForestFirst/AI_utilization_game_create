@@ -78,6 +78,7 @@ namespace BattleSystem
         private BattleManager battleManager;
         private BattleField battleField;
         private WeaponSelectionSystem weaponSelectionSystem;
+        private ComboSystem comboSystem;
 
         // 手札状態
         private HandState currentHandState;
@@ -159,6 +160,7 @@ namespace BattleSystem
             // システム参照の取得
             battleManager = GetComponent<BattleManager>();
             weaponSelectionSystem = GetComponent<WeaponSelectionSystem>();
+            comboSystem = GetComponent<ComboSystem>();
             
             if (battleManager != null)
                 battleField = battleManager.BattleField;
@@ -1113,6 +1115,9 @@ namespace BattleSystem
                 // 履歴に追加
                 pendingDamageHistory.Add(pendingDamage);
                 
+                // ComboSystemに武器使用をチェックさせる
+                ProcessComboForWeaponUse(pendingDamage);
+                
                 // イベント発火
                 OnPendingDamageApplied?.Invoke(pendingDamage);
                 
@@ -1140,6 +1145,60 @@ namespace BattleSystem
                 currentPendingDamage = null;
                 OnPendingDamageCleared?.Invoke();
                 LogDebug("予告ダメージをクリアしました");
+            }
+        }
+        
+        /// <summary>
+        /// 武器使用時のComboSystem連携処理
+        /// </summary>
+        private void ProcessComboForWeaponUse(PendingDamageInfo damageInfo)
+        {
+            if (comboSystem == null || damageInfo?.usedCard?.weaponData == null)
+            {
+                LogDebug("ComboSystem not available or invalid damage info for combo processing");
+                return;
+            }
+            
+            try
+            {
+                // 武器のインデックスを取得
+                int weaponIndex = FindWeaponIndex(damageInfo.usedCard.weaponData);
+                if (weaponIndex == -1)
+                {
+                    LogDebug("Weapon not found in player equipment for combo processing");
+                    return;
+                }
+                
+                // ターゲット位置を決定（最初のターゲットの位置を使用）
+                GridPosition targetPosition = new GridPosition(0, 0); // デフォルト
+                if (damageInfo.targetEnemies.Count > 0)
+                {
+                    var firstEnemy = damageInfo.targetEnemies[0];
+                    targetPosition = new GridPosition(firstEnemy.gridX, firstEnemy.gridY);
+                }
+                
+                // ComboSystemに武器使用を通知してコンボチェック実行
+                var comboResult = comboSystem.ProcessWeaponUse(weaponIndex, targetPosition);
+                
+                if (comboResult.wasExecuted)
+                {
+                    LogDebug($"Combo executed: {comboResult.executedCombo.comboName}");
+                    
+                    // コンボ効果があれば追加行動などを処理
+                    if (comboResult.additionalActionsGranted > 0)
+                    {
+                        AddActionBonus(comboResult.additionalActionsGranted);
+                        LogDebug($"Added {comboResult.additionalActionsGranted} bonus actions from combo");
+                    }
+                }
+                else
+                {
+                    LogDebug("No combo was triggered from weapon use");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error processing combo for weapon use: {ex.Message}");
             }
         }
         

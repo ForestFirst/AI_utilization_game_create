@@ -716,18 +716,31 @@ namespace BattleSystem
             comboSystem = FindObjectOfType<ComboSystem>();
             if (comboSystem == null)
             {
-                Debug.LogWarning("ComboSystem not found! コンボUIが動作しません。");
-                return;
+                Debug.Log("ComboSystem not found, creating one on BattleManager...");
+                if (battleManager != null)
+                {
+                    comboSystem = battleManager.gameObject.AddComponent<ComboSystem>();
+                    Debug.Log("ComboSystem created and attached to BattleManager");
+                }
+                else
+                {
+                    Debug.LogWarning("Cannot create ComboSystem: BattleManager is null");
+                    return;
+                }
+            }
+            else
+            {
+                Debug.Log("ComboSystem found");
             }
             
-            // ComboSystemのイベントを購諭
+            // ComboSystemのイベントを購読
             comboSystem.OnComboStarted += OnComboStarted;
             comboSystem.OnComboProgressUpdated += OnComboProgressUpdated;
             comboSystem.OnComboCompleted += OnComboCompleted;
             comboSystem.OnComboFailed += OnComboFailed;
             comboSystem.OnComboInterrupted += OnComboInterrupted;
             
-            Debug.Log("ComboSystem found and events subscribed for combo UI display");
+            Debug.Log("ComboSystem events subscribed for combo UI display");
         }
         
         void CreateTestDatabasesForBattleManager()
@@ -809,6 +822,9 @@ namespace BattleSystem
             enemyDBField?.SetValue(battleManager, enemyDB);
             
             Debug.Log("Test databases created and assigned to BattleManager!");
+            
+            // ComboSystemにテスト用ComboDatabaseを設定
+            CreateTestComboDatabase();
             
             // 【重要】プレイヤーに武器を実際に装備させる
             EquipWeaponsToPlayer(testWeapons);
@@ -2157,6 +2173,91 @@ namespace BattleSystem
             {
                 pendingDamageText.text = "";
             }
+        }
+        
+        /// <summary>
+        /// テスト用ComboDatabase作成
+        /// </summary>
+        void CreateTestComboDatabase()
+        {
+            if (comboSystem == null)
+            {
+                Debug.LogWarning("ComboSystem is null, cannot create combo database");
+                return;
+            }
+            
+            Debug.Log("Creating test combo database...");
+            
+            // テスト用コンボデータベースを作成
+            ComboDatabase comboDB = ScriptableObject.CreateInstance<ComboDatabase>();
+            
+            // テスト用コンボデータを作成
+            ComboData[] testCombos = new ComboData[]
+            {
+                new ComboData
+                {
+                    comboName = "炎氷の共鳴",
+                    condition = new ComboCondition
+                    {
+                        comboType = ComboType.AttributeCombo,
+                        requiredAttackAttributes = new AttackAttribute[] { AttackAttribute.Fire, AttackAttribute.Ice },
+                        requiredWeaponCount = 2,
+                        maxTurnInterval = 3,
+                        successRate = 0.9f
+                    },
+                    effects = new ComboEffect[]
+                    {
+                        new ComboEffect
+                        {
+                            effectType = ComboEffectType.DamageMultiplier,
+                            damageMultiplier = 1.5f,
+                            effectDescription = "炎と氷の攻撃が共鳴してダメージ1.5倍"
+                        }
+                    },
+                    requiredWeaponCount = 2,
+                    comboDescription = "炎と氷属性の武器を組み合わせて威力強化",
+                    canInterrupt = false,
+                    priority = 10
+                },
+                new ComboData
+                {
+                    comboName = "雷光連撃",
+                    condition = new ComboCondition
+                    {
+                        comboType = ComboType.WeaponCombo,
+                        requiredWeaponTypes = new WeaponType[] { WeaponType.Spear, WeaponType.Sword },
+                        requiredWeaponCount = 2,
+                        maxTurnInterval = 2,
+                        successRate = 0.8f
+                    },
+                    effects = new ComboEffect[]
+                    {
+                        new ComboEffect
+                        {
+                            effectType = ComboEffectType.AdditionalAction,
+                            additionalActions = 1,
+                            effectDescription = "追加行動1回獲得"
+                        }
+                    },
+                    requiredWeaponCount = 2,
+                    comboDescription = "槍と剣の連携で追加攻撃チャンス",
+                    canInterrupt = true,
+                    interruptResistance = 0.3f,
+                    priority = 8
+                }
+            };
+            
+            // プライベートフィールドにリフレクションで設定
+            var combosField = typeof(ComboDatabase).GetField("availableCombos", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            combosField?.SetValue(comboDB, testCombos);
+            
+            // ComboSystemにデータベースを設定
+            var comboDBField = typeof(ComboSystem).GetField("comboDatabase", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            comboDBField?.SetValue(comboSystem, comboDB);
+            
+            Debug.Log("Test combo database created and assigned to ComboSystem!");
         }
         
         // === UIクリック問題修正用デバッグ機能 ===
