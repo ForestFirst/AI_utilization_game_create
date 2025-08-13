@@ -1416,34 +1416,6 @@ namespace BattleSystem
             UpdateComboProgressDisplay();
         }
         
-        /// <summary>
-        /// 戦場の敵表示を更新（手札システム対応版）
-        /// </summary>
-        void UpdateBattleFieldDisplay()
-        {
-            if (battleManager?.BattleField == null || enemyTexts == null) return;
-            
-            // 全ての敵表示をクリア
-            for (int i = 0; i < enemyTexts.Length; i++)
-            {
-                if (enemyTexts[i] != null)
-                    enemyTexts[i].text = "";
-            }
-            
-            // 現在の敵を表示
-            var enemies = battleManager.BattleField.GetAllEnemies();
-            foreach (var enemy in enemies)
-            {
-                if (enemy.gridX >= 0 && enemy.gridX < 3 && enemy.gridY >= 0 && enemy.gridY < 2)
-                {
-                    int idx = enemy.gridX * 2 + enemy.gridY;
-                    if (idx < enemyTexts.Length && enemyTexts[idx] != null)
-                    {
-                        enemyTexts[idx].text = $"{enemy.enemyData.enemyName}\nHP:{enemy.currentHp}";
-                    }
-                }
-            }
-        }
         
         void OnNextTurnClicked()
         {
