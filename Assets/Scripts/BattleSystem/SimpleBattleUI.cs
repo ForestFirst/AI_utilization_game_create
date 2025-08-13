@@ -2201,7 +2201,6 @@ namespace BattleSystem
                     {
                         comboType = ComboType.AttributeCombo,
                         requiredAttackAttributes = new AttackAttribute[] { AttackAttribute.Fire, AttackAttribute.Ice },
-                        requiredWeaponCount = 2,
                         maxTurnInterval = 3,
                         successRate = 0.9f
                     },
@@ -2226,7 +2225,6 @@ namespace BattleSystem
                     {
                         comboType = ComboType.WeaponCombo,
                         requiredWeaponTypes = new WeaponType[] { WeaponType.Spear, WeaponType.Sword },
-                        requiredWeaponCount = 2,
                         maxTurnInterval = 2,
                         successRate = 0.8f
                     },
