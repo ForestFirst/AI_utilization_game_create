@@ -116,11 +116,13 @@ namespace BattleSystem
             optionsContainer.transform.SetParent(parent.transform, false);
             
             GridLayoutGroup gridLayout = optionsContainer.AddComponent<GridLayoutGroup>();
-            gridLayout.cellSize = new Vector2(300, 100);
+            gridLayout.cellSize = new Vector2(350, 120); // ボタンサイズを拡大
             gridLayout.spacing = new Vector2(20, 20);
             gridLayout.startCorner = GridLayoutGroup.Corner.UpperLeft;
             gridLayout.startAxis = GridLayoutGroup.Axis.Horizontal;
             gridLayout.childAlignment = TextAnchor.MiddleCenter;
+            gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            gridLayout.constraintCount = 2; // 2列で表示
             
             RectTransform containerRect = optionsContainer.GetComponent<RectTransform>();
             containerRect.anchorMin = new Vector2(0.1f, 0.3f);
@@ -155,17 +157,26 @@ namespace BattleSystem
         /// </summary>
         private static void CreateButtonTextElements(GameObject button)
         {
-            // メインテキスト
-            CreateTextElement(button, "MainText", "アタッチメント名", Color.white, 16, 
-                new Vector2(0f, 0.6f), new Vector2(1f, 1f));
+            // メインテキスト（アタッチメント名）- より大きく表示
+            TextMeshProUGUI mainText = CreateTextElement(button, "MainText", "アタッチメント名", Color.white, 18, 
+                new Vector2(0.05f, 0.65f), new Vector2(0.95f, 0.95f));
+            mainText.fontStyle = TMPro.FontStyles.Bold;
+            mainText.alignment = TextAlignmentOptions.Center;
+            mainText.verticalAlignment = TMPro.VerticalAlignmentOptions.Middle;
             
-            // サブテキスト
-            CreateTextElement(button, "SubText", "説明", Color.gray, 12, 
-                new Vector2(0f, 0.3f), new Vector2(1f, 0.6f));
+            // サブテキスト（説明）- 適度なサイズで表示
+            TextMeshProUGUI subText = CreateTextElement(button, "SubText", "説明", Color.gray, 14, 
+                new Vector2(0.05f, 0.35f), new Vector2(0.95f, 0.65f));
+            subText.alignment = TextAlignmentOptions.Center;
+            subText.verticalAlignment = TMPro.VerticalAlignmentOptions.Middle;
+            subText.enableWordWrapping = true;
             
-            // レアリティテキスト
-            CreateTextElement(button, "RarityText", "[Common]", Color.white, 10, 
-                new Vector2(0f, 0f), new Vector2(1f, 0.3f));
+            // レアリティテキスト - 下部に表示
+            TextMeshProUGUI rarityText = CreateTextElement(button, "RarityText", "[Common]", Color.white, 12, 
+                new Vector2(0.05f, 0.05f), new Vector2(0.95f, 0.35f));
+            rarityText.fontStyle = TMPro.FontStyles.Italic;
+            rarityText.alignment = TextAlignmentOptions.Center;
+            rarityText.verticalAlignment = TMPro.VerticalAlignmentOptions.Middle;
         }
 
         /// <summary>
@@ -183,11 +194,29 @@ namespace BattleSystem
             textComponent.fontSize = fontSize;
             textComponent.alignment = TextAlignmentOptions.Center;
             
+            // テキスト表示の問題を修正する設定
+            textComponent.enableWordWrapping = true;
+            textComponent.overflowMode = TMPro.TextOverflowModes.Truncate;
+            textComponent.enableAutoSizing = false;
+            textComponent.autoSizeTextContainer = false;
+            
+            // より詳細なテキスト設定
+            textComponent.textWrappingMode = TMPro.TextWrappingModes.Normal;
+            textComponent.parseCtrlCharacters = false;
+            textComponent.isOverlay = false;
+            textComponent.richText = true;
+            
             RectTransform textRect = textObject.GetComponent<RectTransform>();
             textRect.anchorMin = anchorMin;
             textRect.anchorMax = anchorMax;
             textRect.offsetMin = Vector2.zero;
             textRect.offsetMax = Vector2.zero;
+            
+            // テキストコンテナのサイズを明示的に設定
+            textComponent.rectTransform.sizeDelta = new Vector2(
+                (anchorMax.x - anchorMin.x) * 350f, // ボタン幅に合わせる
+                (anchorMax.y - anchorMin.y) * 120f  // ボタン高さに合わせる
+            );
 
             return textComponent;
         }
