@@ -737,6 +737,7 @@ namespace BattleSystem
             
             // テスト用武器データベースを作成
             WeaponDatabase weaponDB = ScriptableObject.CreateInstance<WeaponDatabase>();
+            weaponDB.hideFlags = HideFlags.DontSaveInEditor;
             WeaponData[] testWeapons = new WeaponData[4]
             {
                 new WeaponData("炎の剣", AttackAttribute.Fire, WeaponType.Sword, 120, AttackRange.SingleFront)
@@ -772,6 +773,7 @@ namespace BattleSystem
             
             // テスト用敵データベースを作成
             EnemyDatabase enemyDB = ScriptableObject.CreateInstance<EnemyDatabase>();
+            enemyDB.hideFlags = HideFlags.DontSaveInEditor;
             EnemyData[] testEnemies = new EnemyData[2]
             {
                 new EnemyData
@@ -938,6 +940,7 @@ namespace BattleSystem
         EnemyDatabase CreateDefaultEnemyDatabase()
         {
             EnemyDatabase enemyDB = ScriptableObject.CreateInstance<EnemyDatabase>();
+            enemyDB.hideFlags = HideFlags.DontSaveInEditor;
             
             // デフォルト敵データを作成
             var defaultEnemies = new List<EnemyData>
@@ -2346,6 +2349,7 @@ namespace BattleSystem
             
             // テスト用コンボデータベースを作成
             ComboDatabase comboDB = ScriptableObject.CreateInstance<ComboDatabase>();
+            comboDB.hideFlags = HideFlags.DontSaveInEditor;
             
             // テスト用コンボデータを作成
             ComboData[] testCombos = new ComboData[]

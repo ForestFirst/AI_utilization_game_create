@@ -75,6 +75,7 @@ namespace BattleSystem
         private void CreateTestWeaponDatabase()
         {
             testWeaponDatabase = ScriptableObject.CreateInstance<WeaponDatabase>();
+            testWeaponDatabase.hideFlags = HideFlags.DontSaveInEditor;
             
             WeaponData[] testWeapons = new WeaponData[]
             {
@@ -115,6 +116,7 @@ namespace BattleSystem
         private void CreateTestEnemyDatabase()
         {
             testEnemyDatabase = ScriptableObject.CreateInstance<EnemyDatabase>();
+            testEnemyDatabase.hideFlags = HideFlags.DontSaveInEditor;
             
             EnemyData[] testEnemies = new EnemyData[]
             {
