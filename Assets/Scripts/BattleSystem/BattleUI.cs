@@ -532,7 +532,7 @@ namespace BattleSystem
             instructionRect.offsetMax = Vector2.zero;
 
             // AttachmentSelectionUIのフィールドを設定
-            SetAttachmentSelectionUIFields(selectionUI, selectionPanel, optionsContainer, optionButtonPrefab, skipBtn, titleTMP, instructionTMP);
+            SetAttachmentSelectionUIFields(selectionUI, selectionPanel, optionsContainer.transform, optionButtonPrefab, skipBtn, titleTMP, instructionTMP);
             
             Debug.Log("Basic AttachmentSelectionUI structure created");
         }
