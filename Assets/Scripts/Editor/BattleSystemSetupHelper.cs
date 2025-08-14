@@ -38,9 +38,13 @@ public class BattleSystemSetupHelper : EditorWindow
         // 1. 基本コンポーネントセットアップ
         ComponentAttachmentGuide.SetupBattleSystemComponents();
         
-        // 2. データベース作成
-        bool hasAttachmentDB = AssetDatabase.FindAssets("t:AttachmentDatabase").Any();
-        bool hasCombooDB = AssetDatabase.FindAssets("t:ComboDatabase").Any();
+        // 2. データベース作成（複数の手法で検索）
+        bool hasAttachmentDB = AssetDatabase.FindAssets("t:AttachmentDatabase").Any() ||
+                               AssetDatabase.FindAssets("MainAttachmentDatabase").Any() ||
+                               System.IO.File.Exists("Assets/Data/MainAttachmentDatabase.asset");
+        bool hasCombooDB = AssetDatabase.FindAssets("t:ComboDatabase").Any() ||
+                           AssetDatabase.FindAssets("MainComboDatabase").Any() ||
+                           System.IO.File.Exists("Assets/Data/MainComboDatabase.asset");
         
         if (!hasAttachmentDB)
         {
@@ -54,9 +58,13 @@ public class BattleSystemSetupHelper : EditorWindow
             ComboDatabaseCreator.CreateComboDatabase();
         }
         
-        // 作成後再確認
-        hasAttachmentDB = AssetDatabase.FindAssets("t:AttachmentDatabase").Any();
-        hasCombooDB = AssetDatabase.FindAssets("t:ComboDatabase").Any();
+        // 作成後再確認（複数の手法で検索）
+        hasAttachmentDB = AssetDatabase.FindAssets("t:AttachmentDatabase").Any() ||
+                          AssetDatabase.FindAssets("MainAttachmentDatabase").Any() ||
+                          System.IO.File.Exists("Assets/Data/MainAttachmentDatabase.asset");
+        hasCombooDB = AssetDatabase.FindAssets("t:ComboDatabase").Any() ||
+                      AssetDatabase.FindAssets("MainComboDatabase").Any() ||
+                      System.IO.File.Exists("Assets/Data/MainComboDatabase.asset");
         
         Debug.Log($"📊 データベース作成結果:");
         Debug.Log($"   📦 AttachmentDatabase: {(hasAttachmentDB ? "✅作成済み" : "❌未作成")}");
@@ -82,9 +90,26 @@ public class BattleSystemSetupHelper : EditorWindow
         Debug.Log($"   ⚡ EventSystem: {GetStatusIcon(hasEventSystem)}");
         Debug.Log("");
         
-        // データベース確認
-        bool hasAttachmentDB = AssetDatabase.FindAssets("t:AttachmentDatabase").Length > 0;
-        bool hasCombooDB = AssetDatabase.FindAssets("t:ComboDatabase").Length > 0;
+        // データベース確認（複数の手法で検索）
+        var attachmentTypeAssets = AssetDatabase.FindAssets("t:AttachmentDatabase");
+        var attachmentNameAssets = AssetDatabase.FindAssets("MainAttachmentDatabase");
+        var comboTypeAssets = AssetDatabase.FindAssets("t:ComboDatabase");
+        var comboNameAssets = AssetDatabase.FindAssets("MainComboDatabase");
+        
+        // ファイルシステムレベルでの直接確認
+        bool attachmentFileExists = System.IO.File.Exists("Assets/Data/MainAttachmentDatabase.asset");
+        bool comboFileExists = System.IO.File.Exists("Assets/Data/MainComboDatabase.asset");
+        
+        Debug.Log($"🔍 【デバッグ】検索結果詳細:");
+        Debug.Log($"   AttachmentDatabase (型検索): {attachmentTypeAssets.Length}個");
+        Debug.Log($"   MainAttachmentDatabase (名前検索): {attachmentNameAssets.Length}個");
+        Debug.Log($"   MainAttachmentDatabase (ファイル確認): {attachmentFileExists}");
+        Debug.Log($"   ComboDatabase (型検索): {comboTypeAssets.Length}個");
+        Debug.Log($"   MainComboDatabase (名前検索): {comboNameAssets.Length}個");
+        Debug.Log($"   MainComboDatabase (ファイル確認): {comboFileExists}");
+        
+        bool hasAttachmentDB = attachmentTypeAssets.Length > 0 || attachmentNameAssets.Length > 0 || attachmentFileExists;
+        bool hasCombooDB = comboTypeAssets.Length > 0 || comboNameAssets.Length > 0 || comboFileExists;
         
         Debug.Log("💾 【データベース存在チェック】");
         Debug.Log($"   🔧 AttachmentDatabase: {GetStatusIcon(hasAttachmentDB)}");

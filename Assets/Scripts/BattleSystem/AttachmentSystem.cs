@@ -149,6 +149,7 @@ namespace BattleSystem
         public event Action<AttachmentData> OnAttachmentSelected;
         public event Action<AttachmentData, int> OnAttachmentEnhanced;
         public event Action<AttachmentData> OnAttachmentRemoved;
+        public event Action<List<AttachmentData>> OnPlayModeAttachmentsDisplayRequested;
 
         // プロパティ
         public List<AttachmentSlot> AttachmentSlots => attachmentSlots;
@@ -174,6 +175,9 @@ namespace BattleSystem
                 // AttachmentDatabaseが設定されていない場合、動的に作成
                 CreateDefaultAttachmentDatabase();
             }
+            
+            // PlayMode開始時にアタッチメント情報を表示
+            DisplayEquippedAttachmentsOnPlayModeStart();
         }
 
         // デフォルトのAttachmentDatabaseを動的作成
@@ -472,6 +476,99 @@ namespace BattleSystem
             {
                 Debug.Log($"- {option.attachmentName} ({option.rarity})");
             }
+        }
+        
+        /// <summary>
+        /// PlayMode開始時に装備中のアタッチメントを表示
+        /// </summary>
+        private void DisplayEquippedAttachmentsOnPlayModeStart()
+        {
+            var equippedAttachments = GetAttachedAttachments();
+            
+            // コンソールに装備情報を表示
+            if (equippedAttachments.Count > 0)
+            {
+                Debug.Log("=== PlayMode開始 - 装備中アタッチメント ===");
+                foreach (var attachment in equippedAttachments)
+                {
+                    string comboInfo = !string.IsNullOrEmpty(attachment.associatedComboName) 
+                        ? $" (コンボ: {attachment.associatedComboName})" 
+                        : " (コンボ: 未設定)";
+                    Debug.Log($"🔗 {attachment.attachmentName} [{GetRarityIcon(attachment.rarity)} {attachment.rarity}]{comboInfo}");
+                    
+                    // 効果詳細を表示
+                    foreach (var effect in attachment.effects)
+                    {
+                        string effectDescription = GetEffectDescription(effect);
+                        Debug.Log($"   └─ {effectDescription}");
+                    }
+                }
+                Debug.Log("=========================================");
+            }
+            else
+            {
+                Debug.Log("=== PlayMode開始 - アタッチメント装備なし ===");
+            }
+            
+            // UIイベントを発行してUI側でも表示
+            OnPlayModeAttachmentsDisplayRequested?.Invoke(equippedAttachments);
+        }
+        
+        /// <summary>
+        /// レアリティアイコンを取得
+        /// </summary>
+        private string GetRarityIcon(AttachmentRarity rarity)
+        {
+            return rarity switch
+            {
+                AttachmentRarity.Common => "⚪",
+                AttachmentRarity.Rare => "🔵",
+                AttachmentRarity.Epic => "🟣",
+                AttachmentRarity.Legendary => "🟡",
+                _ => "❔"
+            };
+        }
+        
+        /// <summary>
+        /// エフェクト説明を生成
+        /// </summary>
+        private string GetEffectDescription(AttachmentEffect effect)
+        {
+            string baseDesc = effect.effectType switch
+            {
+                AttachmentEffectType.AttackPowerBoost => $"攻撃力+{(effect.effectValue * 100):F0}%",
+                AttachmentEffectType.MaxHpBoost => $"最大HP+{(effect.effectValue * 100):F0}%",
+                AttachmentEffectType.CriticalRateBoost => $"クリティカル率+{(effect.effectValue * 100):F0}%",
+                AttachmentEffectType.WeaponPowerBoost => $"武器攻撃力+{(effect.effectValue * 100):F0}%",
+                AttachmentEffectType.CooldownReduction => $"クールダウン-{effect.flatValue}ターン",
+                _ => effect.effectType.ToString()
+            };
+            
+            return effect.isPercentage 
+                ? $"{baseDesc} (倍率効果)" 
+                : $"{baseDesc} (固定効果)";
+        }
+        
+        /// <summary>
+        /// PlayMode中に手動でアタッチメント情報を表示
+        /// </summary>
+        [ContextMenu("Show Current Equipped Attachments")]
+        public void ShowCurrentEquippedAttachments()
+        {
+            DisplayEquippedAttachmentsOnPlayModeStart();
+        }
+        
+        /// <summary>
+        /// テスト用：ランダムアタッチメントを装備して表示テスト
+        /// </summary>
+        [ContextMenu("Test: Equip Random Attachment and Display")]
+        public void TestEquipAndDisplay()
+        {
+            // ランダムアタッチメントを装備
+            AttachRandomAttachment();
+            
+            // 装備後に表示テスト
+            ShowCurrentEquippedAttachments();
         }
     }
 }

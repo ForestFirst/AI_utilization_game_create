@@ -660,6 +660,9 @@ namespace BattleSystem
             // ComboSystemを取得してイベントを購読
             SetupComboSystemConnection();
             
+            // AttachmentSystemを取得してイベントを購読
+            SetupAttachmentSystemConnection();
+            
             // 確実に動作するようダミーデータを作成
             CreateTestDatabasesForBattleManager();
         }
@@ -2849,6 +2852,45 @@ namespace BattleSystem
             
             // 作成したUIで選択画面を表示
             selectionUI.ShowSelectionScreen();
+        }
+        
+        /// <summary>
+        /// AttachmentSystemとの接続を設定
+        /// </summary>
+        void SetupAttachmentSystemConnection()
+        {
+            var attachmentSystem = battleManager.GetComponent<AttachmentSystem>();
+            if (attachmentSystem == null)
+            {
+                Debug.LogWarning("AttachmentSystem not found on BattleManager");
+                return;
+            }
+            
+            // PlayMode開始時のアタッチメント表示イベントを購読
+            attachmentSystem.OnPlayModeAttachmentsDisplayRequested += DisplayEquippedAttachmentsInUI;
+            
+            Debug.Log("✅ AttachmentSystem connected to SimpleBattleUI");
+        }
+        
+        /// <summary>
+        /// UI上に装備中のアタッチメントを表示
+        /// </summary>
+        void DisplayEquippedAttachmentsInUI(List<AttachmentData> equippedAttachments)
+        {
+            if (equippedAttachments == null || equippedAttachments.Count == 0)
+            {
+                Debug.Log("📋 装備中アタッチメント: なし");
+                return;
+            }
+            
+            Debug.Log($"📋 UI表示 - 装備中アタッチメント: {equippedAttachments.Count}個");
+            
+            // 将来的にはここでUI要素を更新
+            // 現在はコンソール表示のみ実装
+            foreach (var attachment in equippedAttachments)
+            {
+                Debug.Log($"🎯 UI: {attachment.attachmentName} ({attachment.rarity})");
+            }
         }
     }
 }

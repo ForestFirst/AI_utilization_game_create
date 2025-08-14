@@ -188,24 +188,10 @@ namespace BattleSystem
         /// </summary>
         private void CreateDefaultComboDatabase()
         {
-            Debug.Log("Creating default ComboDatabase...");
+            Debug.LogWarning("ComboDatabase not assigned. Please assign a ComboDatabase asset in the inspector or create one using Tools > Battle System > Create Combo Database");
             
+            // 空のデータベースを作成（エラー回避のため）
             comboDatabase = ScriptableObject.CreateInstance<ComboDatabase>();
-            
-            // ComboDatabaseCreatorから15種類のコンボデータを取得
-            var createAllCombosMethod = typeof(ComboDatabaseCreator).GetMethod("CreateAllCombos", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-            
-            if (createAllCombosMethod != null)
-            {
-                ComboData[] combos = (ComboData[])createAllCombosMethod.Invoke(null, null);
-                comboDatabase.SetCombos(combos);
-                Debug.Log($"Default ComboDatabase created with {combos.Length} combos");
-            }
-            else
-            {
-                Debug.LogError("Failed to create default combo database. ComboDatabaseCreator method not found.");
-            }
         }
 
         private void OnEnable()

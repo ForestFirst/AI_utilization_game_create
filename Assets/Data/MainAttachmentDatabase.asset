@@ -1,0 +1,259 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b884bffaf3ef29e46be47d302eb79d00, type: 3}
+  m_Name: MainAttachmentDatabase
+  m_EditorClassIdentifier: 
+  presetAttachments:
+  - attachmentId: 1
+    attachmentName: "\u30D1\u30EF\u30FC\u30E2\u30B8\u30E5\u30FC\u30EB"
+    rarity: 1
+    category: 0
+    effects:
+    - effectType: 0
+      effectValue: 0.15
+      flatValue: 0
+      conditionDescription: 
+      isPercentage: 1
+      stackable: 1
+    description: "\u653B\u6483\u529B+15%"
+    flavorText: "\u57FA\u672C\u7684\u306A\u653B\u6483\u529B\u5F37\u5316\u30E2\u30B8\u30E5\u30FC\u30EB"
+    isUnique: 0
+    attachmentIcon: {fileID: 0}
+    associatedComboName: "\u30D5\u30EC\u30A4\u30E0\u30B9\u30E9\u30C3\u30B7\u30E5"
+  - attachmentId: 2
+    attachmentName: "\u30A2\u30FC\u30DE\u30FC\u30D7\u30EC\u30FC\u30C8"
+    rarity: 1
+    category: 1
+    effects:
+    - effectType: 5
+      effectValue: 0.1
+      flatValue: 0
+      conditionDescription: 
+      isPercentage: 1
+      stackable: 1
+    description: "\u88AB\u30C0\u30E1\u30FC\u30B8-10%"
+    flavorText: "\u8EFD\u91CF\u306A\u9632\u8B77\u30D7\u30EC\u30FC\u30C8"
+    isUnique: 0
+    attachmentIcon: {fileID: 0}
+    associatedComboName: "\u30A2\u30A4\u30B9\u30D6\u30EC\u30A4\u30AB\u30FC"
+  - attachmentId: 3
+    attachmentName: "\u30A8\u30CA\u30B8\u30FC\u30B3\u30A2"
+    rarity: 1
+    category: 1
+    effects:
+    - effectType: 4
+      effectValue: 0.2
+      flatValue: 0
+      conditionDescription: 
+      isPercentage: 1
+      stackable: 1
+    description: "HP\u6700\u5927\u5024+20%"
+    flavorText: "\u30A8\u30CD\u30EB\u30AE\u30FC\u5BB9\u91CF\u3092\u5897\u52A0\u3055\u305B\u308B"
+    isUnique: 0
+    attachmentIcon: {fileID: 0}
+    associatedComboName: "\u30B5\u30F3\u30C0\u30FC\u30B9\u30C8\u30E9\u30A4\u30AF"
+  - attachmentId: 4
+    attachmentName: "\u30D7\u30EC\u30B7\u30B8\u30E7\u30F3\u30B5\u30A4\u30C8"
+    rarity: 1
+    category: 0
+    effects:
+    - effectType: 1
+      effectValue: 0.1
+      flatValue: 0
+      conditionDescription: 
+      isPercentage: 1
+      stackable: 1
+    description: "\u30AF\u30EA\u30C6\u30A3\u30AB\u30EB\u7387+10%"
+    flavorText: "\u7167\u6E96\u7CBE\u5EA6\u3092\u5411\u4E0A\u3055\u305B\u308B"
+    isUnique: 0
+    attachmentIcon: {fileID: 0}
+    associatedComboName: "\u30AC\u30F3\u30B9\u30EA\u30F3\u30AC\u30FC"
+  - attachmentId: 5
+    attachmentName: "\u30D8\u30D3\u30FC\u30D0\u30EC\u30EB"
+    rarity: 2
+    category: 0
+    effects:
+    - effectType: 3
+      effectValue: 0.3
+      flatValue: 0
+      conditionDescription: 
+      isPercentage: 1
+      stackable: 1
+    description: "\u6B66\u5668\u653B\u6483\u529B+30%"
+    flavorText: "\u91CD\u88C5\u578B\u306E\u653B\u6483\u5F37\u5316\u30D0\u30EC\u30EB"
+    isUnique: 0
+    attachmentIcon: {fileID: 0}
+    associatedComboName: "\u708E\u6C37\u7206\u767A"
+  - attachmentId: 6
+    attachmentName: "\u30B3\u30F3\u30DC\u30C1\u30C3\u30D7"
+    rarity: 2
+    category: 2
+    effects:
+    - effectType: 8
+      effectValue: 0.25
+      flatValue: 0
+      conditionDescription: 
+      isPercentage: 1
+      stackable: 1
+    description: "\u30B3\u30F3\u30DC\u30C0\u30E1\u30FC\u30B8\u500D\u7387+25%"
+    flavorText: "\u30B3\u30F3\u30DC\u52B9\u679C\u3092\u5897\u5E45\u3059\u308B"
+    isUnique: 0
+    attachmentIcon: {fileID: 0}
+    associatedComboName: "\u96F7\u6483\u9023\u6253"
+  - attachmentId: 7
+    attachmentName: "\u30B7\u30FC\u30EB\u30C9\u30B8\u30A7\u30CD\u30EC\u30FC\u30BF\u30FC"
+    rarity: 2
+    category: 1
+    effects:
+    - effectType: 7
+      effectValue: 0.25
+      flatValue: 0
+      conditionDescription: 
+      isPercentage: 1
+      stackable: 1
+    description: "\u76FE\u306E\u53CD\u5C04\u7387+25%"
+    flavorText: "\u9632\u5FA1\u53CD\u5C04\u80FD\u529B\u3092\u5F37\u5316"
+    isUnique: 0
+    attachmentIcon: {fileID: 0}
+    associatedComboName: "\u30B7\u30FC\u30EB\u30C9\u30D0\u30C3\u30B7\u30E5"
+  - attachmentId: 8
+    attachmentName: "\u30AF\u30A4\u30C3\u30AF\u30ED\u30FC\u30C0\u30FC"
+    rarity: 2
+    category: 3
+    effects:
+    - effectType: 12
+      effectValue: 0
+      flatValue: 1
+      conditionDescription: 
+      isPercentage: 0
+      stackable: 1
+    description: "\u30AF\u30FC\u30EB\u30C0\u30A6\u30F3-1\u30BF\u30FC\u30F3"
+    flavorText: "\u6B66\u5668\u306E\u518D\u88C5\u586B\u901F\u5EA6\u5411\u4E0A"
+    isUnique: 0
+    attachmentIcon: {fileID: 0}
+    associatedComboName: "\u30A6\u30A3\u30F3\u30C9\u30B9\u30D1\u30A4\u30E9\u30EB"
+  - attachmentId: 9
+    attachmentName: "\u30EA\u30D5\u30EC\u30AF\u30BF\u30FC\u30B3\u30A2"
+    rarity: 2
+    category: 1
+    effects:
+    - effectType: 6
+      effectValue: 0.3
+      flatValue: 0
+      conditionDescription: 
+      isPercentage: 1
+      stackable: 1
+    description: "\u30AB\u30A6\u30F3\u30BF\u30FC\u30C0\u30E1\u30FC\u30B8+30%"
+    flavorText: "\u53CD\u6483\u80FD\u529B\u3092\u5927\u5E45\u5F37\u5316"
+    isUnique: 0
+    attachmentIcon: {fileID: 0}
+    associatedComboName: "\u30A2\u30FC\u30C1\u30E3\u30FC\u30DC\u30EC\u30FC"
+  - attachmentId: 10
+    attachmentName: "\u30AA\u30FC\u30D0\u30FC\u30AF\u30ED\u30C3\u30AB\u30FC"
+    rarity: 3
+    category: 0
+    effects:
+    - effectType: 2
+      effectValue: 0.5
+      flatValue: 0
+      conditionDescription: 
+      isPercentage: 1
+      stackable: 1
+    description: "\u30AF\u30EA\u30C6\u30A3\u30AB\u30EB\u500D\u7387+50%\uFF082\u500D\u21923\u500D\uFF09"
+    flavorText: "\u9650\u754C\u7A81\u7834\u578B\u306E\u653B\u6483\u5897\u5E45\u5668"
+    isUnique: 0
+    attachmentIcon: {fileID: 0}
+    associatedComboName: "\u30A2\u30FC\u30B9\u30AF\u30E9\u30C3\u30B7\u30E5"
+  - attachmentId: 11
+    attachmentName: "\u30B3\u30F3\u30DC\u30A2\u30AF\u30BB\u30E9\u30EC\u30FC\u30BF\u30FC"
+    rarity: 3
+    category: 2
+    effects:
+    - effectType: 9
+      effectValue: 0
+      flatValue: 1
+      conditionDescription: 
+      isPercentage: 0
+      stackable: 1
+    description: "\u30B3\u30F3\u30DC\u6210\u529F\u6642\u3001\u6B21\u30BF\u30FC\u30F32\u56DE\u884C\u52D5\u53EF\u80FD"
+    flavorText: "\u30B3\u30F3\u30DC\u9023\u643A\u3092\u52A0\u901F\u3055\u305B\u308B"
+    isUnique: 0
+    attachmentIcon: {fileID: 0}
+    associatedComboName: "\u5C5E\u6027\u5FAA\u74B0"
+  - attachmentId: 12
+    attachmentName: "\u30D0\u30EA\u30A2\u30D5\u30A3\u30FC\u30EB\u30C9"
+    rarity: 3
+    category: 3
+    effects:
+    - effectType: 13
+      effectValue: 0.05
+      flatValue: 0
+      conditionDescription: 
+      isPercentage: 1
+      stackable: 1
+    description: "\u30BF\u30FC\u30F3\u958B\u59CB\u6642HP5%\u56DE\u5FA9"
+    flavorText: "\u81EA\u52D5\u56DE\u5FA9\u30D0\u30EA\u30A2\u3092\u5C55\u958B"
+    isUnique: 0
+    attachmentIcon: {fileID: 0}
+    associatedComboName: "\u30DB\u30FC\u30EA\u30FC\u30EC\u30A4\u30B8"
+  - attachmentId: 13
+    attachmentName: "\u30C7\u30B9\u30C8\u30ED\u30A4\u30E4\u30FC\u30E2\u30FC\u30C9"
+    rarity: 4
+    category: 0
+    effects:
+    - effectType: 14
+      effectValue: 1
+      flatValue: 0
+      conditionDescription: 
+      isPercentage: 1
+      stackable: 0
+    description: "HP50%\u4EE5\u4E0B\u6642\u3001\u5168\u30C0\u30E1\u30FC\u30B8+100%"
+    flavorText: "\u5371\u6A5F\u72B6\u614B\u3067\u771F\u306E\u529B\u3092\u767A\u63EE"
+    isUnique: 1
+    attachmentIcon: {fileID: 0}
+    associatedComboName: "\u30C0\u30FC\u30AF\u30CD\u30B9\u30DC\u30A4\u30C9"
+  - attachmentId: 14
+    attachmentName: "\u30D5\u30A7\u30CB\u30C3\u30AF\u30B9\u30B3\u30A2"
+    rarity: 4
+    category: 3
+    effects:
+    - effectType: 15
+      effectValue: 0.5
+      flatValue: 1
+      conditionDescription: 
+      isPercentage: 1
+      stackable: 0
+    description: "\u6226\u95D8\u4E2D1\u56DE\u3060\u3051\u3001HP0\u6642\u306B50%\u3067\u5FA9\u6D3B"
+    flavorText: "\u4E0D\u6B7B\u9CE5\u306E\u529B\u3092\u5BBF\u3059\u30B3\u30A2"
+    isUnique: 1
+    attachmentIcon: {fileID: 0}
+    associatedComboName: "\u30A8\u30EC\u30E1\u30F3\u30BF\u30EB\u30DE\u30B9\u30BF\u30EA\u30FC"
+  - attachmentId: 15
+    attachmentName: "\u30AA\u30E0\u30CB\u30B3\u30F3\u30DC"
+    rarity: 4
+    category: 2
+    effects:
+    - effectType: 10
+      effectValue: 1
+      flatValue: 0
+      conditionDescription: 
+      isPercentage: 1
+      stackable: 0
+    description: "\u4EFB\u610F\u306E\u88C5\u5099\u3067\u30B3\u30F3\u30DC\u7D99\u7D9A\u53EF\u80FD"
+    flavorText: "\u5168\u3066\u306E\u6B66\u5668\u3092\u7D71\u5408\u5236\u5FA1"
+    isUnique: 1
+    attachmentIcon: {fileID: 0}
+    associatedComboName: "\u30AA\u30FC\u30EB\u30A6\u30A7\u30DD\u30F3\u30A2\u30B5\u30EB\u30C8"
+  commonRate: 0.6
+  rareRate: 0.25
+  epicRate: 0.12
+  legendaryRate: 0.03
