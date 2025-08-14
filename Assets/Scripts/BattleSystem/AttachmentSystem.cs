@@ -344,6 +344,32 @@ namespace BattleSystem
             {
                 availableAttachments.AddRange(attachmentDatabase.PresetAttachments);
             }
+            else
+            {
+                // AttachmentDatabaseが設定されていない場合、動的に作成
+                CreateDefaultAttachmentDatabase();
+            }
+        }
+
+        // デフォルトのAttachmentDatabaseを動的作成
+        private void CreateDefaultAttachmentDatabase()
+        {
+            Debug.Log("Creating default AttachmentDatabase...");
+            
+            attachmentDatabase = ScriptableObject.CreateInstance<AttachmentDatabase>();
+            attachmentDatabase.hideFlags = HideFlags.DontSaveInEditor;
+            
+            // OnEnableを手動で呼び出してプリセットアタッチメントを初期化
+            var onEnableMethod = typeof(AttachmentDatabase).GetMethod("OnEnable", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            onEnableMethod?.Invoke(attachmentDatabase, null);
+            
+            // 利用可能なアタッチメントを追加
+            if (attachmentDatabase.PresetAttachments != null)
+            {
+                availableAttachments.AddRange(attachmentDatabase.PresetAttachments);
+                Debug.Log($"Default AttachmentDatabase created with {attachmentDatabase.PresetAttachments.Length} attachments");
+            }
         }
 
         // アタッチメントスロット初期化
