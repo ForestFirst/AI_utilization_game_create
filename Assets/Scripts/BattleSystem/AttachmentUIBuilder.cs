@@ -213,9 +213,13 @@ namespace BattleSystem
             textRect.offsetMax = Vector2.zero;
             
             // テキストコンテナのサイズを明示的に設定
+            // タイトルやインストラクション用の場合は画面幅を使用
+            float containerWidth = name.Contains("Title") || name.Contains("Instruction") ? 1920f : 350f;
+            float containerHeight = name.Contains("Title") || name.Contains("Instruction") ? 1080f : 120f;
+            
             textComponent.rectTransform.sizeDelta = new Vector2(
-                (anchorMax.x - anchorMin.x) * 350f, // ボタン幅に合わせる
-                (anchorMax.y - anchorMin.y) * 120f  // ボタン高さに合わせる
+                (anchorMax.x - anchorMin.x) * containerWidth,
+                (anchorMax.y - anchorMin.y) * containerHeight
             );
 
             return textComponent;
@@ -250,8 +254,17 @@ namespace BattleSystem
         /// </summary>
         private static TextMeshProUGUI CreateTitleText(GameObject parent)
         {
-            return CreateTextElement(parent, "TitleText", "アタッチメント選択", Color.white, 24,
-                new Vector2(0f, 0.8f), new Vector2(1f, 0.9f));
+            TextMeshProUGUI titleText = CreateTextElement(parent, "TitleText", "アタッチメント選択", Color.white, 24,
+                new Vector2(0f, 0.85f), new Vector2(1f, 0.95f));
+            
+            // タイトルテキスト専用設定
+            titleText.enableWordWrapping = false;
+            titleText.overflowMode = TMPro.TextOverflowModes.Overflow;
+            titleText.fontStyle = TMPro.FontStyles.Bold;
+            titleText.alignment = TextAlignmentOptions.Center;
+            titleText.verticalAlignment = TMPro.VerticalAlignmentOptions.Middle;
+            
+            return titleText;
         }
 
         /// <summary>
@@ -259,8 +272,16 @@ namespace BattleSystem
         /// </summary>
         private static TextMeshProUGUI CreateInstructionText(GameObject parent)
         {
-            return CreateTextElement(parent, "InstructionText", "装備するアタッチメントを選択してください", 
-                Color.white, 16, new Vector2(0f, 0.75f), new Vector2(1f, 0.8f));
+            TextMeshProUGUI instructionText = CreateTextElement(parent, "InstructionText", "装備するアタッチメントを選択してください", 
+                Color.white, 16, new Vector2(0f, 0.78f), new Vector2(1f, 0.85f));
+            
+            // 説明テキスト専用設定
+            instructionText.enableWordWrapping = false;
+            instructionText.overflowMode = TMPro.TextOverflowModes.Overflow;
+            instructionText.alignment = TextAlignmentOptions.Center;
+            instructionText.verticalAlignment = TMPro.VerticalAlignmentOptions.Middle;
+            
+            return instructionText;
         }
 
         /// <summary>
