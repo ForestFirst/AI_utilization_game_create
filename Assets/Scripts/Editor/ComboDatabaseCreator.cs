@@ -18,19 +18,8 @@ public class ComboDatabaseCreator : EditorWindow
         // 15種類のコンボデータを作成
         ComboData[] combos = CreateAllCombos();
         
-        // リフレクションを使用してprivateフィールドにアクセス
-        FieldInfo field = typeof(ComboDatabase).GetField("availableCombos", 
-            BindingFlags.NonPublic | BindingFlags.Instance);
-        
-        if (field != null)
-        {
-            field.SetValue(database, combos);
-        }
-        else
-        {
-            Debug.LogError("availableCombosフィールドが見つかりません。ComboDatabase.csの実装を確認してください。");
-            return;
-        }
+        // 直接メソッド呼び出しでコンボを設定（リフレクション不使用）
+        database.SetCombos(combos);
 
         // アセットとして保存
         string assetPath = "Assets/Data/MainComboDatabase.asset";

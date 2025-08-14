@@ -39,15 +39,28 @@ public class BattleSystemSetupHelper : EditorWindow
         ComponentAttachmentGuide.SetupBattleSystemComponents();
         
         // 2. データベース作成
-        if (!AssetDatabase.FindAssets("t:AttachmentDatabase").Any())
+        bool hasAttachmentDB = AssetDatabase.FindAssets("t:AttachmentDatabase").Any();
+        bool hasCombooDB = AssetDatabase.FindAssets("t:ComboDatabase").Any();
+        
+        if (!hasAttachmentDB)
         {
+            Debug.Log("📦 AttachmentDatabase not found. Creating...");
             AttachmentDatabaseCreator.CreateAttachmentDatabase();
         }
         
-        if (!AssetDatabase.FindAssets("t:ComboDatabase").Any())
+        if (!hasCombooDB)
         {
+            Debug.Log("🎯 ComboDatabase not found. Creating...");
             ComboDatabaseCreator.CreateComboDatabase();
         }
+        
+        // 作成後再確認
+        hasAttachmentDB = AssetDatabase.FindAssets("t:AttachmentDatabase").Any();
+        hasCombooDB = AssetDatabase.FindAssets("t:ComboDatabase").Any();
+        
+        Debug.Log($"📊 データベース作成結果:");
+        Debug.Log($"   📦 AttachmentDatabase: {(hasAttachmentDB ? "✅作成済み" : "❌未作成")}");
+        Debug.Log($"   🎯 ComboDatabase: {(hasCombooDB ? "✅作成済み" : "❌未作成")}");
         
         Debug.Log("✅ クイックセットアップ完了！");
         Debug.Log("🎯 バトルシステムの動作準備が整いました");

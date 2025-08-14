@@ -106,12 +106,28 @@ namespace BattleSystem
         
         public ComboData[] GetCombosByType(ComboType type)
         {
-            return availableCombos.Where(combo => combo.condition.comboType == type).ToArray();
+            return availableCombos?.Where(combo => combo.condition.comboType == type).ToArray() ?? new ComboData[0];
         }
         
         public ComboData GetCombo(string comboName)
         {
-            return availableCombos.FirstOrDefault(combo => combo.comboName == comboName);
+            return availableCombos?.FirstOrDefault(combo => combo.comboName == comboName);
+        }
+
+        /// <summary>
+        /// エディタースクリプト用のコンボデータベース設定
+        /// </summary>
+        public void SetCombos(ComboData[] combos)
+        {
+            availableCombos = combos;
+        }
+
+        /// <summary>
+        /// データベースが空かどうかを確認
+        /// </summary>
+        public bool IsEmpty()
+        {
+            return availableCombos == null || availableCombos.Length == 0;
         }
     }
 
@@ -152,6 +168,44 @@ namespace BattleSystem
             activeComboProgresses = new List<ComboProgress>();
             comboFailureCount = new Dictionary<ComboData, int>();
             additionalActionsRemaining = 0;
+        }
+
+        private void Start()
+        {
+            // ComboDatabaseが設定されていない場合、動的に作成
+            if (comboDatabase == null)
+            {
+                CreateDefaultComboDatabase();
+            }
+            else if (comboDatabase.IsEmpty())
+            {
+                Debug.LogWarning("ComboDatabase is empty. Please assign combo data.");
+            }
+        }
+
+        /// <summary>
+        /// デフォルトのComboDatabaseを動的作成
+        /// </summary>
+        private void CreateDefaultComboDatabase()
+        {
+            Debug.Log("Creating default ComboDatabase...");
+            
+            comboDatabase = ScriptableObject.CreateInstance<ComboDatabase>();
+            
+            // ComboDatabaseCreatorから15種類のコンボデータを取得
+            var createAllCombosMethod = typeof(ComboDatabaseCreator).GetMethod("CreateAllCombos", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            
+            if (createAllCombosMethod != null)
+            {
+                ComboData[] combos = (ComboData[])createAllCombosMethod.Invoke(null, null);
+                comboDatabase.SetCombos(combos);
+                Debug.Log($"Default ComboDatabase created with {combos.Length} combos");
+            }
+            else
+            {
+                Debug.LogError("Failed to create default combo database. ComboDatabaseCreator method not found.");
+            }
         }
 
         private void OnEnable()
