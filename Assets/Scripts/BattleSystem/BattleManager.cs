@@ -450,6 +450,8 @@ namespace BattleSystem
         {
             battleResult.turnsUsed = currentTurn;
             battleResult.gatesDestroyed = gateCount - battleField.GetAliveGateCount();
+            
+            // 勝利時のアタッチメント選択処理は別途BattleUIで処理されるため、ここでは結果のみ通知
             OnBattleEnded?.Invoke(battleResult);
         }
 

@@ -366,6 +366,7 @@ namespace BattleSystem
         private void ShowVictoryScreen()
         {
             Debug.Log("Victory! Battle completed successfully.");
+            ShowAttachmentSelectionScreen();
         }
         
         private void ShowDefeatScreen()
@@ -376,7 +377,18 @@ namespace BattleSystem
         private void ShowAttachmentSelectionScreen()
         {
             Debug.Log("Showing attachment selection screen...");
-            // This will be implemented in the next phase
+            
+            // アタッチメント選択UIを探す
+            AttachmentSelectionUI selectionUI = FindObjectOfType<AttachmentSelectionUI>();
+            if (selectionUI != null)
+            {
+                selectionUI.ShowSelectionScreen();
+                Debug.Log("アタッチメント選択画面を表示しました");
+            }
+            else
+            {
+                Debug.LogWarning("AttachmentSelectionUI not found! アタッチメント選択UIが見つかりません");
+            }
         }
         
         private void ShowGameOverScreen()
