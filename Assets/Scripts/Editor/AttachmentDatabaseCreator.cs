@@ -15,10 +15,8 @@ public class AttachmentDatabaseCreator : EditorWindow
         // AttachmentDatabase ScriptableObjectのインスタンスを作成
         AttachmentDatabase database = ScriptableObject.CreateInstance<AttachmentDatabase>();
         
-        // OnEnable相当の初期化を手動実行
-        var onEnableMethod = typeof(AttachmentDatabase).GetMethod("OnEnable", 
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        onEnableMethod?.Invoke(database, null);
+        // 手動初期化を実行（リフレクションではなく直接メソッド呼び出し）
+        database.ForceInitialize();
 
         // アセットとして保存
         string assetPath = "Assets/Data/MainAttachmentDatabase.asset";

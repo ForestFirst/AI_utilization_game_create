@@ -184,10 +184,8 @@ namespace BattleSystem
             attachmentDatabase = ScriptableObject.CreateInstance<AttachmentDatabase>();
             // hideFlagsを設定しないことでアサーションエラーを回避
             
-            // OnEnableを手動で呼び出してプリセットアタッチメントを初期化
-            var onEnableMethod = typeof(AttachmentDatabase).GetMethod("OnEnable", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            onEnableMethod?.Invoke(attachmentDatabase, null);
+            // 手動初期化を実行
+            attachmentDatabase.ForceInitialize();
             
             // 利用可能なアタッチメントを追加
             if (attachmentDatabase.PresetAttachments != null)

@@ -23,7 +23,16 @@ namespace BattleSystem
         
         private void OnEnable()
         {
+            // エディターでのアサーションエラーを回避
+            #if !UNITY_EDITOR
             InitializePresetAttachments();
+            #else
+            // エディターでは手動初期化のみ許可
+            if (Application.isPlaying)
+            {
+                InitializePresetAttachments();
+            }
+            #endif
         }
 
         /// <summary>
@@ -35,6 +44,14 @@ namespace BattleSystem
             {
                 CreateDefaultAttachments();
             }
+        }
+
+        /// <summary>
+        /// エディタースクリプト用の手動初期化
+        /// </summary>
+        public void ForceInitialize()
+        {
+            CreateDefaultAttachments();
         }
 
         /// <summary>

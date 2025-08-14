@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
@@ -204,8 +205,14 @@ public class ComponentAttachmentGuide : EditorWindow
         {
             GameObject canvasObj = new GameObject("Canvas");
             canvas = canvasObj.AddComponent<Canvas>();
-            canvasObj.AddComponent<CanvasScaler>();
-            canvasObj.AddComponent<GraphicRaycaster>();
+            // CanvasScalerとGraphicRaycasterを文字列で追加（型解決の問題を回避）
+            var canvasScalerType = System.Type.GetType("UnityEngine.UI.CanvasScaler, UnityEngine.UI");
+            var graphicRaycasterType = System.Type.GetType("UnityEngine.UI.GraphicRaycaster, UnityEngine.UI");
+            
+            if (canvasScalerType != null)
+                canvasObj.AddComponent(canvasScalerType);
+            if (graphicRaycasterType != null)
+                canvasObj.AddComponent(graphicRaycasterType);
             Debug.Log("🖼️ Canvas作成完了");
         }
         
@@ -293,9 +300,13 @@ public class ComponentAttachmentGuide : EditorWindow
         {
             if (!obj.GetComponent<SimpleBattleUI>())
                 missing.Add("SimpleBattleUI");
-            if (!obj.GetComponent<CanvasScaler>())
+            // 型解決の問題を回避するため、文字列比較で確認
+            var canvasScalerType = System.Type.GetType("UnityEngine.UI.CanvasScaler, UnityEngine.UI");
+            var graphicRaycasterType = System.Type.GetType("UnityEngine.UI.GraphicRaycaster, UnityEngine.UI");
+            
+            if (canvasScalerType != null && !obj.GetComponent(canvasScalerType))
                 missing.Add("CanvasScaler");
-            if (!obj.GetComponent<GraphicRaycaster>())
+            if (graphicRaycasterType != null && !obj.GetComponent(graphicRaycasterType))
                 missing.Add("GraphicRaycaster");
         }
         
