@@ -132,9 +132,9 @@ namespace BattleSystem
     {
         [Header("アタッチメント設定")]
         [SerializeField] private AttachmentDatabase attachmentDatabase;
-        [SerializeField] private int maxAttachmentSlots = 1;  // 基本は1個まで
+        [SerializeField] private int maxAttachmentSlots = 3;  // 最大3個まで装備可能
         [SerializeField] private int selectionOptionsCount = 4; // 選択肢数
-        [SerializeField] private bool allowDuplicates = false;   // 重複許可
+        [SerializeField] private bool allowDuplicates = true;    // 重複許可（PlayMode開始時の自動装備のため）
         
         [Header("強化設定")]
         [SerializeField] private bool allowEnhancement = true;
@@ -175,6 +175,9 @@ namespace BattleSystem
                 // AttachmentDatabaseが設定されていない場合、動的に作成
                 CreateDefaultAttachmentDatabase();
             }
+            
+            // PlayMode開始時に3つのランダムアタッチメントを装備
+            EquipRandomAttachmentsOnStart(3);
             
             // PlayMode開始時にアタッチメント情報を表示
             DisplayEquippedAttachmentsOnPlayModeStart();
@@ -559,6 +562,55 @@ namespace BattleSystem
         }
         
         /// <summary>
+        /// PlayMode開始時に指定数のランダムアタッチメントを装備
+        /// </summary>
+        private void EquipRandomAttachmentsOnStart(int count)
+        {
+            if (attachmentDatabase == null || availableAttachments.Count == 0)
+            {
+                Debug.LogWarning("AttachmentDatabase が利用できません。アタッチメントの自動装備をスキップします。");
+                return;
+            }
+
+            Debug.Log($"🎲 PlayMode開始時に{count}個のランダムアタッチメントを装備中...");
+            
+            int equipped = 0;
+            int maxAttempts = availableAttachments.Count * 2; // 無限ループ防止
+            int attempts = 0;
+            
+            while (equipped < count && attempts < maxAttempts)
+            {
+                attempts++;
+                AttachmentData randomAttachment = attachmentDatabase.GetRandomAttachment();
+                
+                if (randomAttachment != null)
+                {
+                    // 重複チェック（allowDuplicatesがfalseの場合）
+                    if (!allowDuplicates && attachmentSlots.Any(slot => !slot.IsEmpty && 
+                        slot.attachedData.attachmentId == randomAttachment.attachmentId))
+                    {
+                        continue; // 既に装備済みの場合はスキップ
+                    }
+                    
+                    if (AttachAttachment(randomAttachment))
+                    {
+                        equipped++;
+                        Debug.Log($"  ✅ 自動装備: {randomAttachment.attachmentName} [{GetRarityIcon(randomAttachment.rarity)} {randomAttachment.rarity}]");
+                    }
+                }
+            }
+            
+            if (equipped < count)
+            {
+                Debug.LogWarning($"⚠️ 要求された{count}個のうち{equipped}個のアタッチメントのみ装備できました。");
+            }
+            else
+            {
+                Debug.Log($"✅ {equipped}個のランダムアタッチメント装備完了!");
+            }
+        }
+
+        /// <summary>
         /// テスト用：ランダムアタッチメントを装備して表示テスト
         /// </summary>
         [ContextMenu("Test: Equip Random Attachment and Display")]
@@ -569,6 +621,22 @@ namespace BattleSystem
             
             // 装備後に表示テスト
             ShowCurrentEquippedAttachments();
+        }
+        
+        /// <summary>
+        /// 全アタッチメントを取り外し（テスト用）
+        /// </summary>
+        [ContextMenu("Clear All Attachments")]
+        public void ClearAllAttachments()
+        {
+            for (int i = 0; i < attachmentSlots.Count; i++)
+            {
+                if (!attachmentSlots[i].IsEmpty)
+                {
+                    DetachAttachment(i);
+                }
+            }
+            Debug.Log("🧹 全アタッチメント取り外し完了");
         }
     }
 }
