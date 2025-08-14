@@ -393,26 +393,19 @@ namespace BattleSystem
             }
         }
 
+        /// <summary>
+        /// アタッチメント選択UIを動的に作成します
+        /// </summary>
         private void CreateAttachmentSelectionUI()
         {
             Debug.Log("Creating AttachmentSelectionUI dynamically...");
             
-            // AttachmentSystemが存在するか確認
-            AttachmentSystem attachmentSystem = FindObjectOfType<AttachmentSystem>();
+            // AttachmentSystemの確認・作成
+            AttachmentSystem attachmentSystem = AttachmentUIBuilder.EnsureAttachmentSystem();
             if (attachmentSystem == null)
             {
-                Debug.Log("AttachmentSystem not found, creating it...");
-                GameObject battleManagerGO = FindObjectOfType<BattleManager>()?.gameObject;
-                if (battleManagerGO != null)
-                {
-                    attachmentSystem = battleManagerGO.AddComponent<AttachmentSystem>();
-                    Debug.Log("AttachmentSystem created on BattleManager");
-                }
-                else
-                {
-                    Debug.LogError("BattleManager not found! Cannot create AttachmentSystem");
-                    return;
-                }
+                Debug.LogError("Failed to create AttachmentSystem");
+                return;
             }
 
             // Canvasを探す
@@ -423,16 +416,13 @@ namespace BattleSystem
                 return;
             }
 
-            // AttachmentSelectionUIオブジェクトを作成
-            GameObject selectionUIGO = new GameObject("AttachmentSelectionUI");
-            selectionUIGO.transform.SetParent(canvas.transform, false);
-            
-            AttachmentSelectionUI selectionUI = selectionUIGO.AddComponent<AttachmentSelectionUI>();
-
-            // 基本的なUI構造を作成
-            CreateBasicSelectionUI(selectionUIGO, selectionUI);
-
-            Debug.Log("AttachmentSelectionUI created successfully!");
+            // UIBuilderを使用してUIを作成
+            AttachmentSelectionUI selectionUI = AttachmentUIBuilder.CreateAttachmentSelectionUI(canvas);
+            if (selectionUI == null)
+            {
+                Debug.LogError("Failed to create AttachmentSelectionUI");
+                return;
+            }
             
             // 作成したUIで選択画面を表示
             selectionUI.ShowSelectionScreen();
