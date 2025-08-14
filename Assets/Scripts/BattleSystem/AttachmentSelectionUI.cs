@@ -60,6 +60,18 @@ namespace BattleSystem
             {
                 instructionText.text = "装備するアタッチメントを選択してください";
             }
+
+            // テキストのサイズ調整
+            if (titleText != null)
+            {
+                titleText.fontSize = 24;
+            }
+
+            // テキストのrectTransformのサイズ調整
+            if (titleText != null)
+            {
+                titleText.rectTransform.sizeDelta = new Vector2(100, 100);
+            }
         }
 
         // アタッチメント選択画面を表示
@@ -125,27 +137,7 @@ namespace BattleSystem
             }
 
             // テキストコンポーネント設定
-            TextMeshProUGUI[] textComponents = buttonObj.GetComponentsInChildren<TextMeshProUGUI>();
-            
-            if (textComponents.Length > 0)
-            {
-                // メインテキスト（アタッチメント名）
-                textComponents[0].text = attachment.attachmentName;
-                textComponents[0].color = GetRarityColor(attachment.rarity);
-                
-                if (textComponents.Length > 1)
-                {
-                    // サブテキスト（説明）
-                    textComponents[1].text = attachment.description;
-                }
-                
-                if (textComponents.Length > 2)
-                {
-                    // レアリティテキスト
-                    textComponents[2].text = $"[{attachment.rarity}]";
-                    textComponents[2].color = GetRarityColor(attachment.rarity);
-                }
-            }
+            UpdateButtonTexts(buttonObj, attachment);
 
             // 背景色設定
             Image backgroundImage = buttonObj.GetComponent<Image>();
@@ -160,6 +152,62 @@ namespace BattleSystem
             button.onClick.AddListener(() => SelectAttachment(attachment));
             
             Debug.Log($"選択肢ボタン作成: {attachment.attachmentName} ({attachment.rarity})");
+        }
+
+        // ボタンのテキスト要素を更新
+        private void UpdateButtonTexts(GameObject buttonObj, AttachmentData attachment)
+        {
+            // 子オブジェクトからテキストコンポーネントを名前で検索
+            Transform mainTextTransform = buttonObj.transform.Find("MainText");
+            Transform subTextTransform = buttonObj.transform.Find("SubText");
+            Transform comboTextTransform = buttonObj.transform.Find("ComboText");
+            Transform rarityTextTransform = buttonObj.transform.Find("RarityText");
+
+            // メインテキスト（アタッチメント名）
+            if (mainTextTransform != null)
+            {
+                TextMeshProUGUI mainText = mainTextTransform.GetComponent<TextMeshProUGUI>();
+                if (mainText != null)
+                {
+                    mainText.text = attachment.attachmentName;
+                    mainText.color = GetRarityColor(attachment.rarity);
+                }
+            }
+
+            // サブテキスト（説明）
+            if (subTextTransform != null)
+            {
+                TextMeshProUGUI subText = subTextTransform.GetComponent<TextMeshProUGUI>();
+                if (subText != null)
+                {
+                    subText.text = attachment.description;
+                }
+            }
+
+            // コンボテキスト（対応コンボ名）
+            if (comboTextTransform != null)
+            {
+                TextMeshProUGUI comboText = comboTextTransform.GetComponent<TextMeshProUGUI>();
+                if (comboText != null)
+                {
+                    string comboName = !string.IsNullOrEmpty(attachment.associatedComboName) 
+                        ? attachment.associatedComboName 
+                        : "未設定";
+                    comboText.text = $"🎯 {comboName}";
+                    comboText.color = !string.IsNullOrEmpty(attachment.associatedComboName) ? Color.cyan : Color.gray;
+                }
+            }
+
+            // レアリティテキスト
+            if (rarityTextTransform != null)
+            {
+                TextMeshProUGUI rarityText = rarityTextTransform.GetComponent<TextMeshProUGUI>();
+                if (rarityText != null)
+                {
+                    rarityText.text = $"[{attachment.rarity}]";
+                    rarityText.color = GetRarityColor(attachment.rarity);
+                }
+            }
         }
 
         // レアリティ色取得

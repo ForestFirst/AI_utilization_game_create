@@ -158,22 +158,29 @@ namespace BattleSystem
         private static void CreateButtonTextElements(GameObject button)
         {
             // メインテキスト（アタッチメント名）- より大きく表示
-            TextMeshProUGUI mainText = CreateTextElement(button, "MainText", "アタッチメント名", Color.white, 18, 
-                new Vector2(0.05f, 0.65f), new Vector2(0.95f, 0.95f));
+            TextMeshProUGUI mainText = CreateTextElement(button, "MainText", "アタッチメント名", Color.white, 16, 
+                new Vector2(0.05f, 0.75f), new Vector2(0.95f, 0.95f));
             mainText.fontStyle = TMPro.FontStyles.Bold;
             mainText.alignment = TextAlignmentOptions.Center;
             mainText.verticalAlignment = TMPro.VerticalAlignmentOptions.Middle;
             
             // サブテキスト（説明）- 適度なサイズで表示
-            TextMeshProUGUI subText = CreateTextElement(button, "SubText", "説明", Color.gray, 14, 
-                new Vector2(0.05f, 0.35f), new Vector2(0.95f, 0.65f));
+            TextMeshProUGUI subText = CreateTextElement(button, "SubText", "説明", Color.gray, 12, 
+                new Vector2(0.05f, 0.45f), new Vector2(0.95f, 0.75f));
             subText.alignment = TextAlignmentOptions.Center;
             subText.verticalAlignment = TMPro.VerticalAlignmentOptions.Middle;
             subText.enableWordWrapping = true;
             
+            // コンボテキスト（新規追加）- 中段に表示
+            TextMeshProUGUI comboText = CreateTextElement(button, "ComboText", "対応コンボ: 未設定", Color.cyan, 11, 
+                new Vector2(0.05f, 0.25f), new Vector2(0.95f, 0.45f));
+            comboText.alignment = TextAlignmentOptions.Center;
+            comboText.verticalAlignment = TMPro.VerticalAlignmentOptions.Middle;
+            comboText.fontStyle = TMPro.FontStyles.Italic;
+            
             // レアリティテキスト - 下部に表示
-            TextMeshProUGUI rarityText = CreateTextElement(button, "RarityText", "[Common]", Color.white, 12, 
-                new Vector2(0.05f, 0.05f), new Vector2(0.95f, 0.35f));
+            TextMeshProUGUI rarityText = CreateTextElement(button, "RarityText", "[Common]", Color.white, 10, 
+                new Vector2(0.05f, 0.05f), new Vector2(0.95f, 0.25f));
             rarityText.fontStyle = TMPro.FontStyles.Italic;
             rarityText.alignment = TextAlignmentOptions.Center;
             rarityText.verticalAlignment = TMPro.VerticalAlignmentOptions.Middle;
