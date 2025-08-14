@@ -382,13 +382,247 @@ namespace BattleSystem
             AttachmentSelectionUI selectionUI = FindObjectOfType<AttachmentSelectionUI>();
             if (selectionUI != null)
             {
+                Debug.Log("AttachmentSelectionUI found! 選択画面を表示します");
                 selectionUI.ShowSelectionScreen();
                 Debug.Log("アタッチメント選択画面を表示しました");
             }
             else
             {
-                Debug.LogWarning("AttachmentSelectionUI not found! アタッチメント選択UIが見つかりません");
+                Debug.LogWarning("AttachmentSelectionUI not found! 動的にUI要素を作成します");
+                CreateAttachmentSelectionUI();
             }
+        }
+
+        private void CreateAttachmentSelectionUI()
+        {
+            Debug.Log("Creating AttachmentSelectionUI dynamically...");
+            
+            // AttachmentSystemが存在するか確認
+            AttachmentSystem attachmentSystem = FindObjectOfType<AttachmentSystem>();
+            if (attachmentSystem == null)
+            {
+                Debug.Log("AttachmentSystem not found, creating it...");
+                GameObject battleManagerGO = FindObjectOfType<BattleManager>()?.gameObject;
+                if (battleManagerGO != null)
+                {
+                    attachmentSystem = battleManagerGO.AddComponent<AttachmentSystem>();
+                    Debug.Log("AttachmentSystem created on BattleManager");
+                }
+                else
+                {
+                    Debug.LogError("BattleManager not found! Cannot create AttachmentSystem");
+                    return;
+                }
+            }
+
+            // Canvasを探す
+            Canvas canvas = FindObjectOfType<Canvas>();
+            if (canvas == null)
+            {
+                Debug.LogError("Canvas not found! Cannot create AttachmentSelectionUI");
+                return;
+            }
+
+            // AttachmentSelectionUIオブジェクトを作成
+            GameObject selectionUIGO = new GameObject("AttachmentSelectionUI");
+            selectionUIGO.transform.SetParent(canvas.transform, false);
+            
+            AttachmentSelectionUI selectionUI = selectionUIGO.AddComponent<AttachmentSelectionUI>();
+
+            // 基本的なUI構造を作成
+            CreateBasicSelectionUI(selectionUIGO, selectionUI);
+
+            Debug.Log("AttachmentSelectionUI created successfully!");
+            
+            // 作成したUIで選択画面を表示
+            selectionUI.ShowSelectionScreen();
+        }
+
+        private void CreateBasicSelectionUI(GameObject parentGO, AttachmentSelectionUI selectionUI)
+        {
+            // Selection Panel作成
+            GameObject selectionPanel = new GameObject("SelectionPanel");
+            selectionPanel.transform.SetParent(parentGO.transform, false);
+            
+            UnityEngine.UI.Image panelImage = selectionPanel.AddComponent<UnityEngine.UI.Image>();
+            panelImage.color = new Color(0, 0, 0, 0.8f); // 半透明黒背景
+            
+            RectTransform panelRect = selectionPanel.GetComponent<RectTransform>();
+            panelRect.anchorMin = Vector2.zero;
+            panelRect.anchorMax = Vector2.one;
+            panelRect.offsetMin = Vector2.zero;
+            panelRect.offsetMax = Vector2.zero;
+
+            // Options Container作成
+            GameObject optionsContainer = new GameObject("OptionsContainer");
+            optionsContainer.transform.SetParent(selectionPanel.transform, false);
+            
+            UnityEngine.UI.GridLayoutGroup gridLayout = optionsContainer.AddComponent<UnityEngine.UI.GridLayoutGroup>();
+            gridLayout.cellSize = new Vector2(300, 100);
+            gridLayout.spacing = new Vector2(20, 20);
+            gridLayout.startCorner = UnityEngine.UI.GridLayoutGroup.Corner.UpperLeft;
+            gridLayout.startAxis = UnityEngine.UI.GridLayoutGroup.Axis.Horizontal;
+            gridLayout.childAlignment = TextAnchor.MiddleCenter;
+            
+            RectTransform containerRect = optionsContainer.GetComponent<RectTransform>();
+            containerRect.anchorMin = new Vector2(0.1f, 0.3f);
+            containerRect.anchorMax = new Vector2(0.9f, 0.7f);
+            containerRect.offsetMin = Vector2.zero;
+            containerRect.offsetMax = Vector2.zero;
+
+            // Option Button Prefab作成
+            GameObject optionButtonPrefab = CreateOptionButtonPrefab(selectionPanel);
+
+            // Skip Button作成
+            GameObject skipButton = new GameObject("SkipButton");
+            skipButton.transform.SetParent(selectionPanel.transform, false);
+            
+            UnityEngine.UI.Button skipBtn = skipButton.AddComponent<UnityEngine.UI.Button>();
+            UnityEngine.UI.Image skipBtnImage = skipButton.AddComponent<UnityEngine.UI.Image>();
+            skipBtnImage.color = new Color(0.6f, 0.6f, 0.6f, 1f);
+            
+            GameObject skipBtnText = new GameObject("Text");
+            skipBtnText.transform.SetParent(skipButton.transform, false);
+            TMPro.TextMeshProUGUI skipText = skipBtnText.AddComponent<TMPro.TextMeshProUGUI>();
+            skipText.text = "スキップ";
+            skipText.color = Color.white;
+            skipText.fontSize = 18;
+            skipText.alignment = TMPro.TextAlignmentOptions.Center;
+            
+            RectTransform skipBtnRect = skipButton.GetComponent<RectTransform>();
+            skipBtnRect.anchorMin = new Vector2(0.4f, 0.1f);
+            skipBtnRect.anchorMax = new Vector2(0.6f, 0.2f);
+            skipBtnRect.offsetMin = Vector2.zero;
+            skipBtnRect.offsetMax = Vector2.zero;
+
+            RectTransform skipTextRect = skipBtnText.GetComponent<RectTransform>();
+            skipTextRect.anchorMin = Vector2.zero;
+            skipTextRect.anchorMax = Vector2.one;
+            skipTextRect.offsetMin = Vector2.zero;
+            skipTextRect.offsetMax = Vector2.zero;
+
+            // Title Text作成
+            GameObject titleText = new GameObject("TitleText");
+            titleText.transform.SetParent(selectionPanel.transform, false);
+            TMPro.TextMeshProUGUI titleTMP = titleText.AddComponent<TMPro.TextMeshProUGUI>();
+            titleTMP.text = "アタッチメント選択";
+            titleTMP.color = Color.white;
+            titleTMP.fontSize = 24;
+            titleTMP.alignment = TMPro.TextAlignmentOptions.Center;
+            
+            RectTransform titleRect = titleText.GetComponent<RectTransform>();
+            titleRect.anchorMin = new Vector2(0f, 0.8f);
+            titleRect.anchorMax = new Vector2(1f, 0.9f);
+            titleRect.offsetMin = Vector2.zero;
+            titleRect.offsetMax = Vector2.zero;
+
+            // Instruction Text作成
+            GameObject instructionText = new GameObject("InstructionText");
+            instructionText.transform.SetParent(selectionPanel.transform, false);
+            TMPro.TextMeshProUGUI instructionTMP = instructionText.AddComponent<TMPro.TextMeshProUGUI>();
+            instructionTMP.text = "装備するアタッチメントを選択してください";
+            instructionTMP.color = Color.white;
+            instructionTMP.fontSize = 16;
+            instructionTMP.alignment = TMPro.TextAlignmentOptions.Center;
+            
+            RectTransform instructionRect = instructionText.GetComponent<RectTransform>();
+            instructionRect.anchorMin = new Vector2(0f, 0.75f);
+            instructionRect.anchorMax = new Vector2(1f, 0.8f);
+            instructionRect.offsetMin = Vector2.zero;
+            instructionRect.offsetMax = Vector2.zero;
+
+            // AttachmentSelectionUIのフィールドを設定
+            SetAttachmentSelectionUIFields(selectionUI, selectionPanel, optionsContainer, optionButtonPrefab, skipBtn, titleTMP, instructionTMP);
+            
+            Debug.Log("Basic AttachmentSelectionUI structure created");
+        }
+
+        private GameObject CreateOptionButtonPrefab(GameObject parent)
+        {
+            GameObject buttonPrefab = new GameObject("OptionButtonPrefab");
+            buttonPrefab.transform.SetParent(parent.transform, false);
+            buttonPrefab.SetActive(false); // プレハブなので非アクティブ
+            
+            UnityEngine.UI.Button button = buttonPrefab.AddComponent<UnityEngine.UI.Button>();
+            UnityEngine.UI.Image buttonImage = buttonPrefab.AddComponent<UnityEngine.UI.Image>();
+            buttonImage.color = new Color(0.2f, 0.2f, 0.2f, 0.9f);
+            
+            // Main Text
+            GameObject mainText = new GameObject("MainText");
+            mainText.transform.SetParent(buttonPrefab.transform, false);
+            TMPro.TextMeshProUGUI mainTMP = mainText.AddComponent<TMPro.TextMeshProUGUI>();
+            mainTMP.text = "アタッチメント名";
+            mainTMP.color = Color.white;
+            mainTMP.fontSize = 16;
+            mainTMP.alignment = TMPro.TextAlignmentOptions.Center;
+            
+            RectTransform mainTextRect = mainText.GetComponent<RectTransform>();
+            mainTextRect.anchorMin = new Vector2(0f, 0.6f);
+            mainTextRect.anchorMax = new Vector2(1f, 1f);
+            mainTextRect.offsetMin = Vector2.zero;
+            mainTextRect.offsetMax = Vector2.zero;
+            
+            // Sub Text
+            GameObject subText = new GameObject("SubText");
+            subText.transform.SetParent(buttonPrefab.transform, false);
+            TMPro.TextMeshProUGUI subTMP = subText.AddComponent<TMPro.TextMeshProUGUI>();
+            subTMP.text = "説明";
+            subTMP.color = Color.gray;
+            subTMP.fontSize = 12;
+            subTMP.alignment = TMPro.TextAlignmentOptions.Center;
+            
+            RectTransform subTextRect = subText.GetComponent<RectTransform>();
+            subTextRect.anchorMin = new Vector2(0f, 0.3f);
+            subTextRect.anchorMax = new Vector2(1f, 0.6f);
+            subTextRect.offsetMin = Vector2.zero;
+            subTextRect.offsetMax = Vector2.zero;
+            
+            // Rarity Text
+            GameObject rarityText = new GameObject("RarityText");
+            rarityText.transform.SetParent(buttonPrefab.transform, false);
+            TMPro.TextMeshProUGUI rarityTMP = rarityText.AddComponent<TMPro.TextMeshProUGUI>();
+            rarityTMP.text = "[Common]";
+            rarityTMP.color = Color.white;
+            rarityTMP.fontSize = 10;
+            rarityTMP.alignment = TMPro.TextAlignmentOptions.Center;
+            
+            RectTransform rarityTextRect = rarityText.GetComponent<RectTransform>();
+            rarityTextRect.anchorMin = new Vector2(0f, 0f);
+            rarityTextRect.anchorMax = new Vector2(1f, 0.3f);
+            rarityTextRect.offsetMin = Vector2.zero;
+            rarityTextRect.offsetMax = Vector2.zero;
+            
+            return buttonPrefab;
+        }
+
+        private void SetAttachmentSelectionUIFields(AttachmentSelectionUI selectionUI, GameObject selectionPanel, Transform optionsContainer, GameObject optionButtonPrefab, UnityEngine.UI.Button skipButton, TMPro.TextMeshProUGUI titleText, TMPro.TextMeshProUGUI instructionText)
+        {
+            // リフレクションを使用してprivateフィールドを設定
+            var selectionPanelField = typeof(AttachmentSelectionUI).GetField("selectionPanel", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            selectionPanelField?.SetValue(selectionUI, selectionPanel);
+
+            var optionsContainerField = typeof(AttachmentSelectionUI).GetField("optionsContainer", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            optionsContainerField?.SetValue(selectionUI, optionsContainer);
+
+            var optionButtonPrefabField = typeof(AttachmentSelectionUI).GetField("optionButtonPrefab", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            optionButtonPrefabField?.SetValue(selectionUI, optionButtonPrefab);
+
+            var skipButtonField = typeof(AttachmentSelectionUI).GetField("skipButton", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            skipButtonField?.SetValue(selectionUI, skipButton);
+
+            var titleTextField = typeof(AttachmentSelectionUI).GetField("titleText", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            titleTextField?.SetValue(selectionUI, titleText);
+
+            var instructionTextField = typeof(AttachmentSelectionUI).GetField("instructionText", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            instructionTextField?.SetValue(selectionUI, instructionText);
+
+            Debug.Log("AttachmentSelectionUI fields set via reflection");
         }
         
         private void ShowGameOverScreen()
