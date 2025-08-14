@@ -444,6 +444,12 @@ namespace BattleSystem
                 new Vector2(screenWidth * 0.25f, -screenHeight * 0.2f), 
                 new Vector2(140 * scale, 60 * scale), OnResetClicked);
             
+            // テスト用敵撃破ボタン（右下最下）
+            Button killEnemyButton = CreateUIButton("敵を倒す", 
+                new Vector2(screenWidth * 0.25f, -screenHeight * 0.3f), 
+                new Vector2(140 * scale, 60 * scale), OnKillEnemyClicked);
+            killEnemyButton.GetComponent<Image>().color = new Color(0.8f, 0.2f, 0.2f, 0.8f); // 赤色で目立たせる
+            
             // 戦場表示を作成（中央左）- 列選択機能は削除
             CreateBattleFieldDisplay(scale, screenWidth, screenHeight);
             
@@ -1471,6 +1477,60 @@ namespace BattleSystem
             else
             {
                 Debug.LogError("BattleManager is null!");
+            }
+        }
+        
+        /// <summary>
+        /// テスト用：敵を倒すボタンのクリック処理
+        /// </summary>
+        void OnKillEnemyClicked()
+        {
+            Debug.Log("=== Kill Enemy Button Clicked ===");
+            
+            if (battleManager?.BattleField == null)
+            {
+                Debug.LogWarning("BattleManager or BattleField is null!");
+                return;
+            }
+            
+            // 生きている敵を取得
+            var allEnemies = battleManager.BattleField.GetAllEnemies();
+            var aliveEnemies = allEnemies.Where(enemy => enemy != null && enemy.IsAlive()).ToList();
+            
+            if (aliveEnemies.Count == 0)
+            {
+                Debug.Log("No alive enemies to kill!");
+                return;
+            }
+            
+            // 最初の生きている敵を撃破
+            var targetEnemy = aliveEnemies[0];
+            Debug.Log($"Killing enemy: {targetEnemy.enemyData.enemyName} at ({targetEnemy.gridX}, {targetEnemy.gridY})");
+            
+            // 敵のHPを0にして撃破
+            targetEnemy.TakeDamage(targetEnemy.currentHp);
+            
+            // 戦場から敵を削除
+            battleManager.BattleField.RemoveEnemy(new GridPosition(targetEnemy.gridX, targetEnemy.gridY));
+            
+            // UI表示を更新
+            UpdateEnemyDisplay();
+            UpdateBattleFieldDisplay();
+            
+            Debug.Log($"✓ Enemy {targetEnemy.enemyData.enemyName} defeated! Remaining: {aliveEnemies.Count - 1}");
+            
+            // 全敵撃破チェック
+            var remainingEnemies = battleManager.BattleField.GetAllEnemies()
+                .Where(enemy => enemy != null && enemy.IsAlive()).ToList();
+            
+            if (remainingEnemies.Count == 0)
+            {
+                Debug.Log("🎉 All enemies defeated! Victory!");
+                if (battleManager != null)
+                {
+                    // 勝利状態に変更（BattleManagerに勝利処理メソッドがあれば）
+                    // battleManager.SetVictory(); // メソッドが存在する場合
+                }
             }
         }
         
