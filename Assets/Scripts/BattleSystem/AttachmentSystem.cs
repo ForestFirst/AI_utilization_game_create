@@ -137,6 +137,11 @@ namespace BattleSystem
         [SerializeField] private bool allowDuplicates = true;    // 重複許可（PlayMode開始時の自動装備のため）
         [SerializeField] private bool allowUnlimitedSlots = true; // 無制限スロット許可
         
+        [Header("装備武器設定")]
+        [SerializeField] private WeaponDatabase weaponDatabase;
+        [SerializeField] private int maxEquippedWeapons = 5;  // 最大装備武器数（手札の枚数）
+        [SerializeField] private bool autoEquipWeaponsOnStart = true;  // PlayMode開始時の自動武器装備
+        
         [Header("強化設定")]
         [SerializeField] private bool allowEnhancement = true;
         [SerializeField] private int maxEnhancementLevel = 5;
@@ -144,6 +149,10 @@ namespace BattleSystem
         private BattleManager battleManager;
         private List<AttachmentSlot> attachmentSlots;
         private List<AttachmentData> availableAttachments;
+        
+        // 装備武器管理
+        private List<WeaponData> equippedWeapons;
+        private List<CardData> weaponCards;  // 武器カード（ランダム列割り振り済み）
 
         // イベント定義
         public event Action<AttachmentData[]> OnAttachmentOptionsPresented;
@@ -151,16 +160,25 @@ namespace BattleSystem
         public event Action<AttachmentData, int> OnAttachmentEnhanced;
         public event Action<AttachmentData> OnAttachmentRemoved;
         public event Action<List<AttachmentData>> OnPlayModeAttachmentsDisplayRequested;
+        
+        // 武器カード関連イベント
+        public event Action<List<CardData>> OnWeaponCardsGenerated;
+        public event Action<WeaponData> OnWeaponEquipped;
+        public event Action<WeaponData> OnWeaponUnequipped;
 
         // プロパティ
         public List<AttachmentSlot> AttachmentSlots => attachmentSlots;
         public AttachmentDatabase Database => attachmentDatabase;
+        public List<WeaponData> EquippedWeapons => equippedWeapons;
+        public List<CardData> WeaponCards => weaponCards;
 
         private void Awake()
         {
             battleManager = GetComponent<BattleManager>();
             attachmentSlots = new List<AttachmentSlot>();
             availableAttachments = new List<AttachmentData>();
+            equippedWeapons = new List<WeaponData>();
+            weaponCards = new List<CardData>();
             
             InitializeAttachmentSlots();
         }
@@ -179,6 +197,12 @@ namespace BattleSystem
             
             // PlayMode開始時に3つのランダムアタッチメントを装備
             EquipRandomAttachmentsOnStart(3);
+            
+            // PlayMode開始時に武器を自動装備
+            if (autoEquipWeaponsOnStart)
+            {
+                EquipRandomWeaponsOnStart(maxEquippedWeapons);
+            }
             
             // PlayMode開始時にアタッチメント情報を表示
             DisplayEquippedAttachmentsOnPlayModeStart();
@@ -668,6 +692,138 @@ namespace BattleSystem
                 }
             }
             Debug.Log("🧹 全アタッチメント取り外し完了");
+        }
+        
+        /// <summary>
+        /// PlayMode開始時に指定数の武器をランダム装備
+        /// </summary>
+        private void EquipRandomWeaponsOnStart(int count)
+        {
+            if (weaponDatabase == null)
+            {
+                CreateDefaultWeaponDatabase();
+            }
+            
+            if (weaponDatabase == null || weaponDatabase.Weapons == null || weaponDatabase.Weapons.Length == 0)
+            {
+                Debug.LogWarning("WeaponDatabase が利用できません。武器の自動装備をスキップします。");
+                return;
+            }
+            
+            Debug.Log($"⚔️ PlayMode開始時に{count}個のランダム武器を装備中...");
+            
+            equippedWeapons.Clear();
+            var weapons = weaponDatabase.Weapons;
+            var random = new System.Random();
+            
+            for (int i = 0; i < count && i < weapons.Length; i++)
+            {
+                int randomIndex = random.Next(weapons.Length);
+                var selectedWeapon = weapons[randomIndex];
+                
+                equippedWeapons.Add(selectedWeapon);
+                Debug.Log($"  ✅ 武器装備: {selectedWeapon.weaponName} (攻撃力: {selectedWeapon.basePower})");
+            }
+            
+            // 装備武器からランダム列でカードを生成
+            GenerateWeaponCardsWithRandomColumns();
+            
+            Debug.Log($"⚔️ {equippedWeapons.Count}個の武器装備完了!");
+        }
+        
+        /// <summary>
+        /// 装備武器からランダム列割り振りのカードを生成
+        /// </summary>
+        private void GenerateWeaponCardsWithRandomColumns()
+        {
+            weaponCards.Clear();
+            
+            if (equippedWeapons == null || equippedWeapons.Count == 0)
+            {
+                Debug.LogWarning("装備武器がありません。カード生成をスキップします。");
+                return;
+            }
+            
+            var random = new System.Random();
+            int totalColumns = 3; // 戦場は3列（左、中、右）
+            
+            foreach (var weapon in equippedWeapons)
+            {
+                // ランダムに列を割り振り
+                int randomColumn = random.Next(totalColumns);
+                var card = new CardData(weapon, randomColumn, totalColumns);
+                
+                weaponCards.Add(card);
+                Debug.Log($"🎴 武器カード生成: {card.displayName}");
+            }
+            
+            // HandSystemに武器カードを通知
+            OnWeaponCardsGenerated?.Invoke(weaponCards);
+            
+            Debug.Log($"🎴 {weaponCards.Count}枚の武器カード生成完了!");
+        }
+        
+        /// <summary>
+        /// デフォルトのWeaponDatabaseを動的作成
+        /// </summary>
+        private void CreateDefaultWeaponDatabase()
+        {
+            // WeaponDatabaseが設定されていない場合のデフォルト武器作成
+            Debug.Log("WeaponDatabase not found, creating default weapons...");
+            
+            weaponDatabase = ScriptableObject.CreateInstance<WeaponDatabase>();
+            
+            var defaultWeapons = new WeaponData[]
+            {
+                new WeaponData("炎の剣", AttackAttribute.Fire, WeaponType.Sword, 120, AttackRange.SingleFront)
+                {
+                    criticalRate = 10,
+                    specialEffect = "燃焼ダメージ"
+                },
+                new WeaponData("氷の槍", AttackAttribute.Ice, WeaponType.Spear, 100, AttackRange.Column)
+                {
+                    criticalRate = 8,
+                    specialEffect = "凍結効果"
+                },
+                new WeaponData("雷の弓", AttackAttribute.Thunder, WeaponType.Bow, 90, AttackRange.SingleTarget)
+                {
+                    criticalRate = 15,
+                    specialEffect = "麻痺効果"
+                },
+                new WeaponData("風の斧", AttackAttribute.Wind, WeaponType.Axe, 140, AttackRange.Row1)
+                {
+                    criticalRate = 5,
+                    specialEffect = "ノックバック"
+                },
+                new WeaponData("光の魔法杖", AttackAttribute.Light, WeaponType.Magic, 80, AttackRange.All)
+                {
+                    criticalRate = 12,
+                    specialEffect = "回復効果"
+                }
+            };
+            
+            // リフレクションを使って武器配列を設定
+            var weaponsField = typeof(WeaponDatabase).GetField("weapons", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            weaponsField?.SetValue(weaponDatabase, defaultWeapons);
+            
+            Debug.Log($"Default WeaponDatabase created with {defaultWeapons.Length} weapons");
+        }
+        
+        /// <summary>
+        /// 装備武器リストを取得
+        /// </summary>
+        public List<WeaponData> GetEquippedWeapons()
+        {
+            return new List<WeaponData>(equippedWeapons);
+        }
+        
+        /// <summary>
+        /// 武器カードリストを取得
+        /// </summary>
+        public List<CardData> GetWeaponCards()
+        {
+            return new List<CardData>(weaponCards);
         }
     }
 }

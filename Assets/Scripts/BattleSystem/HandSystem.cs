@@ -197,6 +197,14 @@ namespace BattleSystem
                 battleManager.OnGameStateChanged += HandleGameStateChanged;
                 battleManager.OnPlayerDataChanged += HandlePlayerDataChanged;
             }
+            
+            // AttachmentSystemのイベント購読
+            var attachmentSystem = battleManager?.GetComponent<AttachmentSystem>();
+            if (attachmentSystem != null)
+            {
+                attachmentSystem.OnWeaponCardsGenerated += HandleWeaponCardsGenerated;
+                LogDebug("AttachmentSystem events registered");
+            }
         }
 
         /// <summary>
@@ -209,6 +217,14 @@ namespace BattleSystem
                 battleManager.OnTurnChanged -= HandleTurnChanged;
                 battleManager.OnGameStateChanged -= HandleGameStateChanged;
                 battleManager.OnPlayerDataChanged -= HandlePlayerDataChanged;
+            }
+            
+            // AttachmentSystemのイベント解除
+            var attachmentSystem = battleManager?.GetComponent<AttachmentSystem>();
+            if (attachmentSystem != null)
+            {
+                attachmentSystem.OnWeaponCardsGenerated -= HandleWeaponCardsGenerated;
+                LogDebug("AttachmentSystem events unregistered");
             }
         }
 
@@ -277,29 +293,61 @@ namespace BattleSystem
                 GenerateHand();
             }
         }
+        
+        /// <summary>
+        /// AttachmentSystemから武器カードが生成された時の処理
+        /// </summary>
+        private void HandleWeaponCardsGenerated(List<CardData> weaponCards)
+        {
+            LogDebug($"Weapon cards generated: {weaponCards.Count} cards");
+            
+            // 武器カードから直接手札を更新
+            try
+            {
+                GenerateHandFromWeaponCards(weaponCards);
+                ChangeHandState(HandState.Generated);
+                
+                // 手札更新イベントを発火
+                OnHandGenerated?.Invoke(currentHand);
+                
+                LogDebug($"Hand updated from weapon cards: {RemainingCards} cards");
+                if (debugMode) LogHandContents();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error updating hand from weapon cards: {ex.Message}");
+                ClearHand();
+            }
+        }
 
         #endregion
 
         #region Hand Generation
 
         /// <summary>
-        /// 手札の生成
+        /// 手札の生成（AttachmentSystemから武器カードを取得）
         /// </summary>
         public void GenerateHand()
         {
-            if (battleManager?.PlayerData?.equippedWeapons == null)
+            // AttachmentSystemから武器カードを取得
+            var attachmentSystem = battleManager?.GetComponent<AttachmentSystem>();
+            if (attachmentSystem == null)
             {
-                LogDebug("Cannot generate hand: No equipped weapons");
+                LogDebug("Cannot generate hand: AttachmentSystem not found");
+                return;
+            }
+
+            var weaponCards = attachmentSystem.GetWeaponCards();
+            if (weaponCards == null || weaponCards.Count == 0)
+            {
+                LogDebug("Cannot generate hand: No weapon cards available");
                 return;
             }
 
             try
             {
-                // カードプール生成
-                GenerateCardPool();
-                
-                // 手札抽出
-                ExtractHandFromPool();
+                // 武器カードから直接手札を生成
+                GenerateHandFromWeaponCards(weaponCards);
                 
                 // 手札状態更新
                 ChangeHandState(HandState.Generated);
@@ -310,7 +358,7 @@ namespace BattleSystem
                 // イベント発火
                 OnHandGenerated?.Invoke(currentHand);
                 
-                LogDebug($"Hand generated: {RemainingCards} cards");
+                LogDebug($"Hand generated from weapon cards: {RemainingCards} cards");
                 if (debugMode) LogHandContents();
                 
             }
@@ -319,6 +367,33 @@ namespace BattleSystem
                 Debug.LogError($"Error generating hand: {ex.Message}");
                 ClearHand();
             }
+        }
+        
+        /// <summary>
+        /// 武器カードから手札を生成
+        /// </summary>
+        private void GenerateHandFromWeaponCards(List<CardData> weaponCards)
+        {
+            // 手札配列を初期化
+            currentHand = new CardData[handSize];
+            
+            // 武器カードを手札に配置
+            for (int i = 0; i < handSize && i < weaponCards.Count; i++)
+            {
+                currentHand[i] = weaponCards[i];
+            }
+            
+            // 武器カードが手札枚数より少ない場合は繰り返し配置
+            if (weaponCards.Count < handSize && weaponCards.Count > 0)
+            {
+                for (int i = weaponCards.Count; i < handSize; i++)
+                {
+                    int sourceIndex = i % weaponCards.Count;
+                    currentHand[i] = weaponCards[sourceIndex];
+                }
+            }
+            
+            LogDebug($"Generated hand with {weaponCards.Count} weapon cards, filled {handSize} slots");
         }
 
         /// <summary>
