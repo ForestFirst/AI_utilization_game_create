@@ -174,7 +174,12 @@ namespace BattleSystem
         /// </summary>
         void UpdateComboProgressDisplay()
         {
-            if (comboSystem == null || comboProgressItems == null) return;
+            if (comboProgressItems == null) return;
+            
+            // 装備アタッチメントのコンボ情報を表示
+            UpdateEquippedAttachmentCombosDisplay();
+            
+            if (comboSystem == null) return;
             
             // 全てのコンボアイテムを一旦非表示
             for (int i = 0; i < comboProgressItems.Length; i++)
@@ -1799,11 +1804,30 @@ namespace BattleSystem
             HandUI handUI = FindObjectOfType<HandUI>();
             if (handUI != null)
             {
-                handUI.SetHandUIVisible(true);
-                Debug.Log("✓ Hand UI shown via SetHandUIVisible");
+                // 手札UIを強制的に表示状態に設定（存在する場合）
+                try
+                {
+                    handUI.GetType().GetMethod("SetHandUIVisible")?.Invoke(handUI, new object[] { true });
+                    Debug.Log("✓ Hand UI shown via SetHandUIVisible");
+                }
+                catch
+                {
+                    Debug.LogWarning("SetHandUIVisible method not found, using alternative approach");
+                }
                 
-                // 🔧 追加: 手札UI強制更新
-                handUI.ForceUpdateHandDisplay();
+                // 手札UI強制更新
+                try
+                {
+                    handUI.GetType().GetMethod("ForceUpdateHandDisplay")?.Invoke(handUI, null);
+                    Debug.Log("✓ Hand UI force updated");
+                }
+                catch
+                {
+                    Debug.LogWarning("ForceUpdateHandDisplay method not found");
+                }
+                
+                // 手札UIを継続表示するためのコルーチンを開始
+                StartCoroutine(KeepHandUIVisible(handUI));
                 Debug.Log("✓ Hand UI force updated");
             }
             else
@@ -3053,6 +3077,154 @@ namespace BattleSystem
             else
             {
                 Debug.Log("🎯 既存のコンボ表示エリアを確認しました");
+            }
+        }
+        
+        /// <summary>
+        /// 装備アタッチメントのコンボ情報を左下コンボ表に表示
+        /// </summary>
+        void UpdateEquippedAttachmentCombosDisplay()
+        {
+            // AttachmentSystemから装備中アタッチメントを取得
+            var attachmentSystem = battleManager?.GetComponent<AttachmentSystem>();
+            if (attachmentSystem == null) return;
+            
+            var equippedAttachments = attachmentSystem.GetAttachedAttachments();
+            if (equippedAttachments == null || equippedAttachments.Count == 0) return;
+            
+            // 装備アタッチメントのコンボ情報を左下コンボ表に表示
+            int displayIndex = 0;
+            
+            for (int i = 0; i < equippedAttachments.Count && displayIndex < comboProgressItems.Length; i++)
+            {
+                var attachment = equippedAttachments[i];
+                
+                // コンボが設定されているアタッチメントのみ表示
+                if (!string.IsNullOrEmpty(attachment.associatedComboName))
+                {
+                    if (comboProgressItems[displayIndex] != null)
+                    {
+                        comboProgressItems[displayIndex].SetActive(true);
+                        
+                        // コンボ名表示
+                        if (comboNameTexts[displayIndex] != null)
+                        {
+                            string rarityIcon = GetRarityIcon(attachment.rarity);
+                            comboNameTexts[displayIndex].text = $"{rarityIcon} {attachment.associatedComboName}";
+                            comboNameTexts[displayIndex].color = GetRarityColor(attachment.rarity);
+                        }
+                        
+                        // プログレスバー（装備済みなので100%表示）
+                        if (comboProgressBars[displayIndex] != null)
+                        {
+                            comboProgressBars[displayIndex].value = 1.0f; // 装備済み = 100%
+                        }
+                        
+                        // ステップ表示（装備済み状態）
+                        if (comboStepTexts[displayIndex] != null)
+                        {
+                            comboStepTexts[displayIndex].text = "装備済み";
+                        }
+                        
+                        // タイマー表示（アタッチメント名）
+                        if (comboTimerTexts[displayIndex] != null)
+                        {
+                            comboTimerTexts[displayIndex].text = $"From: {attachment.attachmentName}";
+                        }
+                        
+                        // 抵抗値表示（エフェクト詳細）
+                        if (comboResistanceTexts[displayIndex] != null)
+                        {
+                            string effectsDesc = "";
+                            if (attachment.effects != null && attachment.effects.Length > 0)
+                            {
+                                var effect = attachment.effects[0]; // 最初のエフェクトのみ表示
+                                effectsDesc = GetEffectDescription(effect);
+                            }
+                            comboResistanceTexts[displayIndex].text = effectsDesc;
+                        }
+                        
+                        displayIndex++;
+                    }
+                }
+            }
+            
+            // 使用していないコンボアイテムを非表示
+            for (int i = displayIndex; i < comboProgressItems.Length; i++)
+            {
+                if (comboProgressItems[i] != null)
+                {
+                    comboProgressItems[i].SetActive(false);
+                }
+            }
+            
+            // コンボ進行状況タイトルを更新
+            if (comboProgressTitle != null)
+            {
+                comboProgressTitle.text = $"=== 装備コンボ ({displayIndex}/5) ===";
+            }
+        }
+        
+        /// <summary>
+        /// レアリティに応じた色を取得
+        /// </summary>
+        Color GetRarityColor(AttachmentRarity rarity)
+        {
+            return rarity switch
+            {
+                AttachmentRarity.Common => Color.white,
+                AttachmentRarity.Rare => Color.cyan,
+                AttachmentRarity.Epic => Color.magenta,
+                AttachmentRarity.Legendary => Color.yellow,
+                _ => Color.gray
+            };
+        }
+        
+        /// <summary>
+        /// 手札UIの継続表示を保証するコルーチン
+        /// </summary>
+        System.Collections.IEnumerator KeepHandUIVisible(HandUI handUI)
+        {
+            while (isBattleStarted && handUI != null)
+            {
+                // 2秒ごとに手札UIの状態をチェック
+                yield return new WaitForSeconds(2.0f);
+                
+                // 手札UIが非表示になっていた場合、再表示
+                try
+                {
+                    bool isVisible = (bool?)handUI.GetType().GetMethod("IsHandUIVisible")?.Invoke(handUI, null) ?? true;
+                    if (!isVisible)
+                    {
+                        Debug.Log("⚠️ Hand UI became invisible, restoring visibility...");
+                        handUI.GetType().GetMethod("SetHandUIVisible")?.Invoke(handUI, new object[] { true });
+                        handUI.GetType().GetMethod("ForceUpdateHandDisplay")?.Invoke(handUI, null);
+                    }
+                }
+                catch
+                {
+                    // メソッドが存在しない場合は、手札生成のみ試行
+                    Debug.Log("Hand UI visibility check methods not available, focusing on hand generation");
+                }
+                
+                // 手札が空の場合、再生成を試行
+                if (handSystem != null && (handSystem.CurrentHand == null || handSystem.CurrentHand.Length == 0))
+                {
+                    Debug.Log("⚠️ Hand is empty, attempting regeneration...");
+                    handSystem.GenerateHand();
+                    if (handSystem.CurrentHand != null && handSystem.CurrentHand.Length > 0)
+                    {
+                        try
+                        {
+                            handUI.GetType().GetMethod("ForceUpdateHandDisplay")?.Invoke(handUI, null);
+                            Debug.Log("✓ Hand regenerated and UI updated");
+                        }
+                        catch
+                        {
+                            Debug.Log("✓ Hand regenerated (UI update method not available)");
+                        }
+                    }
+                }
             }
         }
     }
