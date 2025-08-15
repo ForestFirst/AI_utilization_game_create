@@ -1355,8 +1355,31 @@ namespace BattleSystem
         /// </summary>
         private bool IsWeaponUsable(CardData card)
         {
+            // AttachmentSystemから取得した武器カードの場合、武器自体のクールダウンのみをチェック
+            if (card?.weaponData != null)
+            {
+                // 武器のクールダウンターン数が0の場合は常に使用可能
+                if (card.weaponData.cooldownTurns <= 0)
+                {
+                    return true;
+                }
+                
+                // 連続使用可能フラグがtrueの場合は使用可能
+                if (card.weaponData.canUseConsecutively)
+                {
+                    return true;
+                }
+            }
+            
+            // 従来のPlayerDataベースのチェック（フォールバック）
             int weaponIndex = FindWeaponIndex(card.weaponData);
-            return weaponIndex != -1 && battleManager.PlayerData.CanUseWeapon(weaponIndex);
+            if (weaponIndex != -1 && battleManager?.PlayerData != null)
+            {
+                return battleManager.PlayerData.CanUseWeapon(weaponIndex);
+            }
+            
+            // PlayerDataに登録されていない武器カードも使用可能とする
+            return true;
         }
 
         /// <summary>

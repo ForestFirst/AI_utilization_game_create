@@ -206,6 +206,9 @@ namespace BattleSystem
             
             // PlayMode開始時にアタッチメント情報を表示
             DisplayEquippedAttachmentsOnPlayModeStart();
+            
+            // HandSystemの状態を確実に初期化
+            InitializeHandSystemForPlay();
         }
 
         // デフォルトのAttachmentDatabaseを動的作成
@@ -778,26 +781,36 @@ namespace BattleSystem
                 new WeaponData("炎の剣", AttackAttribute.Fire, WeaponType.Sword, 120, AttackRange.SingleFront)
                 {
                     criticalRate = 10,
+                    cooldownTurns = 0,
+                    canUseConsecutively = true,
                     specialEffect = "燃焼ダメージ"
                 },
                 new WeaponData("氷の槍", AttackAttribute.Ice, WeaponType.Spear, 100, AttackRange.Column)
                 {
                     criticalRate = 8,
+                    cooldownTurns = 0,
+                    canUseConsecutively = true,
                     specialEffect = "凍結効果"
                 },
                 new WeaponData("雷の弓", AttackAttribute.Thunder, WeaponType.Bow, 90, AttackRange.SingleTarget)
                 {
                     criticalRate = 15,
+                    cooldownTurns = 0,
+                    canUseConsecutively = true,
                     specialEffect = "麻痺効果"
                 },
                 new WeaponData("風の斧", AttackAttribute.Wind, WeaponType.Axe, 140, AttackRange.Row1)
                 {
                     criticalRate = 5,
+                    cooldownTurns = 0,
+                    canUseConsecutively = true,
                     specialEffect = "ノックバック"
                 },
                 new WeaponData("光の魔法杖", AttackAttribute.Light, WeaponType.Magic, 80, AttackRange.All)
                 {
                     criticalRate = 12,
+                    cooldownTurns = 0,
+                    canUseConsecutively = true,
                     specialEffect = "回復効果"
                 }
             };
@@ -824,6 +837,30 @@ namespace BattleSystem
         public List<CardData> GetWeaponCards()
         {
             return new List<CardData>(weaponCards);
+        }
+        
+        /// <summary>
+        /// PlayMode開始時のHandSystem初期化
+        /// </summary>
+        private void InitializeHandSystemForPlay()
+        {
+            var handSystem = battleManager?.GetComponent<HandSystem>();
+            if (handSystem == null) return;
+            
+            // 手札と行動回数を強制初期化
+            try
+            {
+                // リフレクションを使ってHandSystemの初期化メソッドを呼び出し
+                var initMethod = handSystem.GetType().GetMethod("InitializeActionsForTurn", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                initMethod?.Invoke(handSystem, null);
+                
+                Debug.Log("✅ HandSystem初期化完了（行動回数・手札状態）");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"HandSystem初期化に失敗: {ex.Message}");
+            }
         }
     }
 }
