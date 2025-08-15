@@ -663,6 +663,9 @@ namespace BattleSystem
             // AttachmentSystemを取得してイベントを購読
             SetupAttachmentSystemConnection();
             
+            // コンボ表示エリアを初期化
+            InitializeComboDisplayArea();
+            
             // 確実に動作するようダミーデータを作成
             CreateTestDatabasesForBattleManager();
         }
@@ -2880,16 +2883,176 @@ namespace BattleSystem
             if (equippedAttachments == null || equippedAttachments.Count == 0)
             {
                 Debug.Log("📋 装備中アタッチメント: なし");
+                UpdateAttachmentComboDisplay(new List<AttachmentData>());
                 return;
             }
             
             Debug.Log($"📋 UI表示 - 装備中アタッチメント: {equippedAttachments.Count}個");
             
-            // 将来的にはここでUI要素を更新
-            // 現在はコンソール表示のみ実装
+            // UI要素を更新
+            UpdateAttachmentComboDisplay(equippedAttachments);
+            
+            // コンソール表示も継続
             foreach (var attachment in equippedAttachments)
             {
                 Debug.Log($"🎯 UI: {attachment.attachmentName} ({attachment.rarity})");
+            }
+        }
+        
+        /// <summary>
+        /// 戦闘画面にアタッチメント・コンボ情報を表示
+        /// </summary>
+        void UpdateAttachmentComboDisplay(List<AttachmentData> equippedAttachments)
+        {
+            // 既存のアタッチメント・コンボ表示エリアを更新または作成
+            var comboDisplayArea = battleUIGroup.transform.Find("ComboDisplayArea");
+            if (comboDisplayArea == null)
+            {
+                comboDisplayArea = CreateComboDisplayArea();
+            }
+            
+            var comboText = comboDisplayArea.GetComponentInChildren<UnityEngine.UI.Text>();
+            if (comboText == null)
+            {
+                Debug.LogWarning("ComboDisplayArea内にTextコンポーネントが見つかりません");
+                return;
+            }
+            
+            // アタッチメントとコンボ情報を文字列として構築
+            System.Text.StringBuilder comboInfo = new System.Text.StringBuilder();
+            comboInfo.AppendLine("=== 装備アタッチメント ===");
+            
+            if (equippedAttachments.Count == 0)
+            {
+                comboInfo.AppendLine("なし");
+            }
+            else
+            {
+                foreach (var attachment in equippedAttachments)
+                {
+                    string rarityIcon = GetRarityIcon(attachment.rarity);
+                    string comboName = !string.IsNullOrEmpty(attachment.associatedComboName) 
+                        ? attachment.associatedComboName 
+                        : "未設定";
+                    
+                    comboInfo.AppendLine($"{rarityIcon} {attachment.attachmentName}");
+                    comboInfo.AppendLine($"  コンボ: {comboName}");
+                    
+                    // エフェクト情報も表示
+                    if (attachment.effects != null && attachment.effects.Length > 0)
+                    {
+                        foreach (var effect in attachment.effects)
+                        {
+                            comboInfo.AppendLine($"  効果: {GetEffectDescription(effect)}");
+                        }
+                    }
+                    comboInfo.AppendLine();
+                }
+            }
+            
+            // UIテキストを更新
+            comboText.text = comboInfo.ToString();
+        }
+        
+        /// <summary>
+        /// コンボ表示エリアを作成
+        /// </summary>
+        Transform CreateComboDisplayArea()
+        {
+            // コンボ表示用のパネルを作成
+            GameObject comboPanel = new GameObject("ComboDisplayArea");
+            comboPanel.transform.SetParent(battleUIGroup.transform, false);
+            
+            // RectTransformの設定（左上に配置）
+            RectTransform rectTransform = comboPanel.AddComponent<RectTransform>();
+            rectTransform.anchorMin = new Vector2(0, 1);
+            rectTransform.anchorMax = new Vector2(0, 1);
+            rectTransform.pivot = new Vector2(0, 1);
+            rectTransform.anchoredPosition = new Vector2(10, -10);
+            rectTransform.sizeDelta = new Vector2(300, 400);
+            
+            // 背景画像（半透明の黒）
+            var image = comboPanel.AddComponent<UnityEngine.UI.Image>();
+            image.color = new Color(0, 0, 0, 0.7f);
+            
+            // テキスト表示用のGameObjectを作成
+            GameObject textObj = new GameObject("ComboText");
+            textObj.transform.SetParent(comboPanel.transform, false);
+            
+            // テキストコンポーネントの設定
+            var text = textObj.AddComponent<UnityEngine.UI.Text>();
+            text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            text.fontSize = 12;
+            text.color = Color.white;
+            text.alignment = TextAnchor.UpperLeft;
+            text.text = "コンボ情報読み込み中...";
+            
+            // テキストのRectTransform設定
+            RectTransform textRect = text.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = new Vector2(10, 10);
+            textRect.offsetMax = new Vector2(-10, -10);
+            
+            Debug.Log("✅ コンボ表示エリアを作成しました");
+            return comboPanel.transform;
+        }
+        
+        /// <summary>
+        /// レアリティアイコンを取得
+        /// </summary>
+        string GetRarityIcon(AttachmentRarity rarity)
+        {
+            return rarity switch
+            {
+                AttachmentRarity.Common => "⚪",
+                AttachmentRarity.Rare => "🔵", 
+                AttachmentRarity.Epic => "🟣",
+                AttachmentRarity.Legendary => "🟡",
+                _ => "❔"
+            };
+        }
+        
+        /// <summary>
+        /// エフェクト説明を生成
+        /// </summary>
+        string GetEffectDescription(AttachmentEffect effect)
+        {
+            string baseDesc = effect.effectType switch
+            {
+                AttachmentEffectType.AttackPowerBoost => $"攻撃力+{(effect.effectValue * 100):F0}%",
+                AttachmentEffectType.MaxHpBoost => $"最大HP+{(effect.effectValue * 100):F0}%",
+                AttachmentEffectType.CriticalRateBoost => $"クリティカル率+{(effect.effectValue * 100):F0}%",
+                AttachmentEffectType.WeaponPowerBoost => $"武器攻撃力+{(effect.effectValue * 100):F0}%",
+                AttachmentEffectType.CooldownReduction => $"クールダウン-{effect.flatValue}ターン",
+                _ => effect.effectType.ToString()
+            };
+            
+            return baseDesc;
+        }
+        
+        /// <summary>
+        /// コンボ表示エリアの初期化
+        /// </summary>
+        void InitializeComboDisplayArea()
+        {
+            if (battleUIGroup == null)
+            {
+                Debug.LogWarning("battleUIGroupが見つかりません。コンボ表示エリアの初期化をスキップします。");
+                return;
+            }
+            
+            // 既存のコンボ表示エリアをチェック
+            var existingComboArea = battleUIGroup.transform.Find("ComboDisplayArea");
+            if (existingComboArea == null)
+            {
+                // 存在しない場合は作成
+                CreateComboDisplayArea();
+                Debug.Log("🎯 コンボ表示エリアを初期化しました");
+            }
+            else
+            {
+                Debug.Log("🎯 既存のコンボ表示エリアを確認しました");
             }
         }
     }

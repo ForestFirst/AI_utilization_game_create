@@ -132,9 +132,10 @@ namespace BattleSystem
     {
         [Header("アタッチメント設定")]
         [SerializeField] private AttachmentDatabase attachmentDatabase;
-        [SerializeField] private int maxAttachmentSlots = 3;  // 最大3個まで装備可能
+        [SerializeField] private int initialAttachmentSlots = 10;  // 初期スロット数（動的拡張可能）
         [SerializeField] private int selectionOptionsCount = 4; // 選択肢数
         [SerializeField] private bool allowDuplicates = true;    // 重複許可（PlayMode開始時の自動装備のため）
+        [SerializeField] private bool allowUnlimitedSlots = true; // 無制限スロット許可
         
         [Header("強化設定")]
         [SerializeField] private bool allowEnhancement = true;
@@ -205,9 +206,26 @@ namespace BattleSystem
         // アタッチメントスロット初期化
         private void InitializeAttachmentSlots()
         {
-            for (int i = 0; i < maxAttachmentSlots; i++)
+            for (int i = 0; i < initialAttachmentSlots; i++)
             {
                 attachmentSlots.Add(new AttachmentSlot());
+            }
+        }
+        
+        // 動的スロット拡張
+        private void ExpandSlotsIfNeeded()
+        {
+            if (!allowUnlimitedSlots) return;
+            
+            // 空きスロットがない場合、新しいスロットを追加
+            if (!attachmentSlots.Any(slot => slot.IsEmpty))
+            {
+                int slotsToAdd = 5; // 一度に5個追加
+                for (int i = 0; i < slotsToAdd; i++)
+                {
+                    attachmentSlots.Add(new AttachmentSlot());
+                }
+                Debug.Log($"📈 アタッチメントスロットを{slotsToAdd}個追加。総スロット数: {attachmentSlots.Count}");
             }
         }
 
@@ -259,13 +277,26 @@ namespace BattleSystem
             if (attachment == null)
                 return false;
 
+            // 動的スロット拡張チェック
+            ExpandSlotsIfNeeded();
+
             // 空きスロットを探す
             AttachmentSlot emptySlot = attachmentSlots.FirstOrDefault(slot => slot.IsEmpty);
             if (emptySlot == null)
             {
-                // 空きがない場合、最初のスロットを上書き（実際のゲームでは選択UIが必要）
-                emptySlot = attachmentSlots[0];
-                emptySlot.DetachAttachment();
+                // まだ空きがない場合は強制的にスロットを追加
+                if (allowUnlimitedSlots)
+                {
+                    attachmentSlots.Add(new AttachmentSlot());
+                    emptySlot = attachmentSlots.Last();
+                    Debug.Log($"📈 新しいスロットを追加してアタッチメントを装備。総スロット数: {attachmentSlots.Count}");
+                }
+                else
+                {
+                    // 無制限許可されていない場合は最初のスロットを上書き
+                    emptySlot = attachmentSlots[0];
+                    emptySlot.DetachAttachment();
+                }
             }
 
             emptySlot.AttachAttachment(attachment);
