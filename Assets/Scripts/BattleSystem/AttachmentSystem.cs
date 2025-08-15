@@ -703,8 +703,18 @@ namespace BattleSystem
         [ContextMenu("Test: Regenerate Weapon Cards")]
         public void TestRegenerateWeaponCards()
         {
-            Debug.Log("🧪 テスト: 武器カードランダム再生成を実行中...");
+            Debug.Log("🧪 テスト: 武器・カードランダム再生成を実行中...");
             RegenerateWeaponCardsForNewTurn();
+        }
+        
+        /// <summary>
+        /// テスト用：武器のみをランダム再装備
+        /// </summary>
+        [ContextMenu("Test: Random Reequip Weapons")]
+        public void TestRandomReequipWeapons()
+        {
+            Debug.Log("🧪 テスト: 武器ランダム再装備を実行中...");
+            RandomlyReequipWeapons();
         }
         
         /// <summary>
@@ -881,18 +891,51 @@ namespace BattleSystem
         /// </summary>
         public void RegenerateWeaponCardsForNewTurn()
         {
-            if (equippedWeapons == null || equippedWeapons.Count == 0)
+            Debug.Log($"🎲 ターン開始時: 武器の種類と列をランダム再生成中...");
+            
+            // 1. 装備武器をランダムに再選択
+            RandomlyReequipWeapons();
+            
+            // 2. 新しい装備武器からランダム列でカードを再生成
+            GenerateWeaponCardsWithRandomColumns();
+            
+            Debug.Log($"✅ ターン開始時の武器・カード再生成完了! 新しい手札が利用可能です。");
+        }
+        
+        /// <summary>
+        /// 装備武器をランダムに再選択
+        /// </summary>
+        private void RandomlyReequipWeapons()
+        {
+            if (weaponDatabase == null)
             {
-                Debug.LogWarning("装備武器がありません。カード再生成をスキップします。");
+                CreateDefaultWeaponDatabase();
+            }
+            
+            if (weaponDatabase == null || weaponDatabase.Weapons == null || weaponDatabase.Weapons.Length == 0)
+            {
+                Debug.LogWarning("WeaponDatabase が利用できません。武器の再選択をスキップします。");
                 return;
             }
             
-            Debug.Log($"🎲 ターン開始時: {equippedWeapons.Count}個の武器カードの列をランダム再生成中...");
+            int currentWeaponCount = equippedWeapons?.Count ?? maxEquippedWeapons;
             
-            // 装備武器からランダム列でカードを再生成
-            GenerateWeaponCardsWithRandomColumns();
+            Debug.Log($"🔄 装備武器をランダム再選択: {currentWeaponCount}個");
             
-            Debug.Log($"✅ ターン開始時の武器カード再生成完了! 新しい手札が利用可能です。");
+            equippedWeapons.Clear();
+            var weapons = weaponDatabase.Weapons;
+            var random = new System.Random((int)System.DateTime.Now.Ticks);
+            
+            for (int i = 0; i < currentWeaponCount && weapons.Length > 0; i++)
+            {
+                int randomIndex = random.Next(weapons.Length);
+                var selectedWeapon = weapons[randomIndex];
+                
+                equippedWeapons.Add(selectedWeapon);
+                Debug.Log($"  🎯 新装備: {selectedWeapon.weaponName} (攻撃力: {selectedWeapon.basePower})");
+            }
+            
+            Debug.Log($"✅ {equippedWeapons.Count}個の武器をランダム再装備完了!");
         }
     }
 }

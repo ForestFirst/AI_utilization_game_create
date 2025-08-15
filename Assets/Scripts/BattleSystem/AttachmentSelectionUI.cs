@@ -77,6 +77,12 @@ namespace BattleSystem
         // アタッチメント選択画面を表示
         public void ShowSelectionScreen()
         {
+            Debug.Log("=== ShowSelectionScreen START ===");
+            Debug.Log($"attachmentSystem: {(attachmentSystem != null ? "OK" : "NULL")}");
+            Debug.Log($"selectionPanel: {(selectionPanel != null ? "OK" : "NULL")}");
+            Debug.Log($"optionsContainer: {(optionsContainer != null ? "OK" : "NULL")}");
+            Debug.Log($"optionButtonPrefab: {(optionButtonPrefab != null ? "OK" : "NULL")}");
+            
             if (attachmentSystem == null)
             {
                 Debug.LogError("AttachmentSystem not found!");
@@ -96,38 +102,111 @@ namespace BattleSystem
             if (selectionPanel != null)
             {
                 selectionPanel.SetActive(true);
+                Debug.Log("✅ selectionPanel activated");
+            }
+            else
+            {
+                Debug.LogError("❌ selectionPanel is null!");
             }
 
             // 選択肢UIを作成
             CreateOptionButtons();
             
-            Debug.Log($"アタッチメント選択画面表示: {currentOptions.Length}個の選択肢");
+            Debug.Log($"✅ アタッチメント選択画面表示: {currentOptions.Length}個の選択肢");
+            Debug.Log("=== ShowSelectionScreen END ===");
         }
 
         // 選択肢ボタンの作成
         private void CreateOptionButtons()
         {
+            Debug.Log("=== CreateOptionButtons START ===");
+            
             // 既存のボタンをクリア
             ClearOptionButtons();
 
             if (optionsContainer == null || optionButtonPrefab == null)
             {
-                Debug.LogError("Options container or button prefab not assigned!");
-                return;
+                Debug.LogError($"❌ Options container or button prefab not assigned! Container: {(optionsContainer != null ? "OK" : "NULL")}, Prefab: {(optionButtonPrefab != null ? "OK" : "NULL")}");
+                
+                // optionsContainerがnullの場合、動的に作成を試みる
+                if (optionsContainer == null && selectionPanel != null)
+                {
+                    Debug.Log("🔧 optionsContainerがnullのため、動的に作成を試みます...");
+                    CreateOptionsContainerDynamically();
+                }
+                
+                if (optionsContainer == null)
+                {
+                    Debug.LogError("❌ optionsContainer作成に失敗しました");
+                    return;
+                }
             }
+
+            Debug.Log($"✅ optionsContainer準備完了: {optionsContainer.name}");
 
             // 各選択肢のボタンを作成
             for (int i = 0; i < currentOptions.Length; i++)
             {
                 AttachmentData option = currentOptions[i];
+                Debug.Log($"🔲 ボタン作成中 [{i}]: {option.attachmentName}");
                 CreateOptionButton(option, i);
             }
+            
+            Debug.Log("=== CreateOptionButtons END ===");
+        }
+        
+        /// <summary>
+        /// optionsContainerを動的に作成
+        /// </summary>
+        private void CreateOptionsContainerDynamically()
+        {
+            if (selectionPanel == null)
+            {
+                Debug.LogError("❌ selectionPanelがnullのため、optionsContainerを作成できません");
+                return;
+            }
+            
+            Debug.Log("🔧 optionsContainerを動的作成中...");
+            
+            GameObject containerObj = new GameObject("OptionsContainer_Dynamic");
+            containerObj.transform.SetParent(selectionPanel.transform, false);
+            
+            // GridLayoutGroupを追加
+            GridLayoutGroup gridLayout = containerObj.AddComponent<GridLayoutGroup>();
+            gridLayout.cellSize = new Vector2(300, 100);
+            gridLayout.spacing = new Vector2(20, 20);
+            gridLayout.startCorner = GridLayoutGroup.Corner.UpperLeft;
+            gridLayout.startAxis = GridLayoutGroup.Axis.Horizontal;
+            gridLayout.childAlignment = TextAnchor.MiddleCenter;
+            
+            // RectTransformの設定
+            RectTransform containerRect = containerObj.GetComponent<RectTransform>();
+            containerRect.anchorMin = new Vector2(0.1f, 0.3f);
+            containerRect.anchorMax = new Vector2(0.9f, 0.7f);
+            containerRect.offsetMin = Vector2.zero;
+            containerRect.offsetMax = Vector2.zero;
+            
+            optionsContainer = containerObj.transform;
+            
+            Debug.Log($"✅ optionsContainer動的作成完了: {optionsContainer.name}");
         }
 
         // 個別選択肢ボタンの作成
         private void CreateOptionButton(AttachmentData attachment, int index)
         {
-            GameObject buttonObj = Instantiate(optionButtonPrefab, optionsContainer);
+            GameObject buttonObj;
+            
+            if (optionButtonPrefab != null)
+            {
+                buttonObj = Instantiate(optionButtonPrefab, optionsContainer);
+                Debug.Log($"✅ Prefabからボタン作成: {attachment.attachmentName}");
+            }
+            else
+            {
+                // プレハブがない場合は動的に作成
+                Debug.Log($"🔧 プレハブがないため動的にボタン作成: {attachment.attachmentName}");
+                buttonObj = CreateButtonDynamically(attachment);
+            }
             
             // ボタンコンポーネント取得
             Button button = buttonObj.GetComponent<Button>();
@@ -151,7 +230,73 @@ namespace BattleSystem
             // ボタンクリックイベント設定
             button.onClick.AddListener(() => SelectAttachment(attachment));
             
-            Debug.Log($"選択肢ボタン作成: {attachment.attachmentName} ({attachment.rarity})");
+            Debug.Log($"✅ 選択肢ボタン作成完了: {attachment.attachmentName} ({attachment.rarity})");
+        }
+        
+        /// <summary>
+        /// ボタンを動的に作成
+        /// </summary>
+        private GameObject CreateButtonDynamically(AttachmentData attachment)
+        {
+            GameObject buttonObj = new GameObject($"AttachmentButton_{attachment.attachmentName}");
+            buttonObj.transform.SetParent(optionsContainer, false);
+            
+            // RectTransformの設定
+            RectTransform buttonRect = buttonObj.AddComponent<RectTransform>();
+            buttonRect.sizeDelta = new Vector2(300, 100);
+            
+            // Imageコンポーネント（背景）
+            Image buttonImage = buttonObj.AddComponent<Image>();
+            buttonImage.color = new Color(0.2f, 0.2f, 0.2f, 0.8f);
+            
+            // Buttonコンポーネント
+            Button button = buttonObj.AddComponent<Button>();
+            
+            // テキスト要素を作成
+            CreateButtonTextElements(buttonObj, attachment);
+            
+            Debug.Log($"✅ 動的ボタン作成完了: {buttonObj.name}");
+            return buttonObj;
+        }
+        
+        /// <summary>
+        /// ボタンのテキスト要素を動的作成
+        /// </summary>
+        private void CreateButtonTextElements(GameObject buttonObj, AttachmentData attachment)
+        {
+            // MainText
+            GameObject mainTextObj = new GameObject("MainText");
+            mainTextObj.transform.SetParent(buttonObj.transform, false);
+            
+            TextMeshProUGUI mainText = mainTextObj.AddComponent<TextMeshProUGUI>();
+            mainText.text = attachment.attachmentName;
+            mainText.fontSize = 18;
+            mainText.alignment = TextAlignmentOptions.Center;
+            mainText.color = GetRarityColor(attachment.rarity);
+            
+            RectTransform mainTextRect = mainTextObj.GetComponent<RectTransform>();
+            mainTextRect.anchorMin = new Vector2(0, 0.6f);
+            mainTextRect.anchorMax = new Vector2(1, 1);
+            mainTextRect.offsetMin = Vector2.zero;
+            mainTextRect.offsetMax = Vector2.zero;
+            
+            // SubText
+            GameObject subTextObj = new GameObject("SubText");
+            subTextObj.transform.SetParent(buttonObj.transform, false);
+            
+            TextMeshProUGUI subText = subTextObj.AddComponent<TextMeshProUGUI>();
+            subText.text = attachment.description;
+            subText.fontSize = 12;
+            subText.alignment = TextAlignmentOptions.Center;
+            subText.color = Color.white;
+            
+            RectTransform subTextRect = subTextObj.GetComponent<RectTransform>();
+            subTextRect.anchorMin = new Vector2(0, 0.2f);
+            subTextRect.anchorMax = new Vector2(1, 0.6f);
+            subTextRect.offsetMin = Vector2.zero;
+            subTextRect.offsetMax = Vector2.zero;
+            
+            Debug.Log($"✅ テキスト要素作成完了: {attachment.attachmentName}");
         }
 
         // ボタンのテキスト要素を更新
@@ -258,6 +403,35 @@ namespace BattleSystem
 
             // 選択画面を閉じる
             CloseSelectionScreen();
+            
+            // アタッチメント選択後にPlayModeを終了
+            ExitPlayModeAfterDelay();
+        }
+        
+        /// <summary>
+        /// アタッチメント選択後に少し遅延してPlayModeを終了
+        /// </summary>
+        private void ExitPlayModeAfterDelay()
+        {
+            Debug.Log("🏁 アタッチメント選択完了! 2秒後にPlayModeを終了します...");
+            StartCoroutine(ExitPlayModeCoroutine());
+        }
+        
+        /// <summary>
+        /// PlayMode終了のコルーチン
+        /// </summary>
+        private System.Collections.IEnumerator ExitPlayModeCoroutine()
+        {
+            yield return new WaitForSeconds(2f);
+            
+            Debug.Log("🏁 PlayMode終了を実行中...");
+            
+            #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+            Debug.Log("✅ PlayMode終了完了");
+            #else
+            Debug.Log("⚠️ エディター以外の環境では自動終了できません");
+            #endif
         }
 
         // 選択をスキップ
