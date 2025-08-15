@@ -698,6 +698,16 @@ namespace BattleSystem
         }
         
         /// <summary>
+        /// テスト用：武器カードの列をランダム再生成
+        /// </summary>
+        [ContextMenu("Test: Regenerate Weapon Cards")]
+        public void TestRegenerateWeaponCards()
+        {
+            Debug.Log("🧪 テスト: 武器カードランダム再生成を実行中...");
+            RegenerateWeaponCardsForNewTurn();
+        }
+        
+        /// <summary>
         /// PlayMode開始時に指定数の武器をランダム装備
         /// </summary>
         private void EquipRandomWeaponsOnStart(int count)
@@ -747,8 +757,11 @@ namespace BattleSystem
                 return;
             }
             
-            var random = new System.Random();
+            // より確実にランダムになるよう、現在時刻をシードに使用
+            var random = new System.Random((int)System.DateTime.Now.Ticks);
             int totalColumns = 3; // 戦場は3列（左、中、右）
+            
+            Debug.Log($"🎲 {equippedWeapons.Count}個の武器から{totalColumns}列にランダム配置する武器カードを生成中...");
             
             foreach (var weapon in equippedWeapons)
             {
@@ -757,13 +770,13 @@ namespace BattleSystem
                 var card = new CardData(weapon, randomColumn, totalColumns);
                 
                 weaponCards.Add(card);
-                Debug.Log($"🎴 武器カード生成: {card.displayName}");
+                Debug.Log($"🎴 武器カード生成: {card.displayName} → 攻撃列: {randomColumn} ({card.columnName})");
             }
             
             // HandSystemに武器カードを通知
             OnWeaponCardsGenerated?.Invoke(weaponCards);
             
-            Debug.Log($"🎴 {weaponCards.Count}枚の武器カード生成完了!");
+            Debug.Log($"✅ {weaponCards.Count}枚の武器カード生成完了! 手札が更新されます。");
         }
         
         /// <summary>
@@ -861,6 +874,25 @@ namespace BattleSystem
             {
                 Debug.LogWarning($"HandSystem初期化に失敗: {ex.Message}");
             }
+        }
+        
+        /// <summary>
+        /// ターン開始時に武器カードの列をランダムに再生成
+        /// </summary>
+        public void RegenerateWeaponCardsForNewTurn()
+        {
+            if (equippedWeapons == null || equippedWeapons.Count == 0)
+            {
+                Debug.LogWarning("装備武器がありません。カード再生成をスキップします。");
+                return;
+            }
+            
+            Debug.Log($"🎲 ターン開始時: {equippedWeapons.Count}個の武器カードの列をランダム再生成中...");
+            
+            // 装備武器からランダム列でカードを再生成
+            GenerateWeaponCardsWithRandomColumns();
+            
+            Debug.Log($"✅ ターン開始時の武器カード再生成完了! 新しい手札が利用可能です。");
         }
     }
 }

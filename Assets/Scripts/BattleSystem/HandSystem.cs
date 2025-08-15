@@ -241,6 +241,15 @@ namespace BattleSystem
             {
                 // プレイヤーターン開始時の初期化
                 InitializeActionsForTurn();
+                
+                // ターン開始時に武器カードの列をランダム再生成
+                var attachmentSystem = battleManager?.GetComponent<AttachmentSystem>();
+                if (attachmentSystem != null)
+                {
+                    attachmentSystem.RegenerateWeaponCardsForNewTurn();
+                }
+                
+                // 手札生成は武器カード再生成後に自動的に実行される
                 GenerateHand();
             }
         }
@@ -263,6 +272,14 @@ namespace BattleSystem
                     {
                         LogDebug("行動回数および手札を初期化");
                         InitializeActionsForTurn();
+                        
+                        // ターン開始時に武器カードの列をランダム再生成
+                        var attachmentSystem = battleManager?.GetComponent<AttachmentSystem>();
+                        if (attachmentSystem != null)
+                        {
+                            attachmentSystem.RegenerateWeaponCardsForNewTurn();
+                        }
+                        
                         GenerateHand();
                     }
                     break;
@@ -1555,6 +1572,14 @@ namespace BattleSystem
             
             // 行動回数をリセット
             remainingActions = maxActionsPerTurn;
+            
+            // 武器カードの列をランダム再生成
+            var attachmentSystem = battleManager?.GetComponent<AttachmentSystem>();
+            if (attachmentSystem != null)
+            {
+                LogDebug("テスト用: 武器カードの列をランダム再生成中...");
+                attachmentSystem.RegenerateWeaponCardsForNewTurn();
+            }
             
             // 手札を完全に再生成（使用済みカードを復元）
             LogDebug("手札を完全再生成中...");
