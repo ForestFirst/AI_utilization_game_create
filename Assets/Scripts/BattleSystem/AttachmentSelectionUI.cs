@@ -103,6 +103,9 @@ namespace BattleSystem
             {
                 selectionPanel.SetActive(true);
                 Debug.Log("✅ selectionPanel activated");
+                
+                // selectionPanelの子要素もアクティブ化
+                ForceActivateAllChildren(selectionPanel);
             }
             else
             {
@@ -112,8 +115,46 @@ namespace BattleSystem
             // 選択肢UIを作成
             CreateOptionButtons();
             
+            // 最終的な表示状態確認
+            VerifyUIVisibility();
+            
             Debug.Log($"✅ アタッチメント選択画面表示: {currentOptions.Length}個の選択肢");
             Debug.Log("=== ShowSelectionScreen END ===");
+        }
+        
+        /// <summary>
+        /// すべての子要素を強制的にアクティブ化
+        /// </summary>
+        private void ForceActivateAllChildren(GameObject parent)
+        {
+            Transform[] allChildren = parent.GetComponentsInChildren<Transform>(true);
+            foreach (Transform child in allChildren)
+            {
+                child.gameObject.SetActive(true);
+            }
+            Debug.Log($"🔧 全子要素アクティブ化完了: {parent.name}");
+        }
+        
+        /// <summary>
+        /// UI全体の表示状態を確認
+        /// </summary>
+        private void VerifyUIVisibility()
+        {
+            Debug.Log("🔍 UI表示状態最終確認:");
+            Debug.Log($"  - selectionPanel: {(selectionPanel != null ? selectionPanel.activeSelf.ToString() : "NULL")}");
+            Debug.Log($"  - optionsContainer: {(optionsContainer != null ? optionsContainer.gameObject.activeSelf.ToString() : "NULL")}");
+            
+            if (optionsContainer != null)
+            {
+                int childCount = optionsContainer.childCount;
+                Debug.Log($"  - optionsContainer子要素数: {childCount}");
+                
+                for (int i = 0; i < childCount; i++)
+                {
+                    Transform child = optionsContainer.GetChild(i);
+                    Debug.Log($"    [{i}] {child.name}: Active={child.gameObject.activeSelf}");
+                }
+            }
         }
 
         // 選択肢ボタンの作成
@@ -208,6 +249,9 @@ namespace BattleSystem
                 buttonObj = CreateButtonDynamically(attachment);
             }
             
+            // ボタンとその子要素の表示状態を強制的に有効化
+            ForceActivateButtonAndChildren(buttonObj);
+            
             // ボタンコンポーネント取得
             Button button = buttonObj.GetComponent<Button>();
             if (button == null)
@@ -230,7 +274,59 @@ namespace BattleSystem
             // ボタンクリックイベント設定
             button.onClick.AddListener(() => SelectAttachment(attachment));
             
+            // 最終的な表示状態確認
+            Debug.Log($"🔍 ボタン表示状態確認: {buttonObj.name} - Active: {buttonObj.activeInHierarchy}, Self: {buttonObj.activeSelf}");
+            LogButtonChildrenState(buttonObj);
+            
             Debug.Log($"✅ 選択肢ボタン作成完了: {attachment.attachmentName} ({attachment.rarity})");
+        }
+        
+        /// <summary>
+        /// ボタンとその子要素を強制的にアクティブ化
+        /// </summary>
+        private void ForceActivateButtonAndChildren(GameObject buttonObj)
+        {
+            Debug.Log($"🔧 ボタン表示状態を強制有効化: {buttonObj.name}");
+            
+            // ボタン自体をアクティブ化
+            buttonObj.SetActive(true);
+            
+            // 全ての子要素をアクティブ化
+            Transform[] allChildren = buttonObj.GetComponentsInChildren<Transform>(true);
+            foreach (Transform child in allChildren)
+            {
+                if (child != buttonObj.transform) // 自分自身は除く
+                {
+                    child.gameObject.SetActive(true);
+                    Debug.Log($"  📋 子要素アクティブ化: {child.name}");
+                }
+            }
+            
+            // Canvas関連コンポーネントの確認と設定
+            CanvasGroup canvasGroup = buttonObj.GetComponent<CanvasGroup>();
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 1f;
+                canvasGroup.interactable = true;
+                canvasGroup.blocksRaycasts = true;
+                Debug.Log($"  🎨 CanvasGroup設定完了: alpha={canvasGroup.alpha}");
+            }
+        }
+        
+        /// <summary>
+        /// ボタンの子要素の状態をログ出力
+        /// </summary>
+        private void LogButtonChildrenState(GameObject buttonObj)
+        {
+            Debug.Log($"📋 ボタン子要素状態確認: {buttonObj.name}");
+            Transform[] allChildren = buttonObj.GetComponentsInChildren<Transform>(true);
+            foreach (Transform child in allChildren)
+            {
+                if (child != buttonObj.transform)
+                {
+                    Debug.Log($"  - {child.name}: Active={child.gameObject.activeSelf}, InHierarchy={child.gameObject.activeInHierarchy}");
+                }
+            }
         }
         
         /// <summary>
@@ -240,6 +336,9 @@ namespace BattleSystem
         {
             GameObject buttonObj = new GameObject($"AttachmentButton_{attachment.attachmentName}");
             buttonObj.transform.SetParent(optionsContainer, false);
+            
+            // 明示的にアクティブ化
+            buttonObj.SetActive(true);
             
             // RectTransformの設定
             RectTransform buttonRect = buttonObj.AddComponent<RectTransform>();
@@ -255,7 +354,10 @@ namespace BattleSystem
             // テキスト要素を作成
             CreateButtonTextElements(buttonObj, attachment);
             
-            Debug.Log($"✅ 動的ボタン作成完了: {buttonObj.name}");
+            // 作成後にもう一度アクティブ化を確認
+            buttonObj.SetActive(true);
+            
+            Debug.Log($"✅ 動的ボタン作成完了: {buttonObj.name} - Active: {buttonObj.activeSelf}");
             return buttonObj;
         }
         
@@ -267,6 +369,7 @@ namespace BattleSystem
             // MainText
             GameObject mainTextObj = new GameObject("MainText");
             mainTextObj.transform.SetParent(buttonObj.transform, false);
+            mainTextObj.SetActive(true); // 明示的にアクティブ化
             
             TextMeshProUGUI mainText = mainTextObj.AddComponent<TextMeshProUGUI>();
             mainText.text = attachment.attachmentName;
@@ -283,6 +386,7 @@ namespace BattleSystem
             // SubText
             GameObject subTextObj = new GameObject("SubText");
             subTextObj.transform.SetParent(buttonObj.transform, false);
+            subTextObj.SetActive(true); // 明示的にアクティブ化
             
             TextMeshProUGUI subText = subTextObj.AddComponent<TextMeshProUGUI>();
             subText.text = attachment.description;
@@ -296,12 +400,14 @@ namespace BattleSystem
             subTextRect.offsetMin = Vector2.zero;
             subTextRect.offsetMax = Vector2.zero;
             
-            Debug.Log($"✅ テキスト要素作成完了: {attachment.attachmentName}");
+            Debug.Log($"✅ テキスト要素作成完了: {attachment.attachmentName} - MainText: {mainTextObj.activeSelf}, SubText: {subTextObj.activeSelf}");
         }
 
         // ボタンのテキスト要素を更新
         private void UpdateButtonTexts(GameObject buttonObj, AttachmentData attachment)
         {
+            Debug.Log($"🔤 テキスト要素更新開始: {attachment.attachmentName}");
+            
             // 子オブジェクトからテキストコンポーネントを名前で検索
             Transform mainTextTransform = buttonObj.transform.Find("MainText");
             Transform subTextTransform = buttonObj.transform.Find("SubText");
@@ -311,27 +417,32 @@ namespace BattleSystem
             // メインテキスト（アタッチメント名）
             if (mainTextTransform != null)
             {
+                mainTextTransform.gameObject.SetActive(true); // 強制アクティブ化
                 TextMeshProUGUI mainText = mainTextTransform.GetComponent<TextMeshProUGUI>();
                 if (mainText != null)
                 {
                     mainText.text = attachment.attachmentName;
                     mainText.color = GetRarityColor(attachment.rarity);
+                    Debug.Log($"  ✅ MainText更新: {mainText.text}");
                 }
             }
 
             // サブテキスト（説明）
             if (subTextTransform != null)
             {
+                subTextTransform.gameObject.SetActive(true); // 強制アクティブ化
                 TextMeshProUGUI subText = subTextTransform.GetComponent<TextMeshProUGUI>();
                 if (subText != null)
                 {
                     subText.text = attachment.description;
+                    Debug.Log($"  ✅ SubText更新: {subText.text}");
                 }
             }
 
             // コンボテキスト（対応コンボ名）
             if (comboTextTransform != null)
             {
+                comboTextTransform.gameObject.SetActive(true); // 強制アクティブ化
                 TextMeshProUGUI comboText = comboTextTransform.GetComponent<TextMeshProUGUI>();
                 if (comboText != null)
                 {
@@ -340,19 +451,24 @@ namespace BattleSystem
                         : "未設定";
                     comboText.text = $"🎯 {comboName}";
                     comboText.color = !string.IsNullOrEmpty(attachment.associatedComboName) ? Color.cyan : Color.gray;
+                    Debug.Log($"  ✅ ComboText更新: {comboText.text}");
                 }
             }
 
             // レアリティテキスト
             if (rarityTextTransform != null)
             {
+                rarityTextTransform.gameObject.SetActive(true); // 強制アクティブ化
                 TextMeshProUGUI rarityText = rarityTextTransform.GetComponent<TextMeshProUGUI>();
                 if (rarityText != null)
                 {
                     rarityText.text = $"[{attachment.rarity}]";
                     rarityText.color = GetRarityColor(attachment.rarity);
+                    Debug.Log($"  ✅ RarityText更新: {rarityText.text}");
                 }
             }
+            
+            Debug.Log($"🔤 テキスト要素更新完了: {attachment.attachmentName}");
         }
 
         // レアリティ色取得
