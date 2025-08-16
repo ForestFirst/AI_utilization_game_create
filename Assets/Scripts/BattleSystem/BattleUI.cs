@@ -376,20 +376,28 @@ namespace BattleSystem
         
         private void ShowAttachmentSelectionScreen()
         {
-            Debug.Log("Showing attachment selection screen...");
-            
-            // アタッチメント選択UIを探す
-            AttachmentSelectionUI selectionUI = FindObjectOfType<AttachmentSelectionUI>();
-            if (selectionUI != null)
+            try
             {
-                Debug.Log("AttachmentSelectionUI found! 選択画面を表示します");
-                selectionUI.ShowSelectionScreen();
-                Debug.Log("アタッチメント選択画面を表示しました");
+                Debug.Log("Showing attachment selection screen...");
+                
+                // アタッチメント選択UIを探す
+                AttachmentSelectionUI selectionUI = FindObjectOfType<AttachmentSelectionUI>();
+                if (selectionUI != null)
+                {
+                    Debug.Log("AttachmentSelectionUI found! 選択画面を表示します");
+                    selectionUI.ShowSelectionScreen();
+                    Debug.Log("アタッチメント選択画面を表示しました");
+                }
+                else
+                {
+                    Debug.LogWarning("AttachmentSelectionUI not found! 動的にUI要素を作成します");
+                    CreateAttachmentSelectionUI();
+                }
             }
-            else
+            catch (System.Exception ex)
             {
-                Debug.LogWarning("AttachmentSelectionUI not found! 動的にUI要素を作成します");
-                CreateAttachmentSelectionUI();
+                Debug.LogError($"ShowAttachmentSelectionScreenエラー: {ex.Message}");
+                Debug.LogError($"Stack trace: {ex.StackTrace}");
             }
         }
 

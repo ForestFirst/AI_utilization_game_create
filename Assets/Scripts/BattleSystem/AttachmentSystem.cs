@@ -259,6 +259,12 @@ namespace BattleSystem
         // アタッチメント選択肢生成
         public AttachmentData[] GenerateAttachmentOptions()
         {
+            if (availableAttachments == null || availableAttachments.Count == 0)
+            {
+                Debug.LogWarning("GenerateAttachmentOptions: availableAttachments is null or empty");
+                return new AttachmentData[0];
+            }
+            
             List<AttachmentData> options = new List<AttachmentData>();
             List<AttachmentData> candidatePool = new List<AttachmentData>(availableAttachments);
 
@@ -905,18 +911,26 @@ namespace BattleSystem
         /// <summary>
         /// 装備武器をランダムに再選択
         /// </summary>
-        private void RandomlyReequipWeapons()
+        public void RandomlyReequipWeapons()
         {
-            if (weaponDatabase == null)
+            try
             {
-                CreateDefaultWeaponDatabase();
-            }
-            
-            if (weaponDatabase == null || weaponDatabase.Weapons == null || weaponDatabase.Weapons.Length == 0)
-            {
-                Debug.LogWarning("WeaponDatabase が利用できません。武器の再選択をスキップします。");
-                return;
-            }
+                if (weaponDatabase == null)
+                {
+                    CreateDefaultWeaponDatabase();
+                }
+                
+                if (weaponDatabase == null || weaponDatabase.Weapons == null || weaponDatabase.Weapons.Length == 0)
+                {
+                    Debug.LogWarning("WeaponDatabase が利用できません。武器の再選択をスキップします。");
+                    return;
+                }
+                
+                if (equippedWeapons == null)
+                {
+                    equippedWeapons = new List<WeaponData>();
+                    Debug.LogWarning("equippedWeapons was null, initialized new list");
+                }
             
             int currentWeaponCount = equippedWeapons?.Count ?? maxEquippedWeapons;
             
@@ -933,9 +947,55 @@ namespace BattleSystem
                 
                 equippedWeapons.Add(selectedWeapon);
                 Debug.Log($"  🎯 新装備: {selectedWeapon.weaponName} (攻撃力: {selectedWeapon.basePower})");
+                }
+                
+                Debug.Log($"✅ {equippedWeapons.Count}個の武器をランダム再装備完了!");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"武器再装備エラー: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// アタッチメントを取り外し
+        /// </summary>
+        public bool RemoveAttachment(AttachmentData attachmentToRemove)
+        {
+            if (attachmentToRemove == null)
+            {
+                Debug.LogWarning("RemoveAttachment: attachmentToRemove is null");
+                return false;
             }
             
-            Debug.Log($"✅ {equippedWeapons.Count}個の武器をランダム再装備完了!");
+            if (attachmentSlots == null)
+            {
+                Debug.LogWarning("RemoveAttachment: attachmentSlots is null");
+                return false;
+            }
+            
+            var slot = attachmentSlots.FirstOrDefault(s => s != null && !s.IsEmpty && s.attachedData == attachmentToRemove);
+            if (slot == null)
+            {
+                Debug.LogWarning($"RemoveAttachment: {attachmentToRemove.attachmentName} が見つかりません");
+                return false;
+            }
+            
+            // エフェクト除去
+            try
+            {
+                RemoveAttachmentEffects(attachmentToRemove);
+                slot.DetachAttachment();
+                
+                OnAttachmentRemoved?.Invoke(attachmentToRemove);
+                Debug.Log($"アタッチメント取り外し: {attachmentToRemove.attachmentName}");
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"アタッチメント取り外しエラー: {ex.Message}");
+                return false;
+            }
         }
     }
 }

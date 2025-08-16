@@ -1,6 +1,6 @@
 using System;
 
-namespace BattleSystem.Events
+namespace BattleSystem
 {
     /// <summary>
     /// 手札システムのイベント管理を提供するインターフェース

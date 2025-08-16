@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace BattleSystem.Combat
+namespace BattleSystem
 {
     /// <summary>
     /// ダメージ計算機能を提供するインターフェース

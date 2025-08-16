@@ -1,8 +1,7 @@
 using System;
 using UnityEngine;
-using BattleSystem.Combat;
 
-namespace BattleSystem.Events
+namespace BattleSystem
 {
     /// <summary>
     /// 手札システムのイベント管理を担当するクラス

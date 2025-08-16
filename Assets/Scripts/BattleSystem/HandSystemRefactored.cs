@@ -2,16 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using BattleSystem.Combat;
-using BattleSystem.Actions;
-using BattleSystem.Events;
 
 namespace BattleSystem
 {
     /// <summary>
     /// リファクタリングされた手札システム管理クラス
     /// 単一責任原則に従い、手札の管理とカード使用の制御のみを処理
+    /// 
+    /// NOTE: 現在は元のHandSystemと競合を避けるため、コメントアウトしています
+    /// 段階的移行時に有効化してください
     /// </summary>
+    /*
     public class HandSystemRefactored : MonoBehaviour
     {
         #region 設定フィールド
@@ -830,4 +831,5 @@ namespace BattleSystem
         
         #endregion
     }
+    */
 }

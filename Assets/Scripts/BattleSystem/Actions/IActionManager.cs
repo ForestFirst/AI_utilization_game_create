@@ -1,6 +1,6 @@
 using System;
 
-namespace BattleSystem.Actions
+namespace BattleSystem
 {
     /// <summary>
     /// 行動回数管理を提供するインターフェース

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace BattleSystem.Combat
+namespace BattleSystem
 {
     /// <summary>
     /// ダメージ計算を担当するクラス
@@ -126,12 +126,9 @@ namespace BattleSystem.Combat
             
             try
             {
-                // ComboSystemから現在のコンボ効果を取得
-                var activeCombo = comboSystem.GetActiveComboForWeapon(card.weaponData.weaponName);
-                if (activeCombo != null)
-                {
-                    return activeCombo.damageMultiplier;
-                }
+                // 現在は基本倍率1.0fを返す（ComboSystemの実装後に詳細実装）
+                // TODO: ComboSystemからアクティブなコンボ効果を取得する実装を追加
+                return 1.0f;
             }
             catch (Exception ex)
             {

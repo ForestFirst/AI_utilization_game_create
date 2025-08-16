@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-namespace BattleSystem.Actions
+namespace BattleSystem
 {
     /// <summary>
     /// 行動回数管理を担当するクラス

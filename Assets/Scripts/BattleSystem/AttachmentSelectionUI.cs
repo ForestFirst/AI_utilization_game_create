@@ -77,17 +77,19 @@ namespace BattleSystem
         // アタッチメント選択画面を表示
         public void ShowSelectionScreen()
         {
-            Debug.Log("=== ShowSelectionScreen START ===");
-            Debug.Log($"attachmentSystem: {(attachmentSystem != null ? "OK" : "NULL")}");
-            Debug.Log($"selectionPanel: {(selectionPanel != null ? "OK" : "NULL")}");
-            Debug.Log($"optionsContainer: {(optionsContainer != null ? "OK" : "NULL")}");
-            Debug.Log($"optionButtonPrefab: {(optionButtonPrefab != null ? "OK" : "NULL")}");
-            
-            if (attachmentSystem == null)
+            try
             {
-                Debug.LogError("AttachmentSystem not found!");
-                return;
-            }
+                Debug.Log("=== ShowSelectionScreen START ===");
+                Debug.Log($"attachmentSystem: {(attachmentSystem != null ? "OK" : "NULL")}");
+                Debug.Log($"selectionPanel: {(selectionPanel != null ? "OK" : "NULL")}");
+                Debug.Log($"optionsContainer: {(optionsContainer != null ? "OK" : "NULL")}");
+                Debug.Log($"optionButtonPrefab: {(optionButtonPrefab != null ? "OK" : "NULL")}");
+                
+                if (attachmentSystem == null)
+                {
+                    Debug.LogError("AttachmentSystem not found!");
+                    return;
+                }
 
             // アタッチメント選択肢を生成
             currentOptions = attachmentSystem.GenerateAttachmentOptions();
@@ -120,6 +122,12 @@ namespace BattleSystem
             
             Debug.Log($"✅ アタッチメント選択画面表示: {currentOptions.Length}個の選択肢");
             Debug.Log("=== ShowSelectionScreen END ===");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"ShowSelectionScreenエラー: {ex.Message}");
+                Debug.LogError($"Stack trace: {ex.StackTrace}");
+            }
         }
         
         /// <summary>
@@ -492,13 +500,15 @@ namespace BattleSystem
         // アタッチメント選択処理
         private void SelectAttachment(AttachmentData selectedAttachment)
         {
-            if (selectedAttachment == null)
+            try
             {
-                Debug.LogError("Selected attachment is null!");
-                return;
-            }
+                if (selectedAttachment == null)
+                {
+                    Debug.LogError("Selected attachment is null!");
+                    return;
+                }
 
-            Debug.Log($"アタッチメント選択: {selectedAttachment.attachmentName}");
+                Debug.Log($"アタッチメント選択: {selectedAttachment.attachmentName}");
 
             // アタッチメントシステムに装着指示
             if (attachmentSystem != null)
@@ -522,6 +532,12 @@ namespace BattleSystem
             
             // アタッチメント選択後にPlayModeを終了
             ExitPlayModeAfterDelay();
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"SelectAttachmentエラー: {ex.Message}");
+                Debug.LogError($"Stack trace: {ex.StackTrace}");
+            }
         }
         
         /// <summary>
