@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace BattleSystem
@@ -255,7 +257,7 @@ namespace BattleSystem
         /// <returns>効果倍率（持っていない場合1.0）</returns>
         public float GetBuffMultiplier(string buffName)
         {
-            return activeBuffs.GetValueOrDefault(buffName, 1.0f);
+            return activeBuffs.ContainsKey(buffName) ? activeBuffs[buffName] : 1.0f;
         }
 
         /// <summary>
