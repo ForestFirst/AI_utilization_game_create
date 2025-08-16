@@ -544,6 +544,15 @@ namespace BattleSystem
                 if (attackSuccess)
                 {
                     Debug.Log($"✅ Attack successful, processing successful card play");
+                    
+                    // 【修正】実際のダメージを適用
+                    if (HasPendingDamage)
+                    {
+                        Debug.Log($"Applying pending damage...");
+                        bool damageApplied = ApplyPendingDamage();
+                        Debug.Log($"Damage applied: {damageApplied}");
+                    }
+                    
                     // 成功時の処理
                     result = HandleSuccessfulCardPlay(card, handIndex, damageDealt);
                     Debug.Log($"HandleSuccessfulCardPlay result: {result.isSuccess}, turnEnded: {result.turnEnded}");
@@ -1240,6 +1249,13 @@ namespace BattleSystem
                 
                 // イベント発火
                 OnPendingDamageApplied?.Invoke(pendingDamage);
+                
+                // 【修正】敵データ変更をUIに通知
+                if (anyTargetHit)
+                {
+                    OnEnemyDataChanged?.Invoke();
+                    LogDebug("敵データ変更イベントを発火（UI更新のため）");
+                }
                 
                 LogDebug($"予告ダメージ適用完了: {pendingDamage.description}, 総ダメージ: {totalDamageApplied}");
                 
