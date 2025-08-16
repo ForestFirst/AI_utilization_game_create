@@ -64,6 +64,7 @@ namespace BattleSystem
         public ComboCondition condition;
         public ComboEffect[] effects;
         public int requiredWeaponCount;         // 必要武器使用数
+        public string[] requiredWeapons;        // 必要武器リスト
         public string comboDescription;
         public bool canInterrupt;               // 中断可能フラグ
         public float interruptResistance;       // 中断耐性
@@ -79,7 +80,9 @@ namespace BattleSystem
         public List<AttackAttribute> usedAttackAttributes;
         public List<WeaponType> usedWeaponTypes;
         public int currentStep;
+        public int totalSteps;                   // 総ステップ数
         public int startTurn;
+        public float startTime;                  // 開始時間
         public bool isActive;
         public bool isCompleted;
         public float progressPercentage;
@@ -488,7 +491,9 @@ namespace BattleSystem
                 usedAttackAttributes = new List<AttackAttribute> { weapon.attackAttribute },
                 usedWeaponTypes = new List<WeaponType> { weapon.weaponType },
                 currentStep = 1,
+                totalSteps = combo.requiredWeaponCount,
                 startTurn = battleManager.CurrentTurn,
+                startTime = Time.time,
                 isActive = true,
                 isCompleted = false,
                 progressPercentage = 1.0f / combo.requiredWeaponCount

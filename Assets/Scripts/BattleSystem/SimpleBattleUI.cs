@@ -1,9 +1,12 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using static System.Reflection.BindingFlags;
 
 namespace BattleSystem
 {
@@ -16,7 +19,24 @@ namespace BattleSystem
     {
         [Header("UI Creation Settings")]
         [SerializeField] private bool autoCreateUI = true;
+        [SerializeField] private bool useStaticUIReferences = false;
         [SerializeField] private Font defaultFont;
+        
+        [Header("Static UI References - Canvas要素への直接参照")]
+        [SerializeField] private GameObject staticTurnText;
+        [SerializeField] private GameObject staticHpText;
+        [SerializeField] private GameObject staticStateText;
+        [SerializeField] private GameObject staticPendingDamageText;
+        [SerializeField] private GameObject staticNextTurnButton;
+        [SerializeField] private GameObject staticResetButton;
+        [SerializeField] private GameObject staticEnemyInfoPanel;
+        [SerializeField] private GameObject staticBattleFieldPanel;
+        [SerializeField] private GameObject staticComboProgressPanel;
+        [SerializeField] private GameObject staticStartScreenPanel;
+        [SerializeField] private GameObject staticComboTestButton;
+        
+        [Header("Combo Test Settings")]
+        [SerializeField] private bool enableComboTest = true;
         
         // 日本語対応フォントアセット
         private TMP_FontAsset japaneseFont;
@@ -32,6 +52,7 @@ namespace BattleSystem
         private TextMeshProUGUI stateText;
         private Button nextTurnButton;
         private Button resetButton;
+        private Button comboTestButton;
         
         // 予告ダメージ表示UI（HPの下に表示）
         private TextMeshProUGUI pendingDamageText;
@@ -55,6 +76,10 @@ namespace BattleSystem
         private TextMeshProUGUI[] comboStepTexts = new TextMeshProUGUI[5];
         private TextMeshProUGUI[] comboTimerTexts = new TextMeshProUGUI[5];
         private TextMeshProUGUI[] comboResistanceTexts = new TextMeshProUGUI[5];
+        
+        // コンボグループ管理用
+        private Dictionary<string, ComboGroupContainer> comboGroups = new Dictionary<string, ComboGroupContainer>();
+        private GameObject comboGroupContainer; // 全コンボグループの親コンテナ
         
         // コンボ効果表示UI要素（ポップアップ）
         private GameObject comboEffectPopup;
@@ -83,7 +108,7 @@ namespace BattleSystem
         // 戦闘UI要素のグループ（新規追加）
         private GameObject battleUIGroup;
         
-        void Start()
+        private void Start()
         {
             canvas = GetComponent<Canvas>();
             if (canvas == null)
@@ -98,7 +123,12 @@ namespace BattleSystem
             // 日本語フォントアセットを読み込み
             LoadJapaneseFont();
             
-            if (autoCreateUI)
+            if (useStaticUIReferences)
+            {
+                // 静的UI参照を使用する場合の初期化
+                InitializeStaticUIReferences();
+            }
+            else if (autoCreateUI)
             {
                 // 最初はスタート画面を表示
                 CreateStartScreen();
@@ -116,7 +146,7 @@ namespace BattleSystem
         /// <summary>
         /// 敵情報表示を更新（右上エリア）
         /// </summary>
-        void UpdateEnemyInfoDisplay()
+        private void UpdateEnemyInfoDisplay()
         {
             if (battleManager?.BattleField == null || enemyHpTexts == null) return;
             
@@ -172,7 +202,7 @@ namespace BattleSystem
         /// <summary>
         /// コンボ進行状況表示を更新
         /// </summary>
-        void UpdateComboProgressDisplay()
+        private void UpdateComboProgressDisplay()
         {
             if (comboProgressItems == null) return;
             
@@ -187,6 +217,9 @@ namespace BattleSystem
                 if (comboProgressItems[i] != null)
                     comboProgressItems[i].SetActive(false);
             }
+            
+            // 新システム: コンボグループの更新
+            UpdateComboGroupsDisplay();
             
             // アクティブコンボを取得して表示
             var activeCombos = comboSystem.ActiveCombos;
@@ -288,7 +321,7 @@ namespace BattleSystem
         }
 
         
-        void SetupCanvasConfiguration()
+        private void SetupCanvasConfiguration()
         {
             Debug.Log("Setting up Canvas configuration...");
             
@@ -326,7 +359,7 @@ namespace BattleSystem
         /// <summary>
         /// EventSystemの設定（UIの入力処理に必要）
         /// </summary>
-        void SetupEventSystem()
+        private void SetupEventSystem()
         {
             // 既存のEventSystemを確認
             var existingEventSystem = FindObjectOfType<UnityEngine.EventSystems.EventSystem>();
@@ -354,7 +387,7 @@ namespace BattleSystem
         /// <summary>
         /// 日本語対応フォントアセットを読み込む
         /// </summary>
-        void LoadJapaneseFont()
+        private void LoadJapaneseFont()
         {
             // DotGothic16-Regular SDFフォントアセットを読み込み
             japaneseFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/DotGothic16-Regular SDF");
@@ -371,19 +404,27 @@ namespace BattleSystem
             }
         }
         
-        void Update()
+        private void Update()
         {
             UpdateUI();
         }
         
-        void OnDestroy()
+        private void OnDestroy()
         {
+            // BattleManagerイベントの購読解除（メモリリーク防止）
+            if (battleManager != null)
+            {
+                battleManager.OnPlayerDataChanged -= OnPlayerDataChanged;
+            }
+            
             // HandSystemイベントの購読解除（メモリリーク防止）
             if (handSystem != null)
             {
                 handSystem.OnPendingDamageCalculated -= OnPendingDamageCalculated;
                 handSystem.OnPendingDamageApplied -= OnPendingDamageApplied;
                 handSystem.OnPendingDamageCleared -= OnPendingDamageCleared;
+                handSystem.OnEnemyDataChanged -= OnEnemyDataChanged;
+                handSystem.OnBattleFieldChanged -= OnBattleFieldChanged;
             }
             
             // ComboSystemイベントの購読解除（メモリリーク防止）
@@ -397,7 +438,137 @@ namespace BattleSystem
             }
         }
         
-        void CreateSimpleBattleUI()
+        /// <summary>
+        /// 静的UI参照を初期化
+        /// </summary>
+        private void InitializeStaticUIReferences()
+        {
+            Debug.Log("静的UI参照モードで初期化中...");
+            
+            // 基本UI要素の参照を取得
+            if (staticTurnText != null)
+                turnText = staticTurnText.GetComponent<TextMeshProUGUI>();
+            if (staticHpText != null)
+                hpText = staticHpText.GetComponent<TextMeshProUGUI>();
+            if (staticStateText != null)
+                stateText = staticStateText.GetComponent<TextMeshProUGUI>();
+            if (staticPendingDamageText != null)
+                pendingDamageText = staticPendingDamageText.GetComponent<TextMeshProUGUI>();
+            if (staticNextTurnButton != null)
+            {
+                nextTurnButton = staticNextTurnButton.GetComponent<Button>();
+                if (nextTurnButton != null)
+                    nextTurnButton.onClick.AddListener(() => battleManager?.EndPlayerTurn(TurnEndReason.ActionCompleted));
+            }
+            if (staticResetButton != null)
+            {
+                resetButton = staticResetButton.GetComponent<Button>();
+                if (resetButton != null)
+                    resetButton.onClick.AddListener(() => battleManager?.ResetBattle());
+            }
+            if (staticComboTestButton != null && enableComboTest)
+            {
+                comboTestButton = staticComboTestButton.GetComponent<Button>();
+                if (comboTestButton != null)
+                    comboTestButton.onClick.AddListener(TestComboProgress);
+            }
+            
+            // パネル参照
+            enemyInfoPanel = staticEnemyInfoPanel;
+            battleFieldPanel = staticBattleFieldPanel;
+            comboProgressPanel = staticComboProgressPanel;
+            startScreenPanel = staticStartScreenPanel;
+            
+            // 子要素の参照を自動取得
+            InitializeStaticChildReferences();
+            
+            // 初期状態の設定
+            if (startScreenPanel != null)
+                startScreenPanel.SetActive(true);
+        }
+        
+        /// <summary>
+        /// 静的UI要素の子コンポーネント参照を初期化
+        /// </summary>
+        private void InitializeStaticChildReferences()
+        {
+            // 敵情報パネルの子要素を取得
+            if (enemyInfoPanel != null)
+            {
+                enemyInfoTitle = enemyInfoPanel.transform.Find("敵情報タイトル")?.GetComponent<TextMeshProUGUI>();
+                for (int i = 0; i < enemyHpTexts.Length; i++)
+                {
+                    Transform child = enemyInfoPanel.transform.Find($"敵HP表示_{i}");
+                    if (child != null)
+                        enemyHpTexts[i] = child.GetComponent<TextMeshProUGUI>();
+                }
+            }
+            
+            // 戦場パネルの子要素を取得
+            if (battleFieldPanel != null)
+            {
+                int enemyIndex = 0;
+                for (int col = 0; col < 3; col++)
+                {
+                    for (int row = 0; row < 2; row++)
+                    {
+                        Transform gridCell = battleFieldPanel.transform.Find($"グリッド_{col}_{row}");
+                        if (gridCell != null)
+                        {
+                            gridCells[col, row] = gridCell.gameObject;
+                            
+                            Transform enemyText = gridCell.Find($"敵表示_{col}_{row}");
+                            if (enemyText != null && enemyIndex < enemyTexts.Length)
+                                enemyTexts[enemyIndex] = enemyText.GetComponent<TextMeshProUGUI>();
+                            enemyIndex++;
+                        }
+                    }
+                }
+            }
+            
+            // コンボ進行パネルの子要素を取得
+            if (comboProgressPanel != null)
+            {
+                comboProgressTitle = comboProgressPanel.transform.Find("コンボ進行タイトル")?.GetComponent<TextMeshProUGUI>();
+                for (int i = 0; i < comboProgressItems.Length; i++)
+                {
+                    Transform comboItem = comboProgressPanel.transform.Find($"コンボアイテム_{i}");
+                    if (comboItem != null)
+                    {
+                        comboProgressItems[i] = comboItem.gameObject;
+                        comboNameTexts[i] = comboItem.Find($"コンボ名_{i}")?.GetComponent<TextMeshProUGUI>();
+                        comboStepTexts[i] = comboItem.Find($"ステップ表示_{i}")?.GetComponent<TextMeshProUGUI>();
+                        comboTimerTexts[i] = comboItem.Find($"タイマー表示_{i}")?.GetComponent<TextMeshProUGUI>();
+                        comboResistanceTexts[i] = comboItem.Find($"中断耐性表示_{i}")?.GetComponent<TextMeshProUGUI>();
+                        
+                        // 進行率バーの取得
+                        Transform progressBG = comboItem.Find($"進行率バー背景_{i}");
+                        if (progressBG != null)
+                        {
+                            Transform progressBar = progressBG.Find($"進行率バー_{i}");
+                            if (progressBar != null)
+                            {
+                                // スライダーコンポーネントを作成（もし存在しない場合）
+                                Slider slider = progressBG.GetComponent<Slider>();
+                                if (slider == null)
+                                {
+                                    slider = progressBG.gameObject.AddComponent<Slider>();
+                                    slider.minValue = 0f;
+                                    slider.maxValue = 1f;
+                                    slider.value = 0f;
+                                    slider.interactable = false;
+                                }
+                                comboProgressBars[i] = slider;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            Debug.Log("静的UI参照の初期化完了");
+        }
+        
+        private void CreateSimpleBattleUI()
         {
             Debug.Log("Creating Simple Battle UI (Hand System Edition)...");
             
@@ -455,6 +626,15 @@ namespace BattleSystem
                 new Vector2(140 * scale, 60 * scale), OnKillEnemyClicked);
             killEnemyButton.GetComponent<Image>().color = new Color(0.8f, 0.2f, 0.2f, 0.8f); // 赤色で目立たせる
             
+            // コンボテストボタン（左下）
+            if (enableComboTest)
+            {
+                comboTestButton = CreateUIButton("🎯 コンボテスト", 
+                    new Vector2(-screenWidth * 0.25f, -screenHeight * 0.3f), 
+                    new Vector2(160 * scale, 60 * scale), TestComboProgress);
+                comboTestButton.GetComponent<Image>().color = new Color(0.2f, 0.5f, 0.8f, 0.8f); // 青色で目立たせる
+            }
+            
             // 戦場表示を作成（中央左）- 列選択機能は削除
             CreateBattleFieldDisplay(scale, screenWidth, screenHeight);
             
@@ -470,8 +650,11 @@ namespace BattleSystem
             // 手札システム用説明テキスト（下部中央）
             CreateUIText("Info", new Vector2(0, -screenHeight * 0.3f), 
                 new Vector2(600 * scale, 100 * scale), 
-                "手札システム戦闘UI\\n画面下部の手札からカードを選択して攻撃\\n次のターンでダメージ適用＆ターン終了 / リセットで戦闘リセット", 
+                "手札システム戦闘UI\n画面下部の手札からカードを選択して攻撃\n次のターンでダメージ適用＆ターン終了 / リセットで戦闘リセット", 
                 Mathf.RoundToInt(14 * scale));
+            
+            // テスト用装備入れ替えボタン
+            CreateTestEquipmentButtons();
             
             Debug.Log("Simple Battle UI (Hand System Edition) created successfully!");
         }
@@ -645,7 +828,7 @@ namespace BattleSystem
             return sliderObj;
         }
         
-        void SetupBattleManager()
+        private void SetupBattleManager()
         {
             battleManager = FindObjectOfType<BattleManager>();
             if (battleManager == null)
@@ -658,6 +841,9 @@ namespace BattleSystem
             {
                 Debug.Log("BattleManager found and connected");
             }
+            
+            // BattleManagerのイベントを購読
+            battleManager.OnPlayerDataChanged += OnPlayerDataChanged;
             
             // HandSystemを取得してイベントを購読
             SetupHandSystemConnection();
@@ -678,7 +864,7 @@ namespace BattleSystem
         /// <summary>
         /// HandSystemとの接続を設定
         /// </summary>
-        void SetupHandSystemConnection()
+        private void SetupHandSystemConnection()
         {
             handSystem = FindObjectOfType<HandSystem>();
             if (handSystem == null)
@@ -703,6 +889,8 @@ namespace BattleSystem
             handSystem.OnPendingDamageCalculated += OnPendingDamageCalculated;
             handSystem.OnPendingDamageApplied += OnPendingDamageApplied;
             handSystem.OnPendingDamageCleared += OnPendingDamageCleared;
+            handSystem.OnEnemyDataChanged += OnEnemyDataChanged;
+            handSystem.OnBattleFieldChanged += OnBattleFieldChanged;
             
             Debug.Log("HandSystem found and events subscribed for pending damage display");
         }
@@ -710,7 +898,7 @@ namespace BattleSystem
         /// <summary>
         /// ComboSystemとの接続を設定
         /// </summary>
-        void SetupComboSystemConnection()
+        private void SetupComboSystemConnection()
         {
             comboSystem = FindObjectOfType<ComboSystem>();
             if (comboSystem == null)
@@ -742,7 +930,7 @@ namespace BattleSystem
             Debug.Log("ComboSystem events subscribed for combo UI display");
         }
         
-        void CreateTestDatabasesForBattleManager()
+        private void CreateTestDatabasesForBattleManager()
         {
             Debug.Log("Creating test databases for BattleManager...");
             
@@ -779,7 +967,7 @@ namespace BattleSystem
             
             // Reflectionでprivateフィールドを設定
             var weaponsField = typeof(WeaponDatabase).GetField("weapons", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                NonPublic | Instance);
             weaponsField?.SetValue(weaponDB, testWeapons);
             
             // テスト用敵データベースを作成
@@ -810,16 +998,16 @@ namespace BattleSystem
             };
             
             var enemiesField = typeof(EnemyDatabase).GetField("enemies", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                NonPublic | Instance);
             enemiesField?.SetValue(enemyDB, testEnemies);
             
             // BattleManagerにデータベースを設定
             var weaponDBField = typeof(BattleManager).GetField("weaponDatabase", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                NonPublic | Instance);
             weaponDBField?.SetValue(battleManager, weaponDB);
             
             var enemyDBField = typeof(BattleManager).GetField("enemyDatabase", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                NonPublic | Instance);
             enemyDBField?.SetValue(battleManager, enemyDB);
             
             Debug.Log("Test databases created and assigned to BattleManager!");
@@ -837,7 +1025,7 @@ namespace BattleSystem
         /// <summary>
         /// プレイヤーに武器を実際に装備させる（重要！）
         /// </summary>
-        void EquipWeaponsToPlayer(WeaponData[] weapons)
+        private void EquipWeaponsToPlayer(WeaponData[] weapons)
         {
             if (battleManager?.PlayerData == null)
             {
@@ -872,7 +1060,7 @@ namespace BattleSystem
         /// <summary>
         /// テスト用の敵を戦場に配置
         /// </summary>
-        void CreateTestEnemiesOnBattleField()
+        private void CreateTestEnemiesOnBattleField()
         {
             if (battleManager?.BattleField == null)
             {
@@ -884,7 +1072,7 @@ namespace BattleSystem
             
             // テスト用の敵データを取得
             var enemyDBField = typeof(BattleManager).GetField("enemyDatabase", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                NonPublic | Instance);
             EnemyDatabase enemyDB = enemyDBField?.GetValue(battleManager) as EnemyDatabase;
             
             if (enemyDB?.Enemies == null || enemyDB.Enemies.Length == 0)
@@ -1013,7 +1201,7 @@ namespace BattleSystem
             
             // リフレクションでenemiesフィールドにアクセス
             var enemiesField = typeof(EnemyDatabase).GetField("enemies", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                NonPublic | Instance);
             enemiesField?.SetValue(enemyDB, defaultEnemies.ToArray());
             
             Debug.Log($"Created default EnemyDatabase with {defaultEnemies.Count} enemies");
@@ -1023,10 +1211,10 @@ namespace BattleSystem
         /// <summary>
         /// BattleManagerにEnemyDatabaseを設定
         /// </summary>
-        void SetEnemyDatabaseToBattleManager(EnemyDatabase enemyDB)
+        private void SetEnemyDatabaseToBattleManager(EnemyDatabase enemyDB)
         {
             var enemyDBField = typeof(BattleManager).GetField("enemyDatabase", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                NonPublic | Instance);
             enemyDBField?.SetValue(battleManager, enemyDB);
             Debug.Log("EnemyDatabase set to BattleManager");
         }
@@ -1034,7 +1222,7 @@ namespace BattleSystem
         /// <summary>
         /// 既存のEnemyDatabaseにデフォルト敵を追加
         /// </summary>
-        void AddDefaultEnemiesToDatabase(EnemyDatabase enemyDB)
+        private void AddDefaultEnemiesToDatabase(EnemyDatabase enemyDB)
         {
             var defaultEnemies = new EnemyData[]
             {
@@ -1069,7 +1257,7 @@ namespace BattleSystem
             
             // リフレクションで敵データを設定
             var enemiesField = typeof(EnemyDatabase).GetField("enemies", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                NonPublic | Instance);
             enemiesField?.SetValue(enemyDB, defaultEnemies);
             
             Debug.Log($"Added {defaultEnemies.Length} default enemies to existing EnemyDatabase");
@@ -1078,7 +1266,7 @@ namespace BattleSystem
         /// <summary>
         /// 敵情報表示を更新
         /// </summary>
-        void UpdateEnemyDisplay()
+        private void UpdateEnemyDisplay()
         {
             Debug.Log("Updating enemy display...");
             
@@ -1122,7 +1310,7 @@ namespace BattleSystem
         /// <summary>
         /// 戦場グリッド表示を更新
         /// </summary>
-        void UpdateBattleFieldDisplay()
+        private void UpdateBattleFieldDisplay()
         {
             Debug.Log("Updating battlefield display...");
             
@@ -1189,7 +1377,7 @@ namespace BattleSystem
         /// <summary>
         /// 戦場表示の作成（手札システム対応版 - 列選択機能削除）
         /// </summary>
-        void CreateBattleFieldDisplay(float scale, float screenWidth, float screenHeight)
+        private void CreateBattleFieldDisplay(float scale, float screenWidth, float screenHeight)
         {
             Debug.Log("Creating BattleField Display (Hand System Edition)...");
             
@@ -1248,7 +1436,7 @@ namespace BattleSystem
         /// <summary>
         /// 敵情報表示の作成（右上エリア）
         /// </summary>
-        void CreateEnemyInfoDisplay(float scale, float screenWidth, float screenHeight)
+        private void CreateEnemyInfoDisplay(float scale, float screenWidth, float screenHeight)
         {
             Debug.Log("Creating Enemy Info Display...");
             
@@ -1288,7 +1476,7 @@ namespace BattleSystem
         /// <summary>
         /// コンボ進行状況表示の作成（左下エリア）
         /// </summary>
-        void CreateComboProgressDisplay(float scale, float screenWidth, float screenHeight)
+        private void CreateComboProgressDisplay(float scale, float screenWidth, float screenHeight)
         {
             Debug.Log("Creating Combo Progress Display...");
             
@@ -1307,6 +1495,9 @@ namespace BattleSystem
                 "=== コンボ進行 ===", 
                 Mathf.RoundToInt(16 * scale));
             comboProgressTitle.color = Color.cyan;
+            
+            // コンボグループコンテナの初期化
+            InitializeComboGroupContainer(scale, screenWidth, screenHeight);
             
             // 各コンボ進行アイテムを作成（最大5つ）
             for (int i = 0; i < 5; i++)
@@ -1371,7 +1562,7 @@ namespace BattleSystem
         /// <summary>
         /// コンボ効果ポップアップ表示の作成（中央上部エリア）
         /// </summary>
-        void CreateComboEffectDisplay(float scale, float screenWidth, float screenHeight)
+        private void CreateComboEffectDisplay(float scale, float screenWidth, float screenHeight)
         {
             Debug.Log("Creating Combo Effect Display...");
             
@@ -1407,10 +1598,98 @@ namespace BattleSystem
             Debug.Log("コンボ効果ポップアップ表示作成完了!");
         }
         
-        void UpdateUI()
+        /// <summary>
+        /// テスト用装備入れ替えボタンを作成
+        /// </summary>
+        private void CreateTestEquipmentButtons()
+        {
+            RectTransform canvasRect = canvas.GetComponent<RectTransform>();
+            float screenWidth = canvasRect.rect.width;
+            float screenHeight = canvasRect.rect.height;
+            float scale = Mathf.Min(screenWidth / 1920f, screenHeight / 1080f);
+            
+            // テスト用ボタンパネル作成（右上）
+            GameObject testPanel = CreateUIPanel("TestEquipmentPanel", 
+                new Vector2(screenWidth * 0.35f, screenHeight * 0.4f), 
+                new Vector2(220 * scale, 140 * scale), 
+                new Color(0.1f, 0.1f, 0.2f, 0.8f));
+            
+            // タイトル
+            TextMeshProUGUI titleText = CreateUIText("TestTitle", 
+                new Vector2(0, 50 * scale), 
+                new Vector2(200 * scale, 30 * scale), 
+                "=== テスト機能 ===\nF1: 武器 F2: アタッチメント", 
+                Mathf.RoundToInt(10 * scale), testPanel);
+            titleText.color = Color.yellow;
+            titleText.alignment = TextAlignmentOptions.Center;
+            
+            // 武器入れ替えボタン
+            Button weaponSwapButton = CreateUIButton("WeaponSwapButton", 
+                new Vector2(0, 10 * scale), 
+                new Vector2(180 * scale, 30 * scale), 
+                OnWeaponSwapClicked, testPanel);
+            
+            // ボタンテキスト
+            Transform buttonText = weaponSwapButton.transform.Find("Text");
+            if (buttonText != null)
+            {
+                TextMeshProUGUI textComponent = buttonText.GetComponent<TextMeshProUGUI>();
+                if (textComponent != null)
+                {
+                    textComponent.text = "⚔️ 武器入れ替え";
+                    textComponent.fontSize = Mathf.RoundToInt(12 * scale);
+                }
+            }
+            
+            // アタッチメント入れ替えボタン
+            Button attachmentSwapButton = CreateUIButton("AttachmentSwapButton", 
+                new Vector2(0, -30 * scale), 
+                new Vector2(180 * scale, 30 * scale), 
+                OnAttachmentSwapClicked, testPanel);
+            
+            // ボタンテキスト
+            Transform attachmentButtonText = attachmentSwapButton.transform.Find("Text");
+            if (attachmentButtonText != null)
+            {
+                TextMeshProUGUI textComponent = attachmentButtonText.GetComponent<TextMeshProUGUI>();
+                if (textComponent != null)
+                {
+                    textComponent.text = "🔧 アタッチメント入れ替え";
+                    textComponent.fontSize = Mathf.RoundToInt(12 * scale);
+                }
+            }
+            
+            Debug.Log("テスト用装備入れ替えボタン作成完了!");
+        }
+        
+        private void UpdateUI()
         {
             // 戦闘が開始されていない場合はUI更新をスキップ
             if (!isBattleStarted || battleManager == null) return;
+            
+            // キーボードショートカット（テスト用）
+            if (Input.GetKeyDown(KeyCode.F1))
+            {
+                try
+                {
+                    OnWeaponSwapClicked();
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"武器入れ替えエラー: {ex.Message}");
+                }
+            }
+            if (Input.GetKeyDown(KeyCode.F2))
+            {
+                try
+                {
+                    OnAttachmentSwapClicked();
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"アタッチメント入れ替えエラー: {ex.Message}");
+                }
+            }
             
             // ターン表示更新
             if (turnText != null)
@@ -1435,7 +1714,7 @@ namespace BattleSystem
         }
         
         
-        void OnNextTurnClicked()
+        private void OnNextTurnClicked()
         {
             Debug.Log("=== Next Turn Button Clicked ===");
             
@@ -1475,7 +1754,7 @@ namespace BattleSystem
             }
         }
         
-        void OnResetClicked()
+        private void OnResetClicked()
         {
             Debug.Log("=== Reset Battle Button Clicked ===");
             
@@ -1495,9 +1774,157 @@ namespace BattleSystem
         }
         
         /// <summary>
+        /// 武器入れ替えボタンクリック時の処理
+        /// </summary>
+        private void OnWeaponSwapClicked()
+        {
+            Debug.Log("=== 武器入れ替えテスト ===");
+            
+            try
+            {
+                AttachmentSystem attachmentSystem = FindObjectOfType<AttachmentSystem>();
+                if (attachmentSystem == null)
+                {
+                    Debug.LogError("AttachmentSystem not found! Cannot swap weapons.");
+                    return;
+                }
+                
+                // 装備武器をランダムに入れ替え
+                attachmentSystem.RandomlyReequipWeapons();
+                
+                // 手札を再生成
+                attachmentSystem.RegenerateWeaponCardsForNewTurn();
+            
+            // HandSystemに手札更新を通知
+            HandSystem handSystem = FindObjectOfType<HandSystem>();
+            if (handSystem != null)
+            {
+                var weaponCards = attachmentSystem.WeaponCards;
+                if (weaponCards != null && weaponCards.Count > 0)
+                {
+                    // リフレクションでHandSystemの手札を更新
+                    try
+                    {
+                        var field = handSystem.GetType().GetField("currentHand", 
+                            NonPublic | Instance);
+                        if (field != null)
+                        {
+                            field.SetValue(handSystem, weaponCards);
+                            Debug.Log("✅ HandSystem手札更新完了");
+                        }
+                        
+                        // UI更新を強制実行（代替手段）
+                        var updateMethod = handSystem.GetType().GetMethod("ForceUpdateHandDisplay", 
+                            NonPublic | Instance);
+                        if (updateMethod != null)
+                        {
+                            updateMethod.Invoke(handSystem, null);
+                            Debug.Log("✅ HandSystem UI強制更新完了");
+                        }
+                        else
+                        {
+                            // 代替手段：手札状態を変更してUI更新をトリガー
+                            var stateField = handSystem.GetType().GetField("currentHandState", 
+                                NonPublic | Instance);
+                            if (stateField != null)
+                            {
+                                var currentState = stateField.GetValue(handSystem);
+                                stateField.SetValue(handSystem, currentState);
+                                Debug.Log("✅ HandSystem 状態更新完了（代替手段）");
+                            }
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogWarning($"HandSystem更新エラー: {ex.Message}");
+                    }
+                }
+            }
+            
+            Debug.Log($"✅ 武器入れ替え完了: {attachmentSystem.EquippedWeapons.Count}個の武器");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"武器入れ替えエラー: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// アタッチメント入れ替えボタンクリック時の処理
+        /// </summary>
+        private void OnAttachmentSwapClicked()
+        {
+            Debug.Log("=== アタッチメント入れ替えテスト ===");
+            
+            try
+            {
+                AttachmentSystem attachmentSystem = FindObjectOfType<AttachmentSystem>();
+                if (attachmentSystem == null)
+                {
+                    Debug.LogError("AttachmentSystem not found! Cannot swap attachments.");
+                    return;
+                }
+            
+            // 全アタッチメントをクリア
+            var currentAttachments = attachmentSystem.GetAttachedAttachments();
+            Debug.Log($"現在のアタッチメント数: {currentAttachments.Count}");
+            
+            // 既存アタッチメントを削除
+            foreach (var attachment in currentAttachments.ToList())
+            {
+                attachmentSystem.RemoveAttachment(attachment);
+                Debug.Log($"  🗑️ 削除: {attachment.attachmentName}");
+            }
+            
+            // ランダムに新しいアタッチメントを3個装備
+            var availableAttachments = attachmentSystem.GenerateAttachmentOptions();
+            if (availableAttachments != null && availableAttachments.Length > 0)
+            {
+                try
+                {
+                    var random = new System.Random((int)System.DateTime.Now.Ticks);
+                    int attachmentsToAdd = Mathf.Min(3, availableAttachments.Length);
+                    
+                    for (int i = 0; i < attachmentsToAdd; i++)
+                    {
+                        var randomAttachment = availableAttachments[random.Next(availableAttachments.Length)];
+                        if (randomAttachment != null)
+                        {
+                            bool success = attachmentSystem.AttachAttachment(randomAttachment);
+                            if (success)
+                            {
+                                Debug.Log($"  ✅ 装備: {randomAttachment.attachmentName} ({randomAttachment.rarity})");
+                            }
+                            else
+                            {
+                                Debug.LogWarning($"  ❌ 装備失敗: {randomAttachment.attachmentName}");
+                            }
+                        }
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"アタッチメント装備エラー: {ex.Message}");
+                }
+            }
+            
+            // 新しい装備状況を表示
+            var newAttachments = attachmentSystem.GetAttachedAttachments();
+            Debug.Log($"✅ アタッチメント入れ替え完了: {newAttachments.Count}個のアタッチメント装備");
+            
+            // コンボ表示の更新（装備アタッチメントコンボの再表示）
+            UpdateEquippedAttachmentCombosDisplay();
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"アタッチメント入れ替えエラー: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
         /// テスト用：敵を倒すボタンのクリック処理
         /// </summary>
-        void OnKillEnemyClicked()
+        private void OnKillEnemyClicked()
         {
             Debug.Log("=== Kill Enemy Button Clicked ===");
             
@@ -1594,7 +2021,7 @@ namespace BattleSystem
         /// <summary>
         /// 予告ダメージが計算された時の処理
         /// </summary>
-        void OnPendingDamageCalculated(PendingDamageInfo pendingDamage)
+        private void OnPendingDamageCalculated(PendingDamageInfo pendingDamage)
         {
             Debug.Log($"Pending damage calculated: {pendingDamage.description} - {pendingDamage.calculatedDamage} damage");
             
@@ -1610,7 +2037,7 @@ namespace BattleSystem
         /// <summary>
         /// 予告ダメージが実際に適用された時の処理
         /// </summary>
-        void OnPendingDamageApplied(PendingDamageInfo appliedDamage)
+        private void OnPendingDamageApplied(PendingDamageInfo appliedDamage)
         {
             Debug.Log($"Pending damage applied: {appliedDamage.description} - {appliedDamage.calculatedDamage} damage");
             
@@ -1628,7 +2055,7 @@ namespace BattleSystem
         /// <summary>
         /// 予告ダメージがクリアされた時の処理
         /// </summary>
-        void OnPendingDamageCleared()
+        private void OnPendingDamageCleared()
         {
             Debug.Log("Pending damage cleared");
             
@@ -1638,12 +2065,51 @@ namespace BattleSystem
             }
         }
         
+        /// <summary>
+        /// 敵データが変更された時の処理（UI更新）
+        /// </summary>
+        private void OnEnemyDataChanged()
+        {
+            Debug.Log("敵データが変更されました - UI更新開始");
+            
+            // 敵情報表示を強制更新
+            UpdateEnemyInfoDisplay();
+            
+            // 戦場表示も更新
+            UpdateBattleFieldDisplay();
+        }
+        
+        /// <summary>
+        /// 戦場データが変更された時の処理（UI更新）
+        /// </summary>
+        private void OnBattleFieldChanged()
+        {
+            Debug.Log("戦場データが変更されました - UI更新開始");
+            
+            // 戦場表示を強制更新
+            UpdateBattleFieldDisplay();
+        }
+        
+        /// <summary>
+        /// プレイヤーデータが変更された時の処理（UI更新）
+        /// </summary>
+        private void OnPlayerDataChanged(PlayerData playerData)
+        {
+            Debug.Log($"プレイヤーデータが変更されました - HP: {playerData.currentHp}/{playerData.maxHp}");
+            
+            // HP表示を更新
+            if (hpText != null)
+            {
+                hpText.text = $"HP: {playerData.currentHp}/{playerData.maxHp}";
+            }
+        }
+        
         // ===== スタート画面関連メソッド =====
         
         /// <summary>
         /// 戦闘UI要素のグループを作成
         /// </summary>
-        void CreateBattleUIGroup()
+        private void CreateBattleUIGroup()
         {
             battleUIGroup = new GameObject("Battle UI Group");
             battleUIGroup.transform.SetParent(canvas.transform, false);
@@ -1661,7 +2127,7 @@ namespace BattleSystem
         /// <summary>
         /// スタート画面を作成
         /// </summary>
-        void CreateStartScreen()
+        private void CreateStartScreen()
         {
             Debug.Log("Creating Start Screen...");
             
@@ -1733,7 +2199,7 @@ namespace BattleSystem
         /// <summary>
         /// 戦闘開始ボタンクリック時の処理
         /// </summary>
-        void OnStartBattleClicked()
+        private void OnStartBattleClicked()
         {
             Debug.Log("=== Start Battle Button Clicked ===");
             
@@ -1744,7 +2210,7 @@ namespace BattleSystem
         /// <summary>
         /// 戦闘開始処理（手札表示強化版）
         /// </summary>
-        void StartBattle()
+        private void StartBattle()
         {
             Debug.Log("=== Starting battle... ===");
             
@@ -1796,7 +2262,7 @@ namespace BattleSystem
         /// <summary>
         /// 手札UIを表示（強化版）
         /// </summary>
-        void ShowHandUI()
+        private void ShowHandUI()
         {
             Debug.Log("=== ShowHandUI Called ===");
             
@@ -2093,9 +2559,12 @@ namespace BattleSystem
         /// <summary>
         /// コンボ開始時の処理
         /// </summary>
-        void OnComboStarted(ComboData comboData)
+        private void OnComboStarted(ComboData comboData)
         {
             Debug.Log($"Combo started: {comboData.comboName}");
+            
+            // 新システム：コンボグループ作成・表示
+            HandleComboStartedNew(comboData);
             
             // コンボ進行状況表示は自動更新される（UpdateComboProgressDisplayで）
         }
@@ -2103,9 +2572,12 @@ namespace BattleSystem
         /// <summary>
         /// コンボ進行更新時の処理
         /// </summary>
-        void OnComboProgressUpdated(ComboProgress progress)
+        private void OnComboProgressUpdated(ComboProgress progress)
         {
             Debug.Log($"Combo progress updated: {progress.comboData.comboName} - {progress.progressPercentage:P0}");
+            
+            // 新システム：コンボグループ進行更新
+            HandleComboProgressUpdatedNew(progress);
             
             // コンボ進行状況表示は自動更新される（UpdateComboProgressDisplayで）
         }
@@ -2113,9 +2585,12 @@ namespace BattleSystem
         /// <summary>
         /// コンボ完成時の処理
         /// </summary>
-        void OnComboCompleted(ComboExecutionResult result)
+        private void OnComboCompleted(ComboExecutionResult result)
         {
             Debug.Log($"Combo completed: {result.executedCombo.comboName} - {result.resultMessage}");
+            
+            // 新システム：コンボグループ完了処理
+            HandleComboCompletedNew(result);
             
             // コンボ効果ポップアップ表示
             ShowComboEffectPopup(result);
@@ -2124,9 +2599,12 @@ namespace BattleSystem
         /// <summary>
         /// コンボ失敗時の処理
         /// </summary>
-        void OnComboFailed(ComboData comboData, string reason)
+        private void OnComboFailed(ComboData comboData, string reason)
         {
             Debug.Log($"Combo failed: {comboData.comboName} - {reason}");
+            
+            // 新システム：コンボグループ失敗処理
+            HandleComboFailedNew(comboData, reason);
             
             // 失敗メッセージを簡易表示
             if (comboEffectPopup != null)
@@ -2138,9 +2616,12 @@ namespace BattleSystem
         /// <summary>
         /// コンボ中断時の処理
         /// </summary>
-        void OnComboInterrupted(ComboData comboData)
+        private void OnComboInterrupted(ComboData comboData)
         {
             Debug.Log($"Combo interrupted: {comboData.comboName}");
+            
+            // 新システム：コンボグループ中断処理
+            HandleComboInterruptedNew(comboData);
             
             // 中断メッセージを簡易表示
             if (comboEffectPopup != null)
@@ -2152,7 +2633,7 @@ namespace BattleSystem
         /// <summary>
         /// コンボ効果ポップアップ表示
         /// </summary>
-        void ShowComboEffectPopup(ComboExecutionResult result)
+        private void ShowComboEffectPopup(ComboExecutionResult result)
         {
             if (comboEffectPopup == null || comboEffectTitle == null || comboEffectDescription == null)
                 return;
@@ -2370,7 +2851,7 @@ namespace BattleSystem
         /// <summary>
         /// テスト用ComboDatabase作成
         /// </summary>
-        void CreateTestComboDatabase()
+        private void CreateTestComboDatabase()
         {
             if (comboSystem == null)
             {
@@ -2440,12 +2921,12 @@ namespace BattleSystem
             
             // プライベートフィールドにリフレクションで設定
             var combosField = typeof(ComboDatabase).GetField("availableCombos", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                NonPublic | Instance);
             combosField?.SetValue(comboDB, testCombos);
             
             // ComboSystemにデータベースを設定
             var comboDBField = typeof(ComboSystem).GetField("comboDatabase", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                NonPublic | Instance);
             comboDBField?.SetValue(comboSystem, comboDB);
             
             Debug.Log("Test combo database created and assigned to ComboSystem!");
@@ -2884,7 +3365,7 @@ namespace BattleSystem
         /// <summary>
         /// AttachmentSystemとの接続を設定
         /// </summary>
-        void SetupAttachmentSystemConnection()
+        private void SetupAttachmentSystemConnection()
         {
             var attachmentSystem = battleManager.GetComponent<AttachmentSystem>();
             if (attachmentSystem == null)
@@ -2902,7 +3383,7 @@ namespace BattleSystem
         /// <summary>
         /// UI上に装備中のアタッチメントを表示
         /// </summary>
-        void DisplayEquippedAttachmentsInUI(List<AttachmentData> equippedAttachments)
+        private void DisplayEquippedAttachmentsInUI(List<AttachmentData> equippedAttachments)
         {
             if (equippedAttachments == null || equippedAttachments.Count == 0)
             {
@@ -2926,7 +3407,7 @@ namespace BattleSystem
         /// <summary>
         /// 戦闘画面にアタッチメント・コンボ情報を表示
         /// </summary>
-        void UpdateAttachmentComboDisplay(List<AttachmentData> equippedAttachments)
+        private void UpdateAttachmentComboDisplay(List<AttachmentData> equippedAttachments)
         {
             // 既存のアタッチメント・コンボ表示エリアを更新または作成
             var comboDisplayArea = battleUIGroup.transform.Find("ComboDisplayArea");
@@ -3058,7 +3539,7 @@ namespace BattleSystem
         /// <summary>
         /// コンボ表示エリアの初期化
         /// </summary>
-        void InitializeComboDisplayArea()
+        private void InitializeComboDisplayArea()
         {
             if (battleUIGroup == null)
             {
@@ -3083,7 +3564,7 @@ namespace BattleSystem
         /// <summary>
         /// 装備アタッチメントのコンボ情報を左下コンボ表に表示
         /// </summary>
-        void UpdateEquippedAttachmentCombosDisplay()
+        private void UpdateEquippedAttachmentCombosDisplay()
         {
             // AttachmentSystemから装備中アタッチメントを取得
             var attachmentSystem = battleManager?.GetComponent<AttachmentSystem>();
@@ -3226,6 +3707,744 @@ namespace BattleSystem
                     }
                 }
             }
+        }
+        
+        /// <summary>
+        /// コンボグループコンテナの初期化
+        /// </summary>
+        private void InitializeComboGroupContainer(float scale, float screenWidth, float screenHeight)
+        {
+            Debug.Log("🎯 コンボグループコンテナを初期化中...");
+            
+            // 全コンボグループの親コンテナを作成
+            comboGroupContainer = CreateUIPanel("ComboGroupsContainer", 
+                new Vector2(-screenWidth * 0.4f, -screenHeight * 0.35f),
+                new Vector2(350 * scale, 400 * scale), 
+                new Color(0.05f, 0.05f, 0.2f, 0.6f));
+                
+            Debug.Log("✅ コンボグループコンテナ初期化完了");
+        }
+        
+        /// <summary>
+        /// コンボグループを取得または作成
+        /// </summary>
+        private ComboGroupContainer GetOrCreateComboGroup(ComboData combo)
+        {
+            if (comboGroups.TryGetValue(combo.comboName, out ComboGroupContainer existingGroup))
+            {
+                return existingGroup;
+            }
+            
+            // 新しいコンボグループを作成
+            Vector2 position = CalculateComboGroupPosition(comboGroups.Count);
+            Vector2 size = new Vector2(320, 80);
+            
+            ComboGroupContainer newGroup = new ComboGroupContainer(combo, comboGroupContainer.transform, position, size);
+            comboGroups.Add(combo.comboName, newGroup);
+            
+            Debug.Log($"🎯 新しいコンボグループ作成: {combo.comboName}");
+            return newGroup;
+        }
+        
+        /// <summary>
+        /// コンボグループの表示位置を計算
+        /// </summary>
+        private Vector2 CalculateComboGroupPosition(int index)
+        {
+            float yOffset = -index * 85; // 各グループ間の縦間隔
+            return new Vector2(5, yOffset - 10);
+        }
+        
+        /// <summary>
+        /// コンボグループ表示の更新（新システム）
+        /// </summary>
+        private void UpdateComboGroupsDisplay()
+        {
+            if (comboSystem == null) return;
+            
+            var activeCombos = comboSystem.ActiveCombos;
+            
+            // 非アクティブなコンボグループを非表示
+            foreach (var kvp in comboGroups.ToList())
+            {
+                bool isActive = activeCombos.Any(c => c.comboData.comboName == kvp.Key);
+                if (!isActive)
+                {
+                    kvp.Value.SetActive(false);
+                }
+            }
+            
+            // アクティブなコンボグループを更新・表示
+            for (int i = 0; i < activeCombos.Count; i++)
+            {
+                var progress = activeCombos[i];
+                var group = GetOrCreateComboGroup(progress.comboData);
+                
+                group.SetActive(true);
+                group.UpdateProgress(progress);
+                
+                // 位置を再計算（動的な並び替え）
+                Vector2 newPosition = CalculateComboGroupPosition(i);
+                if (group.parentObject != null)
+                {
+                    RectTransform rect = group.parentObject.GetComponent<RectTransform>();
+                    rect.anchoredPosition = newPosition;
+                }
+            }
+            
+            Debug.Log($"🎯 コンボグループ表示更新完了: {activeCombos.Count}個のアクティブコンボ");
+        }
+        
+        /// <summary>
+        /// アクティブなコンボグループを更新
+        /// </summary>
+        private void UpdateActiveComboGroups(List<ComboProgress> activeCombos)
+        {
+            Debug.Log($"🎯 アクティブコンボグループ更新: {activeCombos.Count}個");
+            
+            // すべてのグループを一旦非表示
+            foreach (var group in comboGroups.Values)
+            {
+                group.SetActive(false);
+            }
+            
+            // アクティブなコンボのグループを表示・更新
+            for (int i = 0; i < activeCombos.Count && i < 5; i++)
+            {
+                var progress = activeCombos[i];
+                var group = GetOrCreateComboGroup(progress.comboData);
+                
+                group.SetActive(true);
+                group.UpdateProgress(progress);
+                
+                // 位置を再計算（動的な並び替え）
+                Vector2 newPosition = CalculateComboGroupPosition(i);
+                if (group.parentObject != null)
+                {
+                    RectTransform rect = group.parentObject.GetComponent<RectTransform>();
+                    rect.anchoredPosition = newPosition;
+                }
+            }
+            
+            // タイトル更新
+            if (comboProgressTitle != null)
+            {
+                comboProgressTitle.text = $"=== コンボ進行 ({activeCombos.Count}/5) ===";
+            }
+        }
+        
+        /// <summary>
+        /// コンボ開始時の処理（新システム）
+        /// </summary>
+        private void HandleComboStartedNew(ComboData comboData)
+        {
+            Debug.Log($"🎯 コンボ開始（新システム）: {comboData.comboName}");
+            
+            var group = GetOrCreateComboGroup(comboData);
+            group.SetActive(true);
+            
+            // 初期状態設定
+            if (group.statusText != null)
+                group.statusText.text = "開始!";
+                
+            if (group.nameText != null)
+                group.nameText.color = Color.green;
+        }
+        
+        /// <summary>
+        /// コンボ完了時の処理（新システム）
+        /// </summary>
+        private void HandleComboCompletedNew(ComboExecutionResult result)
+        {
+            Debug.Log($"🎯 コンボ完了（新システム）: {result.executedCombo.comboName}");
+            
+            if (comboGroups.TryGetValue(result.executedCombo.comboName, out ComboGroupContainer group))
+            {
+                if (group.statusText != null)
+                {
+                    group.statusText.text = "完成!";
+                    group.statusText.color = Color.gold;
+                }
+                
+                if (group.nameText != null)
+                    group.nameText.color = Color.yellow;
+                    
+                // 完成エフェクト（一定時間後に非表示）
+                StartCoroutine(HideCompletedComboAfterDelay(group, 3f));
+            }
+        }
+        
+        /// <summary>
+        /// コンボ進行更新時の処理（新システム）
+        /// </summary>
+        private void HandleComboProgressUpdatedNew(ComboProgress progress)
+        {
+            Debug.Log($"🎯 コンボ進行更新（新システム）: {progress.comboData.comboName} - {progress.progressPercentage:P0}");
+            
+            if (comboGroups.TryGetValue(progress.comboData.comboName, out ComboGroupContainer group))
+            {
+                group.UpdateProgress(progress);
+                
+                if (group.statusText != null)
+                {
+                    group.statusText.text = $"{progress.currentStep}/{progress.totalSteps}";
+                    group.statusText.color = Color.cyan;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// コンボ失敗時の処理（新システム）
+        /// </summary>
+        private void HandleComboFailedNew(ComboData comboData, string reason)
+        {
+            Debug.Log($"🎯 コンボ失敗（新システム）: {comboData.comboName} - {reason}");
+            
+            if (comboGroups.TryGetValue(comboData.comboName, out ComboGroupContainer group))
+            {
+                if (group.statusText != null)
+                {
+                    group.statusText.text = "失敗";
+                    group.statusText.color = Color.red;
+                }
+                
+                if (group.nameText != null)
+                    group.nameText.color = Color.red;
+                    
+                // 失敗表示後に非表示
+                StartCoroutine(HideCompletedComboAfterDelay(group, 2f));
+            }
+        }
+        
+        /// <summary>
+        /// コンボ中断時の処理（新システム）
+        /// </summary>
+        private void HandleComboInterruptedNew(ComboData comboData)
+        {
+            Debug.Log($"🎯 コンボ中断（新システム）: {comboData.comboName}");
+            
+            if (comboGroups.TryGetValue(comboData.comboName, out ComboGroupContainer group))
+            {
+                if (group.statusText != null)
+                {
+                    group.statusText.text = "中断";
+                    group.statusText.color = Color.orange;
+                }
+                
+                if (group.nameText != null)
+                    group.nameText.color = Color.orange;
+                    
+                // 中断表示後に非表示
+                StartCoroutine(HideCompletedComboAfterDelay(group, 2f));
+            }
+        }
+        
+        /// <summary>
+        /// 完了したコンボグループを遅延後に非表示
+        /// </summary>
+        private System.Collections.IEnumerator HideCompletedComboAfterDelay(ComboGroupContainer group, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            group.SetActive(false);
+        }
+        
+        // =============================================================================
+        // コンボテスト機能
+        // =============================================================================
+        
+        /// <summary>
+        /// コンボ進行をテストする（デバッグ用）
+        /// </summary>
+        public void TestComboProgress()
+        {
+            if (comboSystem == null)
+            {
+                Debug.LogWarning("ComboSystemが見つかりません");
+                return;
+            }
+            
+            Debug.Log("🎯 コンボテスト開始");
+            
+            // テスト用コンボデータを作成または既存のコンボを進行
+            if (comboSystem.ActiveCombos == null || comboSystem.ActiveCombos.Count == 0)
+            {
+                CreateTestCombo();
+            }
+            else
+            {
+                AdvanceExistingCombo();
+            }
+        }
+        
+        /// <summary>
+        /// テスト用コンボを作成
+        /// </summary>
+        private void CreateTestCombo()
+        {
+            // テスト用のコンボデータを作成
+            ComboData testCombo = CreateTestComboData();
+            
+            // 手動でコンボ進行状況を作成
+            ComboProgress testProgress = new ComboProgress
+            {
+                comboData = testCombo,
+                usedWeaponIndices = new List<int> { 0 },
+                usedAttackAttributes = new List<AttackAttribute> { AttackAttribute.Fire },
+                usedWeaponTypes = new List<WeaponType> { WeaponType.Sword },
+                currentStep = 1,
+                totalSteps = testCombo.requiredWeaponCount,
+                startTurn = battleManager != null ? battleManager.CurrentTurn : 1,
+                startTime = Time.time,
+                isActive = true,
+                isCompleted = false,
+                progressPercentage = 1.0f / testCombo.requiredWeaponCount
+            };
+            
+            // ComboSystemの内部リストに直接追加（テスト用）
+            if (comboSystem.ActiveCombos != null)
+            {
+                comboSystem.ActiveCombos.Add(testProgress);
+                
+                // UI更新を直接呼び出し
+                OnComboStarted(testCombo);
+                OnComboProgressUpdated(testProgress);
+                
+                Debug.Log($"テストコンボ作成: {testCombo.comboName} - 進行率: {testProgress.progressPercentage:P0}");
+            }
+        }
+        
+        /// <summary>
+        /// 既存のコンボを進行させる
+        /// </summary>
+        private void AdvanceExistingCombo()
+        {
+            if (comboSystem.ActiveCombos.Count > 0)
+            {
+                ComboProgress progress = comboSystem.ActiveCombos[0];
+                
+                if (!progress.isCompleted && progress.currentStep < progress.totalSteps)
+                {
+                    // コンボを1ステップ進める
+                    progress.currentStep++;
+                    progress.progressPercentage = (float)progress.currentStep / progress.totalSteps;
+                    
+                    // 武器使用データを追加（テスト用）
+                    progress.usedWeaponIndices.Add(progress.currentStep - 1);
+                    progress.usedAttackAttributes.Add(AttackAttribute.Fire);
+                    progress.usedWeaponTypes.Add(WeaponType.Sword);
+                    
+                    Debug.Log($"コンボ進行: {progress.comboData.comboName} - ステップ: {progress.currentStep}/{progress.totalSteps}");
+                    
+                    // 進行更新UI呼び出し
+                    OnComboProgressUpdated(progress);
+                    
+                    // コンボ完成チェック
+                    if (progress.currentStep >= progress.totalSteps)
+                    {
+                        progress.isCompleted = true;
+                        
+                        // コンボ完成UI呼び出し
+                        ComboExecutionResult result = new ComboExecutionResult
+                        {
+                            wasExecuted = true,
+                            executedCombo = progress.comboData,
+                            appliedEffects = progress.comboData.effects,
+                            additionalActionsGranted = 1,
+                            totalDamageMultiplier = 1.5f,
+                            resultMessage = "テストコンボ完成！"
+                        };
+                        
+                        OnComboCompleted(result);
+                        comboSystem.ActiveCombos.RemoveAt(0);
+                        
+                        Debug.Log($"🎉 コンボ完成: {progress.comboData.comboName}");
+                    }
+                }
+                else
+                {
+                    Debug.Log("既存のコンボはすでに完成しています。新しいコンボを作成します。");
+                    CreateTestCombo();
+                }
+            }
+        }
+        
+        /// <summary>
+        /// テスト用コンボデータを作成
+        /// </summary>
+        private ComboData CreateTestComboData()
+        {
+            ComboData testCombo = new ComboData
+            {
+                comboName = "テスト炎コンボ",
+                requiredWeaponCount = 3,
+                requiredWeapons = new string[] { "炎の剣", "炎の槍", "炎の弓" },
+                comboDescription = "炎属性武器による連続攻撃",
+                canInterrupt = true,
+                interruptResistance = 0.2f,
+                priority = 1,
+                condition = new ComboCondition
+                {
+                    comboType = ComboType.AttributeCombo,
+                    requiredAttackAttributes = new AttackAttribute[] { AttackAttribute.Fire },
+                    requiredWeaponTypes = new WeaponType[] { WeaponType.Sword, WeaponType.Spear, WeaponType.Bow },
+                    minAttackPower = 0,
+                    requiresSequence = false,
+                    maxTurnInterval = 5,
+                    successRate = 0.8f
+                },
+                effects = new ComboEffect[]
+                {
+                    new ComboEffect
+                    {
+                        effectType = ComboEffectType.DamageMultiplier,
+                        damageMultiplier = 1.5f,
+                        effectDescription = "ダメージ150%"
+                    },
+                    new ComboEffect
+                    {
+                        effectType = ComboEffectType.AdditionalAction,
+                        additionalActions = 1,
+                        effectDescription = "追加行動+1"
+                    }
+                }
+            };
+            
+            return testCombo;
+        }
+    }
+
+    /// <summary>
+    /// コンボごとの親オブジェクトとUI要素を管理するコンテナ
+    /// </summary>
+    [System.Serializable]
+    public class ComboGroupContainer
+    {
+        [Header("コンボ情報")]
+        public string comboName;
+        public ComboData comboData;
+        
+        [Header("UI要素")]
+        public GameObject parentObject;          // コンボグループの親オブジェクト
+        public TextMeshProUGUI nameText;        // コンボ名テキスト
+        public Slider progressBar;              // 進行バー
+        public TextMeshProUGUI stepText;        // ステップ表示テキスト
+        public TextMeshProUGUI timerText;       // タイマーテキスト
+        public TextMeshProUGUI statusText;      // ステータステキスト
+        public GameObject effectsContainer;     // エフェクト表示コンテナ
+        
+        [Header("表示設定")]
+        public Vector2 position;                // 表示位置
+        public Vector2 size;                    // サイズ
+        public Color backgroundColor;           // 背景色
+        public bool isActive;                   // アクティブ状態
+        
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="combo">コンボデータ</param>
+        /// <param name="parent">親Transform</param>
+        /// <param name="pos">表示位置</param>
+        /// <param name="containerSize">コンテナサイズ</param>
+        public ComboGroupContainer(ComboData combo, Transform parent, Vector2 pos, Vector2 containerSize)
+        {
+            comboName = combo.comboName;
+            comboData = combo;
+            position = pos;
+            size = containerSize;
+            backgroundColor = GetComboTypeColor(combo);
+            isActive = false;
+            
+            CreateComboGroup(parent);
+        }
+        
+        /// <summary>
+        /// コンボグループのUI要素を作成
+        /// </summary>
+        private void CreateComboGroup(Transform parent)
+        {
+            // 親オブジェクト作成
+            parentObject = new GameObject($"ComboGroup_{comboName}");
+            parentObject.transform.SetParent(parent, false);
+            
+            // RectTransform設定
+            RectTransform parentRect = parentObject.AddComponent<RectTransform>();
+            parentRect.anchoredPosition = position;
+            parentRect.sizeDelta = size;
+            
+            // 背景パネル
+            UnityEngine.UI.Image bgImage = parentObject.AddComponent<UnityEngine.UI.Image>();
+            bgImage.color = backgroundColor;
+            
+            CreateChildUIElements();
+        }
+        
+        /// <summary>
+        /// 子UI要素を作成
+        /// </summary>
+        private void CreateChildUIElements()
+        {
+            // コンボ名テキスト
+            GameObject nameObj = new GameObject("ComboName");
+            nameObj.transform.SetParent(parentObject.transform, false);
+            nameText = nameObj.AddComponent<TextMeshProUGUI>();
+            nameText.text = comboName;
+            nameText.fontSize = 14;
+            nameText.color = Color.white;
+            nameText.alignment = TextAlignmentOptions.TopLeft;
+            
+            RectTransform nameRect = nameObj.GetComponent<RectTransform>();
+            nameRect.anchorMin = new Vector2(0, 0.7f);
+            nameRect.anchorMax = new Vector2(1, 1);
+            nameRect.offsetMin = new Vector2(5, 0);
+            nameRect.offsetMax = new Vector2(-5, -5);
+            
+            // 進行バー
+            CreateProgressBar();
+            
+            // ステップテキスト
+            CreateStepText();
+            
+            // タイマーテキスト
+            CreateTimerText();
+            
+            // ステータステキスト
+            CreateStatusText();
+            
+            // エフェクトコンテナ
+            CreateEffectsContainer();
+        }
+        
+        /// <summary>
+        /// 進行バーを作成
+        /// </summary>
+        private void CreateProgressBar()
+        {
+            GameObject sliderObj = new GameObject("ProgressBar");
+            sliderObj.transform.SetParent(parentObject.transform, false);
+            
+            progressBar = sliderObj.AddComponent<Slider>();
+            progressBar.minValue = 0f;
+            progressBar.maxValue = 1f;
+            progressBar.value = 0f;
+            
+            // Background
+            GameObject bg = new GameObject("Background");
+            bg.transform.SetParent(sliderObj.transform, false);
+            UnityEngine.UI.Image bgImage = bg.AddComponent<UnityEngine.UI.Image>();
+            bgImage.color = new Color(0.2f, 0.2f, 0.2f, 0.8f);
+            
+            RectTransform bgRect = bg.GetComponent<RectTransform>();
+            bgRect.anchorMin = Vector2.zero;
+            bgRect.anchorMax = Vector2.one;
+            bgRect.offsetMin = Vector2.zero;
+            bgRect.offsetMax = Vector2.zero;
+            
+            // Fill Area
+            GameObject fillArea = new GameObject("Fill Area");
+            fillArea.transform.SetParent(sliderObj.transform, false);
+            
+            RectTransform fillAreaRect = fillArea.GetComponent<RectTransform>();
+            fillAreaRect.anchorMin = Vector2.zero;
+            fillAreaRect.anchorMax = Vector2.one;
+            fillAreaRect.offsetMin = Vector2.zero;
+            fillAreaRect.offsetMax = Vector2.zero;
+            
+            // Fill
+            GameObject fill = new GameObject("Fill");
+            fill.transform.SetParent(fillArea.transform, false);
+            UnityEngine.UI.Image fillImage = fill.AddComponent<UnityEngine.UI.Image>();
+            fillImage.color = Color.green;
+            
+            RectTransform fillRect = fill.GetComponent<RectTransform>();
+            fillRect.anchorMin = Vector2.zero;
+            fillRect.anchorMax = Vector2.one;
+            fillRect.offsetMin = Vector2.zero;
+            fillRect.offsetMax = Vector2.zero;
+            
+            // Sliderの設定
+            progressBar.fillRect = fillRect;
+            
+            RectTransform sliderRect = sliderObj.GetComponent<RectTransform>();
+            sliderRect.anchorMin = new Vector2(0, 0.4f);
+            sliderRect.anchorMax = new Vector2(1, 0.6f);
+            sliderRect.offsetMin = new Vector2(5, 0);
+            sliderRect.offsetMax = new Vector2(-5, 0);
+        }
+        
+        /// <summary>
+        /// ステップテキストを作成
+        /// </summary>
+        private void CreateStepText()
+        {
+            GameObject stepObj = new GameObject("StepText");
+            stepObj.transform.SetParent(parentObject.transform, false);
+            stepText = stepObj.AddComponent<TextMeshProUGUI>();
+            stepText.text = "0/0";
+            stepText.fontSize = 10;
+            stepText.color = Color.cyan;
+            stepText.alignment = TextAlignmentOptions.Center;
+            
+            RectTransform stepRect = stepObj.GetComponent<RectTransform>();
+            stepRect.anchorMin = new Vector2(0, 0.2f);
+            stepRect.anchorMax = new Vector2(0.5f, 0.4f);
+            stepRect.offsetMin = new Vector2(5, 0);
+            stepRect.offsetMax = new Vector2(-2, 0);
+        }
+        
+        /// <summary>
+        /// タイマーテキストを作成
+        /// </summary>
+        private void CreateTimerText()
+        {
+            GameObject timerObj = new GameObject("TimerText");
+            timerObj.transform.SetParent(parentObject.transform, false);
+            timerText = timerObj.AddComponent<TextMeshProUGUI>();
+            timerText.text = "";
+            timerText.fontSize = 8;
+            timerText.color = Color.yellow;
+            timerText.alignment = TextAlignmentOptions.Center;
+            
+            RectTransform timerRect = timerObj.GetComponent<RectTransform>();
+            timerRect.anchorMin = new Vector2(0.5f, 0.2f);
+            timerRect.anchorMax = new Vector2(1, 0.4f);
+            timerRect.offsetMin = new Vector2(2, 0);
+            timerRect.offsetMax = new Vector2(-5, 0);
+        }
+        
+        /// <summary>
+        /// ステータステキストを作成
+        /// </summary>
+        private void CreateStatusText()
+        {
+            GameObject statusObj = new GameObject("StatusText");
+            statusObj.transform.SetParent(parentObject.transform, false);
+            statusText = statusObj.AddComponent<TextMeshProUGUI>();
+            statusText.text = "待機中";
+            statusText.fontSize = 9;
+            statusText.color = Color.gray;
+            statusText.alignment = TextAlignmentOptions.Center;
+            
+            RectTransform statusRect = statusObj.GetComponent<RectTransform>();
+            statusRect.anchorMin = new Vector2(0, 0);
+            statusRect.anchorMax = new Vector2(1, 0.2f);
+            statusRect.offsetMin = new Vector2(5, 0);
+            statusRect.offsetMax = new Vector2(-5, 0);
+        }
+        
+        /// <summary>
+        /// エフェクトコンテナを作成
+        /// </summary>
+        private void CreateEffectsContainer()
+        {
+            effectsContainer = new GameObject("EffectsContainer");
+            effectsContainer.transform.SetParent(parentObject.transform, false);
+            
+            RectTransform effectsRect = effectsContainer.AddComponent<RectTransform>();
+            effectsRect.anchorMin = Vector2.zero;
+            effectsRect.anchorMax = Vector2.one;
+            effectsRect.offsetMin = Vector2.zero;
+            effectsRect.offsetMax = Vector2.zero;
+        }
+        
+        /// <summary>
+        /// コンボタイプに応じた色を取得
+        /// </summary>
+        private Color GetComboTypeColor(ComboData combo)
+        {
+            // 武器タイプやエフェクトに応じて色を決定
+            if (combo.condition.requiredAttackAttributes != null && combo.condition.requiredAttackAttributes.Length > 0)
+            {
+                var firstAttribute = combo.condition.requiredAttackAttributes[0];
+                switch (firstAttribute)
+                {
+                    case AttackAttribute.Fire:
+                        return new Color(0.8f, 0.2f, 0.2f, 0.7f); // 赤系
+                    case AttackAttribute.Ice:
+                        return new Color(0.2f, 0.5f, 0.8f, 0.7f); // 青系
+                    case AttackAttribute.Thunder:
+                        return new Color(0.8f, 0.8f, 0.2f, 0.7f); // 黄系
+                    case AttackAttribute.Wind:
+                        return new Color(0.2f, 0.8f, 0.5f, 0.7f); // 緑系
+                    case AttackAttribute.Light:
+                        return new Color(0.9f, 0.9f, 0.9f, 0.7f); // 白系
+                    case AttackAttribute.Dark:
+                        return new Color(0.4f, 0.2f, 0.6f, 0.7f); // 紫系
+                    default:
+                        return new Color(0.3f, 0.3f, 0.3f, 0.7f); // グレー系
+                }
+            }
+            return new Color(0.2f, 0.2f, 0.4f, 0.7f); // デフォルト
+        }
+        
+        /// <summary>
+        /// コンボの進行状況を更新
+        /// </summary>
+        public void UpdateProgress(ComboProgress progress)
+        {
+            if (progressBar != null)
+                progressBar.value = progress.progressPercentage;
+            
+            if (stepText != null)
+                stepText.text = $"{progress.currentStep}/{progress.comboData.requiredWeaponCount}";
+            
+            if (statusText != null)
+            {
+                if (progress.progressPercentage >= 1.0f)
+                    statusText.text = "完成!";
+                else if (progress.progressPercentage > 0)
+                    statusText.text = "進行中";
+                else
+                    statusText.text = "待機中";
+            }
+            
+            UpdateTimerDisplay(progress);
+        }
+        
+        /// <summary>
+        /// タイマー表示を更新
+        /// </summary>
+        private void UpdateTimerDisplay(ComboProgress progress)
+        {
+            if (timerText == null) return;
+            
+            if (progress.comboData.condition.maxTurnInterval > 0)
+            {
+                int remainingTurns = progress.comboData.condition.maxTurnInterval - 
+                                   (Time.time - progress.startTime > 0 ? 1 : 0);
+                if (remainingTurns > 0)
+                {
+                    timerText.text = $"残り{remainingTurns}T";
+                    timerText.color = remainingTurns <= 2 ? Color.red : Color.yellow;
+                }
+                else
+                {
+                    timerText.text = "期限切れ";
+                    timerText.color = Color.red;
+                }
+            }
+            else
+            {
+                timerText.text = "";
+            }
+        }
+        
+        /// <summary>
+        /// コンボグループの表示/非表示を切り替え
+        /// </summary>
+        public void SetActive(bool active)
+        {
+            isActive = active;
+            if (parentObject != null)
+                parentObject.SetActive(active);
+        }
+        
+        /// <summary>
+        /// コンボグループを破棄
+        /// </summary>
+        public void Destroy()
+        {
+            if (parentObject != null)
+                UnityEngine.Object.Destroy(parentObject);
         }
     }
 }

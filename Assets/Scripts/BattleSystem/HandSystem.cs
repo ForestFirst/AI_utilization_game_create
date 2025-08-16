@@ -115,6 +115,10 @@ namespace BattleSystem
         public event Action<int, int> OnActionsChanged;            // 行動回数変更時 (残り, 最大)
         public event Action OnActionsExhausted;                    // 行動回数0時
         public event Action OnAutoTurnEnd;                         // 自動ターン終了時
+        
+        // 戦闘データ変更関連イベント
+        public event Action OnEnemyDataChanged;                    // 敵データ変更時
+        public event Action OnBattleFieldChanged;                  // 戦場データ変更時
 
         // プロパティ
         public HandState CurrentHandState => currentHandState;
@@ -834,6 +838,12 @@ namespace BattleSystem
                 }
             }
             
+            // 敵データ変更を通知（UI更新のため）
+            if (allEnemies.Count > 0)
+            {
+                OnEnemyDataChanged?.Invoke();
+            }
+            
             return allEnemies.Count > 0;
         }
 
@@ -871,6 +881,12 @@ namespace BattleSystem
                 // TODO: ゲートダメージ処理の実装
             }
             
+            // 敵データ変更を通知（UI更新のため）
+            if (anyHit)
+            {
+                OnEnemyDataChanged?.Invoke();
+            }
+            
             return anyHit;
         }
 
@@ -899,6 +915,12 @@ namespace BattleSystem
                 }
             }
             
+            // 敵データ変更を通知（UI更新のため）
+            if (enemiesInRow.Count > 0)
+            {
+                OnEnemyDataChanged?.Invoke();
+            }
+            
             return enemiesInRow.Count > 0;
         }
 
@@ -921,6 +943,9 @@ namespace BattleSystem
                 {
                     RemoveEnemy(frontEnemy);
                 }
+                
+                // 敵データ変更を通知（UI更新のため）
+                OnEnemyDataChanged?.Invoke();
                 return true;
             }
             
@@ -929,6 +954,9 @@ namespace BattleSystem
             {
                 damageDealt = baseDamage;
                 // TODO: ゲートダメージ処理の実装
+                
+                // 戦場データ変更を通知（UI更新のため）
+                OnBattleFieldChanged?.Invoke();
                 return true;
             }
             
