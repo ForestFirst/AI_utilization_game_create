@@ -100,7 +100,7 @@ namespace BattleSystem
         [SerializeField] private int handSize = 5;                      // 手札枚数
         [SerializeField] private bool allowDuplicateCards = true;       // 重複カード許可
         [SerializeField] private bool autoGenerateOnTurnStart = true;   // ターン開始時自動生成
-        [SerializeField] private bool debugMode = true;                // デバッグモード
+        [SerializeField] private bool debugMode = false;               // デバッグモード（プレイヤー動作時のみ）
         
         [Header("行動回数設定")]
         [SerializeField] private int baseActionsPerTurn = 1;            // 基本行動回数/ターン
@@ -549,55 +549,56 @@ namespace BattleSystem
         /// <returns>使用結果</returns>
         public CardPlayResult PlayCard(int handIndex)
         {
-            Debug.Log($"=== HandSystem.PlayCard START: handIndex {handIndex} ===");
+            Debug.Log($"🎯 === カード選択 [{handIndex}] - 2回クリック実行 ===");
             var result = new CardPlayResult();
             
-            Debug.Log($"Current remainingActions: {remainingActions}");
-            Debug.Log($"Current maxActionsPerTurn: {maxActionsPerTurn}");
-            Debug.Log($"Current currentHandState: {currentHandState}");
-            Debug.Log($"BattleManager currentState: {battleManager?.CurrentState}");
+            Debug.Log($"現在の行動回数: {remainingActions}/{maxActionsPerTurn}");
+            Debug.Log($"手札状態: {currentHandState}");
+            Debug.Log($"ゲーム状態: {battleManager?.CurrentState}");
             
             try
             {
                 // 基本妥当性チェック
-                Debug.Log($"Starting ValidateCardPlay for handIndex {handIndex}");
                 if (!ValidateCardPlay(handIndex, out string errorMessage))
                 {
-                    Debug.LogWarning($"❌ ValidateCardPlay failed: {errorMessage}");
+                    Debug.LogWarning($"❌ カード選択無効: {errorMessage}");
                     result.isSuccess = false;
                     result.message = errorMessage;
                     return result;
                 }
-                Debug.Log($"✅ ValidateCardPlay passed for handIndex {handIndex}");
+                Debug.Log($"✅ カード選択妥当性チェック通過");
 
                 CardData card = currentHand[handIndex];
-                Debug.Log($"Card to play: {card?.displayName ?? "NULL"}");
+                Debug.Log($"🃏 選択カード: {card?.displayName ?? "NULL"}");
                 
-                // 攻撃実行
-                Debug.Log($"Starting ExecuteCardAttack for {card?.displayName}");
+                // 攻撃実行（予告ダメージ計算）
+                Debug.Log($"⚔️ 攻撃計算開始: {card?.displayName}");
                 bool attackSuccess = ExecuteCardAttack(card, out int damageDealt);
-                Debug.Log($"ExecuteCardAttack result: {attackSuccess}, damage: {damageDealt}");
+                Debug.Log($"攻撃計算結果: 成功={attackSuccess}, ダメージ={damageDealt}");
                 
                 if (attackSuccess)
                 {
-                    Debug.Log($"✅ Attack successful, processing successful card play");
+                    Debug.Log($"✅ 攻撃成功 - ダメージ適用処理開始");
                     
                     // 【修正】実際のダメージを適用
                     if (HasPendingDamage)
                     {
-                        Debug.Log($"Applying pending damage...");
+                        Debug.Log($"💥 予告ダメージ適用開始...");
                         bool damageApplied = ApplyPendingDamage();
-                        Debug.Log($"Damage applied: {damageApplied}");
+                        Debug.Log($"ダメージ適用結果: {damageApplied}");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"⚠️ 予告ダメージが設定されていません");
                     }
                     
                     // 成功時の処理
                     result = HandleSuccessfulCardPlay(card, handIndex, damageDealt);
-                    Debug.Log($"HandleSuccessfulCardPlay result: {result.isSuccess}, turnEnded: {result.turnEnded}");
+                    Debug.Log($"✅ カード使用処理完了: ターン終了={result.turnEnded}");
                 }
                 else
                 {
-                    Debug.LogWarning($"❌ Attack failed for {card?.displayName}");
-                    // 失敗時の処理
+                    Debug.LogWarning($"❌ 攻撃失敗: {card?.displayName}");
                     result.isSuccess = false;
                     result.message = "攻撃実行に失敗しました";
                 }
@@ -605,17 +606,17 @@ namespace BattleSystem
             }
             catch (Exception ex)
             {
-                Debug.LogError($"❌ Error playing card: {ex.Message}");
+                Debug.LogError($"❌ カード使用エラー: {ex.Message}");
                 Debug.LogError($"Stack trace: {ex.StackTrace}");
                 result.isSuccess = false;
                 result.message = "カード使用中にエラーが発生しました";
             }
             
-            Debug.Log($"Final result: isSuccess={result.isSuccess}, message={result.message}");
+            Debug.Log($"📊 最終結果: 成功={result.isSuccess}, メッセージ={result.message}");
             
             // 結果イベント発火
             OnCardPlayResult?.Invoke(result);
-            Debug.Log($"=== HandSystem.PlayCard END: handIndex {handIndex} ===");
+            Debug.Log($"🎯 === カード選択 [{handIndex}] 処理終了 ===");
             return result;
         }
 
@@ -732,9 +733,13 @@ namespace BattleSystem
         /// <returns>予告ダメージ情報（nullの場合は計算失敗）</returns>
         public PendingDamageInfo CalculatePreviewDamage(CardData card)
         {
-            if (card?.weaponData == null) return null;
+            if (card?.weaponData == null)
+            {
+                Debug.Log("❌ カードまたは武器データがnull - プレビュー計算不可");
+                return null;
+            }
             
-            LogDebug($"=== CalculatePreviewDamage START: {card.displayName} ===");
+            Debug.Log($"👁️ === カード1回クリック - ダメージプレビュー計算: {card.displayName} ===");
             
             // 【修正】統合ダメージ計算を使用（シミュレーションモード）
             var damageInfo = CalculateCompleteDamage(card, simulateCombo: true);
@@ -743,9 +748,17 @@ namespace BattleSystem
             var pendingDamage = new PendingDamageInfo(card, damageInfo.finalDamage, 
                 damageInfo.GetDetailedDescription(card.displayName));
             
+            Debug.Log($"📊 ダメージ計算詳細:");
+            Debug.Log($"  - 基本ダメージ: {damageInfo.baseDamage}");
+            Debug.Log($"  - コンボ倍率: {damageInfo.comboMultiplier:F1}");
+            Debug.Log($"  - コンボダメージ: {damageInfo.comboDamage}");
+            Debug.Log($"  - 最終ダメージ: {damageInfo.finalDamage}");
+            
             // 攻撃範囲に応じたターゲットを計算（ダメージ値は最終ダメージを使用）
             bool hasTargets = false;
             WeaponData weapon = card.weaponData;
+            
+            Debug.Log($"🎯 攻撃範囲: {weapon.attackRange}");
             
             switch (weapon.attackRange)
             {
@@ -769,14 +782,12 @@ namespace BattleSystem
             
             if (hasTargets)
             {
-                LogDebug($"✅ 予告ダメージプレビュー計算完了: {pendingDamage.description}");
-                LogDebug($"  - 基本ダメージ: {damageInfo.baseDamage}");
-                LogDebug($"  - コンボ効果: {damageInfo.comboDamage} (x{damageInfo.comboMultiplier:F1})");
-                LogDebug($"  - 最終ダメージ: {damageInfo.finalDamage}");
+                Debug.Log($"✅ プレビュー計算成功: {pendingDamage.targetEnemies.Count}体の敵にダメージ予告");
+                Debug.Log($"💥 予告ダメージ: {damageInfo.finalDamage} ({pendingDamage.description})");
                 return pendingDamage;
             }
             
-            LogDebug($"❌ 有効なターゲットが見つかりませんでした: {card.displayName}");
+            Debug.Log($"❌ 攻撃対象が見つかりません: {card.displayName}");
             return null;
         }
         
@@ -1149,31 +1160,38 @@ namespace BattleSystem
             
             if (card?.weaponData == null)
             {
-                LogDebug("CalculateCompleteDamage: カードまたは武器データがnull");
+                Debug.Log("❌ CalculateCompleteDamage: カードまたは武器データがnull");
                 return result;
             }
 
             WeaponData weapon = card.weaponData;
+            string modeStr = simulateCombo ? "プレビュー" : "実行";
+            
+            Debug.Log($"🧮 === 統合ダメージ計算開始 ({modeStr}モード): {card.displayName} ===");
             
             // 1. 基本ダメージ計算
             result.baseDamage = GetBaseDamage(weapon);
-            LogDebug($"基本ダメージ: {result.baseDamage}");
+            Debug.Log($"⚡ 基本ダメージ: {result.baseDamage} (プレイヤー基礎攻撃力 + 武器攻撃力)");
 
             // 2. コンボ効果計算
             result.comboMultiplier = CalculateComboEffect(card, simulateCombo);
             result.comboDamage = Mathf.RoundToInt(result.baseDamage * result.comboMultiplier) - result.baseDamage;
-            LogDebug($"コンボ倍率: {result.comboMultiplier}, コンボダメージ: {result.comboDamage}");
+            Debug.Log($"💫 コンボ効果: 倍率{result.comboMultiplier:F1}x, 追加ダメージ{result.comboDamage}");
 
             // 3. その他の効果計算（装備効果、バフ/デバフなど）
             result.otherMultiplier = CalculateOtherEffects(card);
             result.otherDamage = Mathf.RoundToInt(result.baseDamage * result.otherMultiplier) - result.baseDamage;
-            LogDebug($"その他効果倍率: {result.otherMultiplier}, その他ダメージ: {result.otherDamage}");
+            Debug.Log($"🔧 その他効果: 倍率{result.otherMultiplier:F1}x, 追加ダメージ{result.otherDamage}");
 
             // 4. 最終ダメージ計算
             float totalMultiplier = result.comboMultiplier * result.otherMultiplier;
             result.finalDamage = Mathf.RoundToInt(result.baseDamage * totalMultiplier);
             
-            LogDebug($"統合ダメージ計算完了 - 基本:{result.baseDamage}, コンボ:{result.comboDamage}, その他:{result.otherDamage}, 最終:{result.finalDamage}");
+            Debug.Log($"💥 最終ダメージ計算:");
+            Debug.Log($"   基本: {result.baseDamage}");
+            Debug.Log($"   + コンボ: {result.comboDamage}");
+            Debug.Log($"   + その他: {result.otherDamage}");
+            Debug.Log($"   = 最終: {result.finalDamage} (総倍率: {totalMultiplier:F1}x)");
             
             return result;
         }
@@ -1407,7 +1425,7 @@ namespace BattleSystem
         {
             if (currentPendingDamage == null)
             {
-                LogDebug("予告ダメージがありません");
+                Debug.Log("❌ 予告ダメージがありません");
                 return false;
             }
             
@@ -1415,21 +1433,37 @@ namespace BattleSystem
             int totalDamageApplied = 0;
             bool anyTargetHit = false;
             
+            Debug.Log($"=== ApplyPendingDamage START ===");
+            Debug.Log($"予告ダメージ: {pendingDamage.description}");
+            Debug.Log($"ターゲット敵数: {pendingDamage.targetEnemies.Count}");
+            Debug.Log($"ダメージ値: {pendingDamage.calculatedDamage}");
+            
             try
             {
                 // 敵にダメージを適用
-                foreach (var enemy in pendingDamage.targetEnemies)
+                for (int i = 0; i < pendingDamage.targetEnemies.Count; i++)
                 {
+                    var enemy = pendingDamage.targetEnemies[i];
                     if (enemy != null && enemy.IsAlive())
                     {
+                        int hpBefore = enemy.currentHp;
                         enemy.TakeDamage(pendingDamage.calculatedDamage);
+                        int hpAfter = enemy.currentHp;
+                        
+                        Debug.Log($"✅ 敵 [{i}] ダメージ適用: {hpBefore} → {hpAfter} (-{pendingDamage.calculatedDamage})");
+                        
                         totalDamageApplied += pendingDamage.calculatedDamage;
                         anyTargetHit = true;
                         
                         if (!enemy.IsAlive())
                         {
+                            Debug.Log($"💀 敵 [{i}] 撃破 - RemoveEnemyを実行");
                             RemoveEnemy(enemy);
                         }
+                    }
+                    else
+                    {
+                        Debug.Log($"❌ 敵 [{i}] は無効またはすでに死亡");
                     }
                 }
                 
@@ -1441,6 +1475,7 @@ namespace BattleSystem
                         gate.TakeDamage(pendingDamage.calculatedDamage);
                         totalDamageApplied += pendingDamage.calculatedDamage;
                         anyTargetHit = true;
+                        Debug.Log($"🏰 ゲートにダメージ適用: {pendingDamage.calculatedDamage}");
                     }
                 }
                 
@@ -1460,19 +1495,21 @@ namespace BattleSystem
                 if (anyTargetHit)
                 {
                     OnEnemyDataChanged?.Invoke();
-                    LogDebug("敵データ変更イベントを発火（UI更新のため）");
+                    Debug.Log("🔄 OnEnemyDataChangedイベントを発火（UI更新のため）");
                 }
                 
-                LogDebug($"予告ダメージ適用完了: {pendingDamage.description}, 総ダメージ: {totalDamageApplied}");
+                Debug.Log($"✅ 予告ダメージ適用完了: 総ダメージ {totalDamageApplied}");
                 
                 // 予告ダメージをクリア
                 ClearPendingDamage();
                 
+                Debug.Log("=== ApplyPendingDamage END ===");
                 return anyTargetHit;
             }
             catch (Exception ex)
             {
-                Debug.LogError($"予告ダメージ適用エラー: {ex.Message}");
+                Debug.LogError($"❌ 予告ダメージ適用エラー: {ex.Message}");
+                Debug.LogError($"Stack trace: {ex.StackTrace}");
                 return false;
             }
         }
