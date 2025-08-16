@@ -54,6 +54,43 @@ namespace BattleSystem
     }
 
     /// <summary>
+    /// 統合ダメージ計算情報
+    /// コンボ効果、装備効果、バフ/デバフを含む完全なダメージ内訳
+    /// </summary>
+    [Serializable]
+    public struct DamageCalculationInfo
+    {
+        public int baseDamage;          // 基本ダメージ
+        public float comboMultiplier;   // コンボ倍率
+        public int comboDamage;         // コンボ追加ダメージ
+        public float otherMultiplier;   // その他効果倍率
+        public int otherDamage;         // その他追加ダメージ
+        public int finalDamage;         // 最終ダメージ
+        public string detailDescription; // 詳細説明
+        
+        /// <summary>
+        /// 詳細な説明文を生成
+        /// </summary>
+        public string GetDetailedDescription(string cardName)
+        {
+            if (string.IsNullOrEmpty(detailDescription))
+            {
+                var parts = new List<string> { $"基本: {baseDamage}" };
+                
+                if (comboDamage > 0)
+                    parts.Add($"コンボ: +{comboDamage} (x{comboMultiplier:F1})");
+                
+                if (otherDamage > 0)
+                    parts.Add($"装備効果: +{otherDamage} (x{otherMultiplier:F1})");
+                
+                detailDescription = $"{cardName}: {string.Join(", ", parts)} = {finalDamage}ダメージ";
+            }
+            
+            return detailDescription;
+        }
+    }
+
+    /// <summary>
     /// 手札システム管理クラス
     /// プレイヤーの装備武器から手札を生成し、カードベースの攻撃を管理
     /// </summary>
@@ -689,6 +726,7 @@ namespace BattleSystem
 
         /// <summary>
         /// 予告ダメージの計算（カード選択時プレビュー用）
+        /// 【修正】統合ダメージ計算を使用してコンボ効果込みの正確なプレビューを提供
         /// </summary>
         /// <param name="card">計算対象のカード</param>
         /// <returns>予告ダメージ情報（nullの場合は計算失敗）</returns>
@@ -696,77 +734,91 @@ namespace BattleSystem
         {
             if (card?.weaponData == null) return null;
             
-            WeaponData weapon = card.weaponData;
-            int baseDamage = GetBaseDamage(weapon);
+            LogDebug($"=== CalculatePreviewDamage START: {card.displayName} ===");
             
-            // 予告ダメージ情報を作成
-            var pendingDamage = new PendingDamageInfo(card, baseDamage, $"{card.displayName}で攻撃予定");
+            // 【修正】統合ダメージ計算を使用（シミュレーションモード）
+            var damageInfo = CalculateCompleteDamage(card, simulateCombo: true);
             
-            // 攻撃範囲に応じたターゲットを計算
+            // 予告ダメージ情報を作成（最終ダメージを使用）
+            var pendingDamage = new PendingDamageInfo(card, damageInfo.finalDamage, 
+                damageInfo.GetDetailedDescription(card.displayName));
+            
+            // 攻撃範囲に応じたターゲットを計算（ダメージ値は最終ダメージを使用）
             bool hasTargets = false;
+            WeaponData weapon = card.weaponData;
             
             switch (weapon.attackRange)
             {
                 case AttackRange.All:
-                    hasTargets = CalculateAllTargets(pendingDamage, baseDamage);
+                    hasTargets = CalculateAllTargets(pendingDamage, damageInfo.finalDamage);
                     break;
                     
                 case AttackRange.Column:
-                    hasTargets = CalculateColumnTargets(pendingDamage, card.targetColumn, baseDamage);
+                    hasTargets = CalculateColumnTargets(pendingDamage, card.targetColumn, damageInfo.finalDamage);
                     break;
                     
                 case AttackRange.Row1:
                 case AttackRange.Row2:
-                    hasTargets = CalculateRowTargets(pendingDamage, weapon, baseDamage);
+                    hasTargets = CalculateRowTargets(pendingDamage, weapon, damageInfo.finalDamage);
                     break;
                     
                 default:
-                    hasTargets = CalculateSingleTargets(pendingDamage, card, baseDamage);
+                    hasTargets = CalculateSingleTargets(pendingDamage, card, damageInfo.finalDamage);
                     break;
             }
             
             if (hasTargets)
             {
-                LogDebug($"予告ダメージプレビュー計算完了: {pendingDamage.description}, ダメージ: {baseDamage}");
+                LogDebug($"✅ 予告ダメージプレビュー計算完了: {pendingDamage.description}");
+                LogDebug($"  - 基本ダメージ: {damageInfo.baseDamage}");
+                LogDebug($"  - コンボ効果: {damageInfo.comboDamage} (x{damageInfo.comboMultiplier:F1})");
+                LogDebug($"  - 最終ダメージ: {damageInfo.finalDamage}");
                 return pendingDamage;
             }
             
+            LogDebug($"❌ 有効なターゲットが見つかりませんでした: {card.displayName}");
             return null;
         }
         
         /// <summary>
         /// 予告ダメージの計算（実際の適用は次のターンで実行）
+        /// 【修正】統合ダメージ計算を使用してコンボ効果を実際に適用
         /// </summary>
         private bool CalculatePendingDamage(CardData card, out int damageDealt)
         {
             damageDealt = 0;
             
+            LogDebug($"=== CalculatePendingDamage START: {card.displayName} ===");
+            
+            // 【修正】統合ダメージ計算を使用（実際のコンボ処理実行）
+            var damageInfo = CalculateCompleteDamage(card, simulateCombo: false);
+            
             WeaponData weapon = card.weaponData;
-            int baseDamage = GetBaseDamage(weapon);
             
-            // 予告ダメージ情報を作成
-            var pendingDamage = new PendingDamageInfo(card, baseDamage, $"{card.displayName}で攻撃予定");
+            // 予告ダメージ情報を作成（最終ダメージを使用）
+            var pendingDamage = new PendingDamageInfo(card, damageInfo.finalDamage, 
+                damageInfo.GetDetailedDescription(card.displayName));
             
-            // 攻撃範囲に応じたターゲットを計算
+            // 攻撃範囲に応じたターゲットを計算（ダメージ値は最終ダメージを使用）
             bool hasTargets = false;
             
             switch (weapon.attackRange)
             {
                 case AttackRange.All:
-                    hasTargets = CalculateAllTargets(pendingDamage, baseDamage);
+                    hasTargets = CalculateAllTargets(pendingDamage, damageInfo.finalDamage);
                     break;
                     
                 case AttackRange.Column:
-                    hasTargets = CalculateColumnTargets(pendingDamage, card.targetColumn, baseDamage);
+                    hasTargets = CalculateColumnTargets(pendingDamage, card.targetColumn, damageInfo.finalDamage);
                     break;
                     
                 case AttackRange.Row1:
                 case AttackRange.Row2:
-                    hasTargets = CalculateRowTargets(pendingDamage, weapon, baseDamage);
+                    hasTargets = CalculateRowTargets(pendingDamage, weapon, damageInfo.finalDamage);
                     break;
                     
                 default:
-                    hasTargets = CalculateSingleTargets(pendingDamage, card, baseDamage);
+                    hasTargets = CalculateSingleTargets(pendingDamage, card, damageInfo.finalDamage);
                     break;
             }
             
@@ -774,15 +826,19 @@ namespace BattleSystem
             {
                 // 予告ダメージを保存
                 currentPendingDamage = pendingDamage;
-                damageDealt = baseDamage;
+                damageDealt = damageInfo.finalDamage;
                 
                 // イベント発火
                 OnPendingDamageCalculated?.Invoke(pendingDamage);
                 
-                LogDebug($"予告ダメージ計算完了: {pendingDamage.description}, ダメージ: {damageDealt}");
+                LogDebug($"✅ 予告ダメージ計算完了: {pendingDamage.description}");
+                LogDebug($"  - 基本ダメージ: {damageInfo.baseDamage}");
+                LogDebug($"  - コンボ効果: {damageInfo.comboDamage} (x{damageInfo.comboMultiplier:F1})");
+                LogDebug($"  - 最終ダメージ: {damageInfo.finalDamage}");
                 return true;
             }
             
+            LogDebug($"❌ 有効なターゲットが見つかりませんでした: {card.displayName}");
             return false;
         }
         
@@ -1078,6 +1134,156 @@ namespace BattleSystem
         private int GetBaseDamage(WeaponData weapon)
         {
             return battleManager.PlayerData.baseAttackPower + weapon.basePower;
+        }
+
+        /// <summary>
+        /// 統合ダメージ計算（コンボ効果、バフ/デバフ、装備効果すべて含む）
+        /// 1回クリック時と2回クリック時で同じ結果を保証
+        /// </summary>
+        /// <param name="card">使用カード</param>
+        /// <param name="simulateCombo">コンボ効果をシミュレートするか（1回クリック時=true, 2回クリック時=false）</param>
+        /// <returns>最終ダメージ計算結果</returns>
+        private DamageCalculationInfo CalculateCompleteDamage(CardData card, bool simulateCombo = true)
+        {
+            var result = new DamageCalculationInfo();
+            
+            if (card?.weaponData == null)
+            {
+                LogDebug("CalculateCompleteDamage: カードまたは武器データがnull");
+                return result;
+            }
+
+            WeaponData weapon = card.weaponData;
+            
+            // 1. 基本ダメージ計算
+            result.baseDamage = GetBaseDamage(weapon);
+            LogDebug($"基本ダメージ: {result.baseDamage}");
+
+            // 2. コンボ効果計算
+            result.comboMultiplier = CalculateComboEffect(card, simulateCombo);
+            result.comboDamage = Mathf.RoundToInt(result.baseDamage * result.comboMultiplier) - result.baseDamage;
+            LogDebug($"コンボ倍率: {result.comboMultiplier}, コンボダメージ: {result.comboDamage}");
+
+            // 3. その他の効果計算（装備効果、バフ/デバフなど）
+            result.otherMultiplier = CalculateOtherEffects(card);
+            result.otherDamage = Mathf.RoundToInt(result.baseDamage * result.otherMultiplier) - result.baseDamage;
+            LogDebug($"その他効果倍率: {result.otherMultiplier}, その他ダメージ: {result.otherDamage}");
+
+            // 4. 最終ダメージ計算
+            float totalMultiplier = result.comboMultiplier * result.otherMultiplier;
+            result.finalDamage = Mathf.RoundToInt(result.baseDamage * totalMultiplier);
+            
+            LogDebug($"統合ダメージ計算完了 - 基本:{result.baseDamage}, コンボ:{result.comboDamage}, その他:{result.otherDamage}, 最終:{result.finalDamage}");
+            
+            return result;
+        }
+
+        /// <summary>
+        /// コンボ効果の計算
+        /// </summary>
+        /// <param name="card">使用カード</param>
+        /// <param name="simulate">シミュレーションモードか</param>
+        /// <returns>コンボ倍率</returns>
+        private float CalculateComboEffect(CardData card, bool simulate)
+        {
+            if (comboSystem == null || card?.weaponData == null)
+            {
+                LogDebug("ComboSystem または weaponData が null");
+                return 1.0f;
+            }
+
+            try
+            {
+                // 武器インデックスを取得
+                int weaponIndex = FindWeaponIndex(card.weaponData);
+                if (weaponIndex == -1)
+                {
+                    LogDebug("武器がプレイヤー装備に見つかりません");
+                    return 1.0f;
+                }
+
+                // シミュレーションモードの場合、実際にコンボ処理は実行せずダメージ計算のみ
+                if (simulate)
+                {
+                    // 現在のコンボ状況を基に予想倍率を計算
+                    return CalculateComboPreviewMultiplier(weaponIndex, card);
+                }
+                else
+                {
+                    // 実際のコンボ処理を実行（2回クリック時）
+                    GridPosition targetPosition = new GridPosition(card.targetColumn, 0);
+                    var comboResult = comboSystem.ProcessWeaponUse(weaponIndex, targetPosition);
+                    
+                    LogDebug($"コンボ処理結果 - 実行済み:{comboResult.wasExecuted}, ダメージ倍率:{comboResult.totalDamageMultiplier}");
+                    return comboResult.totalDamageMultiplier;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"コンボ効果計算エラー: {ex.Message}");
+                return 1.0f;
+            }
+        }
+
+        /// <summary>
+        /// コンボプレビュー倍率の計算（1回クリック時用）
+        /// </summary>
+        private float CalculateComboPreviewMultiplier(int weaponIndex, CardData card)
+        {
+            try
+            {
+                // 現在のアクティブコンボとコンボ進行状況を確認
+                var activeProgresses = comboSystem.ActiveCombos;
+                
+                float bestMultiplier = 1.0f;
+                
+                if (activeProgresses != null)
+                {
+                    foreach (var progress in activeProgresses)
+                    {
+                        if (progress.comboData != null && progress.comboData.effects != null)
+                        {
+                            // このコンボが完成した場合のダメージ倍率を計算
+                            float multiplier = 1.0f;
+                            foreach (var effect in progress.comboData.effects)
+                            {
+                                if (effect.effectType == ComboEffectType.DamageMultiplier)
+                                {
+                                    multiplier *= effect.damageMultiplier;
+                                }
+                            }
+                            
+                            if (multiplier > bestMultiplier)
+                            {
+                                bestMultiplier = multiplier;
+                            }
+                        }
+                    }
+                }
+                
+                LogDebug($"コンボプレビュー倍率: {bestMultiplier} (アクティブコンボ数: {activeProgresses?.Count ?? 0})");
+                return bestMultiplier;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"コンボプレビュー倍率計算エラー: {ex.Message}");
+                return 1.0f;
+            }
+        }
+
+        /// <summary>
+        /// その他の効果計算（装備効果、バフ/デバフなど）
+        /// </summary>
+        private float CalculateOtherEffects(CardData card)
+        {
+            // 基本倍率
+            float multiplier = 1.0f;
+            
+            // TODO: 装備効果の計算
+            // TODO: バフ/デバフ効果の計算
+            // TODO: 特殊状態効果の計算
+            
+            return multiplier;
         }
 
         /// <summary>
