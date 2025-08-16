@@ -261,18 +261,18 @@ namespace BattleSystem
     /// 戦闘フィールドの管理クラス
     /// ゲート数に連動したグリッド構造、ゲート別敵配置、戦略的攻撃機能を提供
     /// </summary>
-    public class BattleField
+    public class BattleField : MonoBehaviour
     {
         [Header("グリッド設定")]
-        private int columns;                    // 横幅（ゲート数）
+        [SerializeField] private int columns;                    // 横幅（ゲート数）
         private const int rows = 2;             // 縦幅（固定2列）
         private EnemyInstance[,] gridEnemies;   // グリッド上の敵配置
         private Dictionary<GridPosition, bool> occupiedPositions; // 占有位置管理
         
         [Header("ゲート管理")]
-        private List<GateData> gates;           // ゲート配列
+        [SerializeField] private List<GateData> gates;           // ゲート配列
         private Dictionary<int, List<EnemyInstance>> gateEnemies; // ゲート別敵管理
-        private int currentTurn;                // 現在のターン数
+        [SerializeField] private int currentTurn;                // 現在のターン数
         
         [Header("戦略システム")]
         private GateData selectedTargetGate;    // 選択された攻撃対象ゲート
@@ -293,7 +293,16 @@ namespace BattleSystem
         public GateData SelectedTargetGate => selectedTargetGate;
         public int CurrentTurn => currentTurn;
 
-        public BattleField(int gateCount)
+        void Awake()
+        {
+            // デフォルト値の設定
+            if (columns <= 0) columns = 3; // デフォルト3ゲート
+            
+            // 初期化処理
+            InitializeBattleField(columns);
+        }
+        
+        public void InitializeBattleField(int gateCount)
         {
             columns = Math.Max(1, Math.Min(gateCount, 6)); // 1-6ゲートに制限
             gridEnemies = new EnemyInstance[columns, rows];
@@ -1016,6 +1025,15 @@ namespace BattleSystem
             }
             
             return info;
+        }
+        
+        /// <summary>
+        /// デバッグログ出力
+        /// </summary>
+        /// <param name="message">ログメッセージ</param>
+        private void LogDebug(string message)
+        {
+            Debug.Log($"[BattleField] {message}");
         }
         
         #endregion

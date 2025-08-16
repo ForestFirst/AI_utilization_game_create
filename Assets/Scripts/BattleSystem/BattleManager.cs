@@ -198,7 +198,9 @@ namespace BattleSystem
             turnTimer = 0f;
             
             // 戦闘フィールドの初期化
-            battleField = new BattleField(gateCount);
+            GameObject battleFieldObj = new GameObject("BattleField");
+            battleField = battleFieldObj.AddComponent<BattleField>();
+            battleField.InitializeBattleField(gateCount);
             
             // プレイヤーデータの初期化
             playerData = new PlayerData();
