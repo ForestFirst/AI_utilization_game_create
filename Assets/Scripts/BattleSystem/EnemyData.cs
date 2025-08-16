@@ -79,26 +79,15 @@ namespace BattleSystem
         }
     }
 
-    // ゲート召喚パターンの定義
-    [Serializable]
-    public class GateSummonPattern
-    {
-        public string patternName;
-        public int summonInterval;      // 召喚間隔（ターン）
-        public int summonCount;         // 一回の召喚数
-        public bool isInitialSummon;    // 初回召喚フラグ
-        public int[] allowedEnemyIds;   // 召喚可能敵ID配列
-    }
+    // 注意: GateSummonPatternはBattleField.csで定義されています
 
     // 敵データベース管理クラス
     [CreateAssetMenu(fileName = "EnemyDatabase", menuName = "BattleSystem/EnemyDatabase")]
     public class EnemyDatabase : ScriptableObject
     {
         [SerializeField] private EnemyData[] enemies;
-        [SerializeField] private GateSummonPattern[] summonPatterns;
         
         public EnemyData[] Enemies => enemies;
-        public GateSummonPattern[] SummonPatterns => summonPatterns;
         
         public EnemyData GetEnemy(int enemyId)
         {
