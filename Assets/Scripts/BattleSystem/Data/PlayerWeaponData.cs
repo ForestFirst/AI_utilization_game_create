@@ -131,10 +131,11 @@ namespace BattleSystem
     public class PlayerData
     {
         [Header("基本ステータス")]
-        [SerializeField] public int maxHp = 100;
-        [SerializeField] public int currentHp = 100;
+        [SerializeField] public int maxHp = 15000;
+        [SerializeField] public int currentHp = 15000;
         [SerializeField] public int maxMana = 50;
         [SerializeField] public int currentMana = 50;
+        [SerializeField] public int baseAttackPower = 100;
 
         [Header("戦闘修正値")]
         [SerializeField] public float damageMultiplier = 1.0f;
@@ -145,6 +146,8 @@ namespace BattleSystem
 
         [Header("武器データ")]
         [SerializeField] public PlayerWeaponData weaponData;
+        [SerializeField] public WeaponData[] equippedWeapons = new WeaponData[4];
+        [SerializeField] public int[] weaponCooldowns = new int[4];
 
         /// <summary>
         /// HPの割合を取得
@@ -214,12 +217,29 @@ namespace BattleSystem
         }
 
         /// <summary>
+        /// 武器使用可能性をチェック
+        /// </summary>
+        /// <param name="weaponIndex">武器インデックス</param>
+        /// <returns>使用可能かどうか</returns>
+        public bool CanUseWeapon(int weaponIndex)
+        {
+            return weaponIndex >= 0 && weaponIndex < 4 && 
+                   equippedWeapons[weaponIndex] != null && 
+                   weaponCooldowns[weaponIndex] <= 0;
+        }
+
+        /// <summary>
         /// プレイヤーデータのリセット
         /// </summary>
         public void Reset()
         {
             currentHp = maxHp;
             currentMana = maxMana;
+            // 武器クールダウンをリセット
+            for (int i = 0; i < weaponCooldowns.Length; i++)
+            {
+                weaponCooldowns[i] = 0;
+            }
         }
     }
 }

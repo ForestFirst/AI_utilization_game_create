@@ -81,47 +81,7 @@ namespace BattleSystem
         TimeLimit          // 制限ターン内達成
     }
 
-    // プレイヤーデータの基本構造
-    [Serializable]
-    public class PlayerData
-    {
-        public int maxHp;           // 最大HP
-        public int currentHp;       // 現在HP
-        public int baseAttackPower; // 基本攻撃力
-        public WeaponData[] equippedWeapons; // 装備武器配列（4個）
-        public int[] weaponCooldowns;        // 武器クールダウン配列
-
-        public PlayerData()
-        {
-            maxHp = 15000;
-            currentHp = 15000;
-            baseAttackPower = 100;
-            equippedWeapons = new WeaponData[4];
-            weaponCooldowns = new int[4];
-        }
-
-        public bool IsAlive()
-        {
-            return currentHp > 0;
-        }
-
-        public void TakeDamage(int damage)
-        {
-            currentHp = Mathf.Max(0, currentHp - damage);
-        }
-
-        public void Heal(int healAmount)
-        {
-            currentHp = Mathf.Min(maxHp, currentHp + healAmount);
-        }
-
-        public bool CanUseWeapon(int weaponIndex)
-        {
-            return weaponIndex >= 0 && weaponIndex < 4 && 
-                   equippedWeapons[weaponIndex] != null && 
-                   weaponCooldowns[weaponIndex] <= 0;
-        }
-    }
+    // PlayerDataクラスはPlayerWeaponData.csで定義済み
 
     // 戦闘結果データ
     [Serializable]
