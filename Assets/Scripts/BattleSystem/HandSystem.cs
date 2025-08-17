@@ -950,7 +950,7 @@ namespace BattleSystem
             }
             
             // ゲートも攻撃（簡易実装）
-            if (CanAttackGate(columnIndex))
+            if (CanDirectlyAttackGate(columnIndex))
             {
                 damageDealt += baseDamage;
                 anyHit = true;
@@ -1026,7 +1026,7 @@ namespace BattleSystem
             }
             
             // 敵がいない場合はゲートを攻撃
-            if (CanAttackGate(card.targetColumn))
+            if (CanDirectlyAttackGate(card.targetColumn))
             {
                 damageDealt = baseDamage;
                 // TODO: ゲートダメージ処理の実装
@@ -1082,7 +1082,7 @@ namespace BattleSystem
             }
             
             // ゲートも攻撃（簡易実装）
-            if (CanAttackGate(columnIndex))
+            if (CanDirectlyAttackGate(columnIndex))
             {
                 // TODO: ゲートダメージ処理の実装
                 hasTargets = true;
@@ -1126,7 +1126,7 @@ namespace BattleSystem
             }
             
             // 敵がいない場合はゲートを攻撃
-            if (CanAttackGate(card.targetColumn))
+            if (CanDirectlyAttackGate(card.targetColumn))
             {
                 // TODO: ゲートダメージ処理の実装
                 return true;
@@ -1384,13 +1384,13 @@ namespace BattleSystem
         /// <summary>
         /// ゲート攻撃可能性チェック（BattleField互換）
         /// </summary>
-        private bool CanAttackGate(int columnIndex)
+        private bool CanDirectlyAttackGate(int columnIndex)
         {
             if (battleField != null)
             {
                 try
                 {
-                    return battleField.CanAttackGate(columnIndex);
+                    return battleField.CanDirectlyAttackGate(columnIndex);
                 }
                 catch
                 {

@@ -490,7 +490,7 @@ namespace BattleSystem
                     battleResult.enemiesDefeated++;
                 }
             }
-            else if (battleField.CanAttackGate(targetPosition.x))
+            else if (battleField.CanDirectlyAttackGate(targetPosition.x))
             {
                 // ゲート攻撃処理
                 GateData gate = battleField.Gates.Find(g => g.position.x == targetPosition.x);
@@ -744,7 +744,7 @@ namespace BattleSystem
             else if (target.targetType == TargetType.Column)
             {
                 // ゲート攻撃（列に敵がいない場合のみ）
-                if (battleField.CanAttackGate(target.columnIndex))
+                if (battleField.CanDirectlyAttackGate(target.columnIndex))
                 {
                     GateData gate = battleField.Gates.Find(g => g.position.x == target.columnIndex);
                     if (gate != null && !gate.IsDestroyed())

@@ -332,7 +332,7 @@ namespace BattleSystem
             {
                 targets.Add(CreateEnemyTarget(enemy));
             }
-            else if (field.CanAttackGate(targetPos.x))
+            else if (field.CanDirectlyAttackGate(targetPos.x))
             {
                 GateData gate = field.Gates.Find(g => g.position.x == targetPos.x);
                 if (gate != null)
@@ -370,7 +370,7 @@ namespace BattleSystem
             }
             
             // 列に敵がいない場合はゲートを攻撃
-            if (enemies.Count == 0 && field.CanAttackGate(column))
+            if (enemies.Count == 0 && field.CanDirectlyAttackGate(column))
             {
                 GateData gate = field.Gates.Find(g => g.position.x == column);
                 if (gate != null)

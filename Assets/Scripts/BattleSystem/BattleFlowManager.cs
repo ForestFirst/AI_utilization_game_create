@@ -178,7 +178,7 @@ namespace BattleSystem
 
                 case AttackRange.SingleTarget:
                     // 任意の単体への攻撃
-                    return field.GetEnemyAt(target) != null || field.CanAttackGate(target.x);
+                    return field.GetEnemyAt(target) != null || field.CanDirectlyAttackGate(target.x);
 
                 case AttackRange.Row1:
                 case AttackRange.Row2:
@@ -188,7 +188,7 @@ namespace BattleSystem
 
                 case AttackRange.Column:
                     // 縦列攻撃
-                    return field.GetEnemiesInColumn(target.x).Count > 0 || field.CanAttackGate(target.x);
+                    return field.GetEnemiesInColumn(target.x).Count > 0 || field.CanDirectlyAttackGate(target.x);
 
                 case AttackRange.All:
                     // 全体攻撃
@@ -427,7 +427,7 @@ namespace BattleSystem
                     Debug.Log($"{target.enemyData.enemyName} を撃破");
                 }
             }
-            else if (field.CanAttackGate(targetPosition.x))
+            else if (field.CanDirectlyAttackGate(targetPosition.x))
             {
                 // ゲート攻撃
                 GateData gate = field.Gates.Find(g => g.position.x == targetPosition.x);

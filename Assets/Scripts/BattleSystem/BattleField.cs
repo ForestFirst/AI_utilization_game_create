@@ -1,31 +1,122 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace BattleSystem
 {
-    // GridPositionは別ファイルで定義済み
+    /// <summary>
+    /// ゲートタイプ（仕様書に基づく5種類）
+    /// </summary>
+    public enum GateType
+    {
+        Standard,       // 標準ゲート
+        Elite,          // エリートゲート（強化敵）
+        Support,        // サポートゲート（バフ敵）
+        Summoner,       // 召喚ゲート（召喚特化）
+        Fortress        // 要塞ゲート（高HP）
+    }
 
-    // ゲートデータの構造
+    /// <summary>
+    /// ゲート戦略効果
+    /// </summary>
+    public enum GateStrategicEffect
+    {
+        None,                   // 効果なし
+        BuffAllEnemies,         // 全敵強化
+        IncreaseSpawnRate,      // 召喚率上昇
+        DefenseBoost,           // 防御力強化
+        AttackBoost,            // 攻撃力強化
+        Regeneration           // HP回復
+    }
+
+    /// <summary>
+    /// ゲート召喚パターン詳細（仕様書A,B,Cパターン対応）
+    /// </summary>
+    public enum GateSpawnPattern
+    {
+        None,               // 召喚なし
+        PatternA,           // 毎ターン2体召喚
+        PatternB,           // 3ターンに1回、3体召喚
+        PatternC,           // 初回のみ5体、以降2ターンに1回
+        Periodic,           // 定期召喚
+        OnDamage,           // ダメージ時召喚
+        Continuous,         // 継続召喚
+        Defensive           // 防御時召喚
+    }
+
+    /// <summary>
+    /// ゲートデータの構造（仕様書に基づく拡張版）
+    /// </summary>
     [Serializable]
     public class GateData
     {
+        [Header("基本情報")]
         public int gateId;
         public int maxHp;               // 最大HP（基本25,000）
         public int currentHp;           // 現在HP
         public string gateName;
-        public GateSummonPattern summonPattern;
-        public int lastSummonTurn;      // 最後に召喚したターン
+        public GateType gateType;       // ゲートタイプ
         public GridPosition position;   // ゲートの位置（列番号）
         
-        public GateData(int id, int hp, string name, GridPosition pos)
+        [Header("敵配置設定")]
+        public GateSpawnPattern spawnPattern;      // 召喚パターン
+        public GateSummonPattern summonPattern;    // 既存システム互換性
+        public List<string> assignedEnemyTypes;   // 配置される敵種類
+        public int maxEnemiesPerGate;             // ゲート当たり最大敵数
+        public int spawnCooldown;                 // 召喚クールダウン
+        public int lastSummonTurn;                // 最後に召喚したターン
+        
+        [Header("召喚設定詳細")]
+        public int summonInterval;                // 召喚間隔（ターン）
+        public int[] allowedEnemyIds;            // 召喚可能な敵ID配列
+        public int summonCount;                  // 一度に召喚する敵数
+        public bool isFirstSummonDone;           // 初回召喚完了フラグ（パターンC用）
+        
+        [Header("戦略効果")]
+        public GateStrategicEffect strategicEffect;    // 戦略効果
+        public float effectStrength;                   // 効果強度（1.0=100%）
+        public bool isEffectActive;                    // 効果アクティブか
+        
+        [Header("破壊時効果")]
+        public bool hasDestructionBonus;              // 破壊ボーナスあり
+        public int destructionReward;                  // 破壊報酬
+        public string destructionEffectDescription;    // 破壊効果説明
+        
+        public GateData(int id, int hp, string name, GridPosition pos, GateType type = GateType.Standard)
         {
             gateId = id;
             maxHp = hp;
             currentHp = hp;
             gateName = name;
-            lastSummonTurn = -1;
+            gateType = type;
             position = pos;
+            
+            // 敵配置設定の初期化
+            spawnPattern = GateSpawnPattern.PatternA;
+            assignedEnemyTypes = new List<string>();
+            maxEnemiesPerGate = 2;
+            spawnCooldown = 3;
+            lastSummonTurn = -1;
+            
+            // 召喚設定詳細の初期化
+            summonInterval = 3;               // デフォルト3ターン間隔
+            allowedEnemyIds = new int[] { 0, 1, 2 }; // デフォルト敵ID
+            summonCount = 1;                  // デフォルト1体召喚
+            isFirstSummonDone = false;
+            
+            // 戦略効果の初期化
+            strategicEffect = GateStrategicEffect.None;
+            effectStrength = 1.0f;
+            isEffectActive = true;
+            
+            // 破壊時効果の初期化
+            hasDestructionBonus = false;
+            destructionReward = 100;
+            destructionEffectDescription = "";
+            
+            // ゲートタイプに応じた初期設定
+            ConfigureByType(type);
         }
         
         public bool IsDestroyed()
@@ -41,6 +132,167 @@ namespace BattleSystem
         public float GetHpPercentage()
         {
             return (float)currentHp / maxHp;
+        }
+        
+        /// <summary>
+        /// ゲートタイプに応じた設定の適用（仕様書に基づく）
+        /// </summary>
+        private void ConfigureByType(GateType type)
+        {
+            switch (type)
+            {
+                case GateType.Standard:
+                    maxHp = 25000;
+                    spawnPattern = GateSpawnPattern.PatternA;
+                    summonInterval = 3;
+                    summonCount = 1;
+                    strategicEffect = GateStrategicEffect.None;
+                    assignedEnemyTypes.AddRange(new string[] { "BasicEnemy", "Soldier" });
+                    break;
+                    
+                case GateType.Elite:
+                    maxHp = 35000;
+                    spawnPattern = GateSpawnPattern.OnDamage;
+                    summonInterval = 2;
+                    summonCount = 1;
+                    strategicEffect = GateStrategicEffect.AttackBoost;
+                    effectStrength = 1.5f;
+                    assignedEnemyTypes.AddRange(new string[] { "EliteEnemy", "Champion" });
+                    break;
+                    
+                case GateType.Support:
+                    maxHp = 20000;
+                    spawnPattern = GateSpawnPattern.PatternB;
+                    summonInterval = 4;
+                    summonCount = 2;
+                    strategicEffect = GateStrategicEffect.BuffAllEnemies;
+                    effectStrength = 1.2f;
+                    assignedEnemyTypes.AddRange(new string[] { "Healer", "Buffer" });
+                    break;
+                    
+                case GateType.Summoner:
+                    maxHp = 15000;
+                    spawnPattern = GateSpawnPattern.PatternC;
+                    summonInterval = 2;
+                    summonCount = 3;
+                    strategicEffect = GateStrategicEffect.IncreaseSpawnRate;
+                    effectStrength = 2.0f;
+                    assignedEnemyTypes.AddRange(new string[] { "Minion", "Spawn" });
+                    break;
+                    
+                case GateType.Fortress:
+                    maxHp = 50000;
+                    spawnPattern = GateSpawnPattern.Defensive;
+                    summonInterval = 5;
+                    summonCount = 1;
+                    strategicEffect = GateStrategicEffect.DefenseBoost;
+                    effectStrength = 2.0f;
+                    assignedEnemyTypes.AddRange(new string[] { "Guardian", "Tank" });
+                    hasDestructionBonus = true;
+                    destructionReward = 500;
+                    break;
+            }
+            
+            currentHp = maxHp;
+        }
+        
+        /// <summary>
+        /// 召喚可能かの判定（詳細パターン対応）
+        /// </summary>
+        public bool CanSummon(int currentTurn)
+        {
+            if (IsDestroyed() || currentTurn - lastSummonTurn < summonInterval)
+                return false;
+                
+            switch (spawnPattern)
+            {
+                case GateSpawnPattern.PatternA:
+                    return true; // 毎ターン2体召喚
+                case GateSpawnPattern.PatternB:
+                    return (currentTurn - lastSummonTurn) >= 3; // 3ターンに1回
+                case GateSpawnPattern.PatternC:
+                    if (!isFirstSummonDone)
+                        return true; // 初回召喚
+                    return (currentTurn - lastSummonTurn) >= 2; // 以降2ターンに1回
+                case GateSpawnPattern.Periodic:
+                    return currentTurn % summonInterval == 0;
+                case GateSpawnPattern.Continuous:
+                    return true;
+                case GateSpawnPattern.OnDamage:
+                    return currentHp < maxHp * 0.8f;
+                case GateSpawnPattern.Defensive:
+                    return currentHp < maxHp * 0.5f;
+                default:
+                    return false;
+            }
+        }
+        
+        /// <summary>
+        /// 召喚実行時の処理
+        /// </summary>
+        public void OnSummonExecuted(int currentTurn)
+        {
+            lastSummonTurn = currentTurn;
+            
+            if (spawnPattern == GateSpawnPattern.PatternC && !isFirstSummonDone)
+            {
+                isFirstSummonDone = true;
+            }
+        }
+        
+        /// <summary>
+        /// 戦略効果の適用
+        /// </summary>
+        public void ApplyStrategicEffect(List<EnemyInstance> targetEnemies)
+        {
+            if (!isEffectActive || IsDestroyed())
+                return;
+                
+            switch (strategicEffect)
+            {
+                case GateStrategicEffect.BuffAllEnemies:
+                    foreach (var enemy in targetEnemies)
+                    {
+                        enemy.ApplyBuff("GateBoost", effectStrength, -1);
+                    }
+                    break;
+                    
+                case GateStrategicEffect.AttackBoost:
+                    foreach (var enemy in targetEnemies.Where(e => e.assignedGateId == gateId))
+                    {
+                        enemy.ApplyBuff("AttackBoost", effectStrength, -1);
+                    }
+                    break;
+                    
+                case GateStrategicEffect.DefenseBoost:
+                    foreach (var enemy in targetEnemies.Where(e => e.assignedGateId == gateId))
+                    {
+                        enemy.ApplyBuff("DefenseBoost", effectStrength, -1);
+                    }
+                    break;
+                    
+                case GateStrategicEffect.Regeneration:
+                    foreach (var enemy in targetEnemies.Where(e => e.assignedGateId == gateId))
+                    {
+                        int healAmount = Mathf.RoundToInt(enemy.enemyData.baseHp * 0.1f);
+                        enemy.Heal(healAmount);
+                    }
+                    break;
+            }
+        }
+        
+        /// <summary>
+        /// ゲート破壊時の処理
+        /// </summary>
+        public void OnDestroyed()
+        {
+            currentHp = 0;
+            isEffectActive = false;
+            
+            if (hasDestructionBonus)
+            {
+                Debug.Log($"Gate {gateName} destroyed! Bonus reward: {destructionReward}");
+            }
         }
     }
 
@@ -68,13 +320,73 @@ namespace BattleSystem
             InitializeGates(gateCount);
         }
 
+        /// <summary>
+        /// ゲートの戦略的初期化（仕様書に基づく配置パターン）
+        /// </summary>
         private void InitializeGates(int gateCount)
         {
             for (int i = 0; i < gateCount; i++)
             {
                 GridPosition gatePos = new GridPosition(i, -1); // ゲートは行-1に配置
-                GateData gate = new GateData(i, 25000, $"Gate_{i}", gatePos);
+                GateType gateType = DetermineStrategicGateType(i, gateCount);
+                GateData gate = new GateData(i, 25000, $"Gate_{i}", gatePos, gateType);
                 gates.Add(gate);
+            }
+        }
+        
+        /// <summary>
+        /// 戦略的ゲートタイプの決定（仕様書のパターンA,B,C対応）
+        /// </summary>
+        private GateType DetermineStrategicGateType(int gateIndex, int totalGates)
+        {
+            // 仕様書に基づく戦略的ゲート配置ロジック
+            switch (totalGates)
+            {
+                case 1: // ボス戦等
+                    return GateType.Fortress;
+                    
+                case 2: // 1段階：バランス型
+                    if (gateIndex == 0) return GateType.Support;  // バフ役
+                    return GateType.Standard;                     // 通常敵
+                    
+                case 3: // パターンA「支援優先」
+                    if (gateIndex == 0) return GateType.Support;      // バフ役
+                    if (gateIndex == 1) return GateType.Standard;     // 通常敵
+                    return GateType.Elite;                            // 強敵
+                    
+                case 4: // パターンB「速攻勝負」
+                    if (gateIndex == 0) return GateType.Support;      // バフ役
+                    if (gateIndex == 1) return GateType.Summoner;     // 召喚特化
+                    if (gateIndex == 2) return GateType.Standard;     // 通常敵
+                    return GateType.Elite;                            // 強敵
+                    
+                case 5: // パターンC「パズル型」
+                    if (gateIndex == 0) return GateType.Support;      // バフ役
+                    if (gateIndex == 1) return GateType.Summoner;     // 召喚特化
+                    if (gateIndex == 2) return GateType.Standard;     // 通常敵
+                    if (gateIndex == 3) return GateType.Elite;        // 強敵
+                    return GateType.Fortress;                         // 要塞
+                    
+                case 6: // 最大複雑度
+                    if (gateIndex == 0) return GateType.Support;      // バフ役
+                    if (gateIndex == 1) return GateType.Summoner;     // 召喚特化
+                    if (gateIndex == 2) return GateType.Standard;     // 通常敵1
+                    if (gateIndex == 3) return GateType.Standard;     // 通常敵2
+                    if (gateIndex == 4) return GateType.Elite;        // 強敵
+                    return GateType.Fortress;                         // 要塞
+                    
+                default:
+                    // デフォルトパターン（7個以上の場合）
+                    int pattern = gateIndex % 3;
+                    switch (pattern)
+                    {
+                        case 0:
+                            return GateType.Support;
+                        case 1:
+                            return GateType.Standard;
+                        default:
+                            return GateType.Elite;
+                    }
             }
         }
 
@@ -228,11 +540,7 @@ namespace BattleSystem
             return GetAllEnemies().Count;
         }
 
-        // ゲートへの攻撃が可能な列かチェック
-        public bool CanAttackGate(int column)
-        {
-            return !HasEnemyInColumn(column);
-        }
+        // 既存メソッドは削除し、CanDirectlyAttackGateに統合
 
         // すべてのゲートが破壊されたかチェック
         public bool AreAllGatesDestroyed()
@@ -274,7 +582,201 @@ namespace BattleSystem
             {
                 gate.currentHp = gate.maxHp;
                 gate.lastSummonTurn = -1;
+                gate.isFirstSummonDone = false;
+                gate.isEffectActive = true;
             }
+        }
+        
+        // ========================================
+        // ゲート戦闘システム拡張メソッド（仕様書対応）
+        // ========================================
+        
+        /// <summary>
+        /// ゲートからの敵召喚処理（仕様書のA,B,Cパターン対応）
+        /// </summary>
+        public void ProcessGateSummoning(int currentTurn)
+        {
+            foreach (GateData gate in gates)
+            {
+                if (gate.CanSummon(currentTurn))
+                {
+                    SummonEnemiesFromGate(gate, currentTurn);
+                    gate.OnSummonExecuted(currentTurn);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 指定ゲートからの敵召喚実行
+        /// </summary>
+        private void SummonEnemiesFromGate(GateData gate, int currentTurn)
+        {
+            int summonCount = GetActualSummonCount(gate, currentTurn);
+            
+            for (int i = 0; i < summonCount; i++)
+            {
+                GridPosition emptyPos = GetRandomEmptyPosition();
+                if (emptyPos.x == -1) break; // 空きがない場合
+                
+                // 実際の敵召喚処理（EnemyDatabaseと連携）
+                // 仮実装：基本敵を召喚
+                EnemyData basicEnemyData = CreateEnemyDataForGate(gate);
+                EnemyInstance newEnemy = new EnemyInstance(basicEnemyData, emptyPos.x, emptyPos.y);
+                newEnemy.assignedGateId = gate.gateId;
+                
+                if (PlaceEnemy(newEnemy, emptyPos))
+                {
+                    Debug.Log($"ゲート{gate.gateName}({gate.gateType})から{basicEnemyData.enemyName}を召喚: ({emptyPos.x}, {emptyPos.y})");
+                }
+            }
+        }
+        
+        /// <summary>
+        /// パターンに応じた実際の召喚数を取得
+        /// </summary>
+        private int GetActualSummonCount(GateData gate, int currentTurn)
+        {
+            switch (gate.spawnPattern)
+            {
+                case GateSpawnPattern.PatternA:
+                    return 2; // 毎ターン2体
+                case GateSpawnPattern.PatternB:
+                    return 3; // 3ターンに1回3体
+                case GateSpawnPattern.PatternC:
+                    return !gate.isFirstSummonDone ? 5 : 1; // 初回5体、以降1体
+                default:
+                    return gate.summonCount; // デフォルト
+            }
+        }
+        
+        /// <summary>
+        /// ゲートタイプに応じた敵データを作成（仮実装）
+        /// </summary>
+        private EnemyData CreateEnemyDataForGate(GateData gate)
+        {
+            // 仮実装：ゲートタイプに応じた基本敵データを作成
+            EnemyData enemyData = new EnemyData();
+            
+            switch (gate.gateType)
+            {
+                case GateType.Elite:
+                    enemyData.enemyName = "エリート敵";
+                    enemyData.enemyId = 101;
+                    enemyData.baseHp = 8000;
+                    enemyData.attackPower = 2500;
+                    enemyData.category = EnemyCategory.Attacker;
+                    break;
+                case GateType.Support:
+                    enemyData.enemyName = "サポート敵";
+                    enemyData.enemyId = 102;
+                    enemyData.baseHp = 4000;
+                    enemyData.attackPower = 1000;
+                    enemyData.category = EnemyCategory.Support;
+                    enemyData.primaryAction = EnemyActionType.BuffAlly;
+                    break;
+                case GateType.Summoner:
+                    enemyData.enemyName = "召喚敵";
+                    enemyData.enemyId = 103;
+                    enemyData.baseHp = 3000;
+                    enemyData.attackPower = 800;
+                    enemyData.category = EnemyCategory.Special;
+                    enemyData.primaryAction = EnemyActionType.Summon;
+                    break;
+                case GateType.Fortress:
+                    enemyData.enemyName = "要塞敵";
+                    enemyData.enemyId = 104;
+                    enemyData.baseHp = 12000;
+                    enemyData.attackPower = 2000;
+                    enemyData.category = EnemyCategory.Vanguard;
+                    break;
+                default: // Standard
+                    enemyData.enemyName = "標準敵";
+                    enemyData.enemyId = 100;
+                    enemyData.baseHp = 5000;
+                    enemyData.attackPower = 1500;
+                    enemyData.category = EnemyCategory.Attacker;
+                    break;
+            }
+            
+            return enemyData;
+        }
+        
+        /// <summary>
+        /// ゲートの戦略効果を処理
+        /// </summary>
+        public void ProcessGateStrategicEffects()
+        {
+            List<EnemyInstance> allEnemies = GetAllEnemies();
+            
+            foreach (GateData gate in gates)
+            {
+                if (!gate.IsDestroyed())
+                {
+                    gate.ApplyStrategicEffect(allEnemies);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 指定ゲートを取得
+        /// </summary>
+        public GateData GetGate(int gateId)
+        {
+            return gates.Find(g => g.gateId == gateId);
+        }
+        
+        /// <summary>
+        /// 生存中のゲートを取得
+        /// </summary>
+        public List<GateData> GetAliveGates()
+        {
+            return gates.Where(g => !g.IsDestroyed()).ToList();
+        }
+        
+        /// <summary>
+        /// 指定列がゲート列かの判定
+        /// </summary>
+        public bool IsGateColumn(int column)
+        {
+            return gates.Any(g => g.position.x == column && !g.IsDestroyed());
+        }
+        
+        /// <summary>
+        /// 指定列のゲートを取得
+        /// </summary>
+        public GateData GetGateInColumn(int column)
+        {
+            return gates.Find(g => g.position.x == column);
+        }
+        
+        /// <summary>
+        /// ゲートへの直接攻撃が可能かの判定（既存CanAttackGateとの統合）
+        /// </summary>
+        public bool CanDirectlyAttackGate(int column)
+        {
+            // 配列範囲チェック
+            if (column < 0 || column >= columns)
+                return false;
+                
+            // ゲート攻撃条件：対象列に生きているゲートが存在し、その前方に敵がいない
+            GateData targetGate = GetGateInColumn(column);
+            if (targetGate == null || targetGate.IsDestroyed())
+                return false;
+                
+            // グリッド配列の初期化チェック
+            if (gridEnemies == null)
+                return true;
+                
+            // 前方の敵をチェック（簡単な実装）
+            for (int row = 0; row < rows; row++)
+            {
+                if (gridEnemies[column, row] != null && gridEnemies[column, row].IsAlive())
+                {
+                    return false; // 前方に敵がいる場合は攻撃不可
+                }
+            }
+            
+            return true;
         }
     }
 }

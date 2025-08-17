@@ -204,7 +204,7 @@ namespace BattleSystem
                 return true;
 
             // ゲートへの攻撃
-            if (field.CanAttackGate(target.x))
+            if (field.CanDirectlyAttackGate(target.x))
             {
                 var gate = field.Gates.Find(g => g.position.x == target.x);
                 return gate != null && !gate.IsDestroyed();
@@ -222,7 +222,7 @@ namespace BattleSystem
         // 列ターゲット妥当性チェック
         private bool ValidateColumnTarget(BattleField field, int column)
         {
-            return field.GetEnemiesInColumn(column).Count > 0 || field.CanAttackGate(column);
+            return field.GetEnemiesInColumn(column).Count > 0 || field.CanDirectlyAttackGate(column);
         }
 
         // 全体ターゲット妥当性チェック
@@ -258,7 +258,7 @@ namespace BattleSystem
                 case AttackRange.Column:
                     for (int x = 0; x < field.Columns; x++)
                     {
-                        if (field.GetEnemiesInColumn(x).Count > 0 || field.CanAttackGate(x))
+                        if (field.GetEnemiesInColumn(x).Count > 0 || field.CanDirectlyAttackGate(x))
                             return true;
                     }
                     return false;
