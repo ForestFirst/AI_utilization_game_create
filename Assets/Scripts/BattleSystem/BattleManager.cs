@@ -125,6 +125,7 @@ namespace BattleSystem
         public event Action<GameState> OnGameStateChanged;
         public event Action<int> OnTurnChanged;
         public event Action<PlayerData> OnPlayerDataChanged;
+        public event Action<int, int> OnPlayerHealthChanged;      // プレイヤーHP変更イベント (currentHp, maxHp)
         public event Action<BattleResult> OnBattleEnded;
         public event Action<TargetSelection> OnTargetSelected;    // ターゲット選択時
         public event Action OnTargetCleared;                      // ターゲットクリア時
@@ -251,6 +252,7 @@ namespace BattleSystem
             }
             
             OnPlayerDataChanged?.Invoke(playerData);
+            OnPlayerHealthChanged?.Invoke(playerData.currentHp, playerData.maxHp);
         }
 
         // プレイヤーターン終了
@@ -304,6 +306,7 @@ namespace BattleSystem
                 int damage = enemy.currentAttackPower;
                 playerData.TakeDamage(damage);
                 OnPlayerDataChanged?.Invoke(playerData);
+            OnPlayerHealthChanged?.Invoke(playerData.currentHp, playerData.maxHp);
             }
         }
 
