@@ -364,27 +364,27 @@ namespace BattleSystem
         // 敵召喚判定
         private bool ShouldSummonEnemy(GateData gate)
         {
-            if (gate.summonPattern == null)
+            if (gate.summonPattern == GateSummonPattern.None)
                 return false;
 
             int turnsSinceLastSummon = currentTurn - gate.lastSummonTurn;
-            return turnsSinceLastSummon >= gate.summonPattern.summonInterval;
+            return turnsSinceLastSummon >= gate.summonInterval;
         }
 
         // ゲートからの敵召喚
         private void SummonEnemyFromGate(GateData gate)
         {
-            if (gate.summonPattern.allowedEnemyIds == null || gate.summonPattern.allowedEnemyIds.Length == 0)
+            if (gate.allowedEnemyIds == null || gate.allowedEnemyIds.Length == 0)
                 return;
 
-            for (int i = 0; i < gate.summonPattern.summonCount; i++)
+            for (int i = 0; i < gate.summonCount; i++)
             {
                 GridPosition emptyPos = battleField.GetRandomEmptyPosition();
                 if (emptyPos.x == -1) // 空きがない場合
                     break;
 
-                int randomEnemyId = gate.summonPattern.allowedEnemyIds[
-                    UnityEngine.Random.Range(0, gate.summonPattern.allowedEnemyIds.Length)];
+                int randomEnemyId = gate.allowedEnemyIds[
+                    UnityEngine.Random.Range(0, gate.allowedEnemyIds.Length)];
                 
                 EnemyData enemyData = enemyDatabase.GetEnemy(randomEnemyId);
                 if (enemyData != null)

@@ -63,6 +63,11 @@ namespace BattleSystem
         public int spawnCooldown;                  // 召喚クールダウン
         public int lastSummonTurn;                 // 最後に召喚したターン
         
+        [Header("召喚設定詳細")]
+        public int summonInterval;                 // 召喚間隔（ターン）
+        public int[] allowedEnemyIds;             // 召喚可能な敵ID配列
+        public int summonCount;                   // 一度に召喚する敵数
+        
         [Header("戦略効果")]
         public GateStrategicEffect strategicEffect;    // 戦略効果
         public float effectStrength;                   // 効果強度（1.0=100%）
@@ -88,6 +93,11 @@ namespace BattleSystem
             maxEnemiesPerGate = 2;
             spawnCooldown = 3;
             lastSummonTurn = -1;
+            
+            // 召喚設定詳細の初期化
+            summonInterval = 3;               // デフォルト3ターン間隔
+            allowedEnemyIds = new int[] { 0, 1, 2 }; // デフォルト敵ID
+            summonCount = 1;                  // デフォルト1体召喚
             
             // 戦略効果の初期化
             strategicEffect = GateStrategicEffect.None;
@@ -1016,6 +1026,24 @@ namespace BattleSystem
             }
             
             return info;
+        }
+
+        /// <summary>
+        /// 生存ゲート数を取得
+        /// </summary>
+        /// <returns>生存中のゲート数</returns>
+        public int GetAliveGateCount()
+        {
+            return AliveGates.Count;
+        }
+
+        /// <summary>
+        /// 全ゲートが破壊されているかをチェック
+        /// </summary>
+        /// <returns>全ゲートが破壊されている場合true</returns>
+        public bool AreAllGatesDestroyed()
+        {
+            return GetAliveGateCount() == 0;
         }
         
         #endregion

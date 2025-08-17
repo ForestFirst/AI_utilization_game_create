@@ -352,4 +352,92 @@ namespace BattleSystem
             return $"{EnemyName}[{gridX},{gridY}] HP:{currentHp}/{MaxHp} Gate:{assignedGateId}";
         }
     }
+
+    /// <summary>
+    /// 敵データベース - 敵データの管理を行うScriptableObject
+    /// </summary>
+    [CreateAssetMenu(fileName = "EnemyDatabase", menuName = "BattleSystem/EnemyDatabase")]
+    public class EnemyDatabase : ScriptableObject
+    {
+        [Header("敵データ配列")]
+        [SerializeField] private EnemyData[] enemies;
+
+        /// <summary>
+        /// 敵データ配列のプロパティ
+        /// </summary>
+        public EnemyData[] Enemies => enemies;
+
+        /// <summary>
+        /// IDで敵データを取得
+        /// </summary>
+        /// <param name="enemyId">敵ID</param>
+        /// <returns>敵データ（見つからない場合はnull）</returns>
+        public EnemyData GetEnemy(int enemyId)
+        {
+            if (enemies == null || enemyId < 0 || enemyId >= enemies.Length)
+                return null;
+                
+            return enemies[enemyId];
+        }
+
+        /// <summary>
+        /// 敵名で敵データを取得
+        /// </summary>
+        /// <param name="enemyName">敵名</param>
+        /// <returns>敵データ（見つからない場合はnull）</returns>
+        public EnemyData GetEnemyByName(string enemyName)
+        {
+            if (enemies == null || string.IsNullOrEmpty(enemyName))
+                return null;
+
+            foreach (var enemy in enemies)
+            {
+                if (enemy != null && enemy.enemyName == enemyName)
+                    return enemy;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// ランダムな敵データを取得
+        /// </summary>
+        /// <returns>ランダムな敵データ</returns>
+        public EnemyData GetRandomEnemy()
+        {
+            if (enemies == null || enemies.Length == 0)
+                return null;
+                
+            int randomIndex = UnityEngine.Random.Range(0, enemies.Length);
+            return enemies[randomIndex];
+        }
+
+        /// <summary>
+        /// カテゴリで敵データを絞り込み
+        /// </summary>
+        /// <param name="category">敵カテゴリ</param>
+        /// <returns>該当する敵データ配列</returns>
+        public EnemyData[] GetEnemiesByCategory(EnemyCategory category)
+        {
+            if (enemies == null)
+                return new EnemyData[0];
+
+            var result = new System.Collections.Generic.List<EnemyData>();
+            foreach (var enemy in enemies)
+            {
+                if (enemy != null && enemy.category == category)
+                    result.Add(enemy);
+            }
+            return result.ToArray();
+        }
+
+        /// <summary>
+        /// 敵データ数を取得
+        /// </summary>
+        public int Count => enemies?.Length ?? 0;
+
+        /// <summary>
+        /// 有効な敵データが存在するかチェック
+        /// </summary>
+        public bool HasEnemies => enemies != null && enemies.Length > 0;
+    }
 }
