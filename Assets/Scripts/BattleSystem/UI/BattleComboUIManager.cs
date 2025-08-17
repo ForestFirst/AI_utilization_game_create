@@ -67,7 +67,6 @@ namespace BattleSystem.UI
             if (comboSystem != null)
             {
                 comboSystem.OnComboStarted += HandleComboStarted;
-                comboSystem.OnComboProgressChanged += HandleComboProgressChanged;
                 comboSystem.OnComboCompleted += HandleComboCompleted;
                 comboSystem.OnComboFailed += HandleComboFailed;
             }
@@ -81,7 +80,6 @@ namespace BattleSystem.UI
             if (comboSystem != null)
             {
                 comboSystem.OnComboStarted -= HandleComboStarted;
-                comboSystem.OnComboProgressChanged -= HandleComboProgressChanged;
                 comboSystem.OnComboCompleted -= HandleComboCompleted;
                 comboSystem.OnComboFailed -= HandleComboFailed;
             }
@@ -187,10 +185,10 @@ namespace BattleSystem.UI
         /// <summary>
         /// コンボ開始時のハンドラー
         /// </summary>
-        /// <param name="comboName">コンボ名</param>
-        private void HandleComboStarted(string comboName)
+        /// <param name="comboData">コンボデータ</param>
+        private void HandleComboStarted(ComboData comboData)
         {
-            if (comboContainers.TryGetValue(comboName, out var container))
+            if (comboData != null && comboContainers.TryGetValue(comboData.comboName, out var container))
             {
                 container.isActive = true;
                 container.parentObject.SetActive(true);
@@ -200,28 +198,12 @@ namespace BattleSystem.UI
         }
 
         /// <summary>
-        /// コンボ進行変更時のハンドラー
-        /// </summary>
-        /// <param name="comboName">コンボ名</param>
-        /// <param name="currentStep">現在のステップ</param>
-        /// <param name="totalSteps">総ステップ数</param>
-        /// <param name="progress">進行率(0-1)</param>
-        private void HandleComboProgressChanged(string comboName, int currentStep, int totalSteps, float progress)
-        {
-            if (comboContainers.TryGetValue(comboName, out var container))
-            {
-                container.progressBar.value = progress;
-                container.stepText.text = $"{currentStep}/{totalSteps}";
-            }
-        }
-
-        /// <summary>
         /// コンボ完了時のハンドラー
         /// </summary>
-        /// <param name="comboName">コンボ名</param>
-        private void HandleComboCompleted(string comboName)
+        /// <param name="result">コンボ実行結果</param>
+        private void HandleComboCompleted(ComboExecutionResult result)
         {
-            if (comboContainers.TryGetValue(comboName, out var container))
+            if (result?.comboData != null && comboContainers.TryGetValue(result.comboData.comboName, out var container))
             {
                 container.isActive = false;
                 container.statusText.text = "完了";
@@ -235,10 +217,11 @@ namespace BattleSystem.UI
         /// <summary>
         /// コンボ失敗時のハンドラー
         /// </summary>
-        /// <param name="comboName">コンボ名</param>
-        private void HandleComboFailed(string comboName)
+        /// <param name="comboData">コンボデータ</param>
+        /// <param name="reason">失敗理由</param>
+        private void HandleComboFailed(ComboData comboData, string reason)
         {
-            if (comboContainers.TryGetValue(comboName, out var container))
+            if (comboData != null && comboContainers.TryGetValue(comboData.comboName, out var container))
             {
                 container.isActive = false;
                 container.statusText.text = "失敗";

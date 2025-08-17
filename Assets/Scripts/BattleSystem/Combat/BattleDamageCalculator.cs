@@ -183,20 +183,13 @@ namespace BattleSystem.Combat
                 return;
             }
 
-            // アクティブなコンボからダメージ倍率を取得
-            var activeCombo = comboSystem.GetActiveComboForCard(card);
-            if (activeCombo != null)
-            {
-                calculation.comboMultiplier = activeCombo.comboEffect?.damageMultiplier ?? 1.0f;
-                calculation.comboDamage = Mathf.RoundToInt(
-                    calculation.baseDamage * (calculation.comboMultiplier - 1.0f)
-                );
-            }
-            else
-            {
-                calculation.comboMultiplier = 1.0f;
-                calculation.comboDamage = 0;
-            }
+            // 現在のコンボ進行状況から倍率を取得（仮実装）
+            // 実際のComboSystemの実装に応じて修正が必要
+            calculation.comboMultiplier = 1.0f;
+            calculation.comboDamage = 0;
+            
+            // コンボシステムが利用可能な場合の処理
+            // 実装は具体的なComboSystemのAPIに依存
         }
 
         /// <summary>
@@ -213,21 +206,13 @@ namespace BattleSystem.Combat
             if (attachmentSystem == null || player == null)
                 return;
 
-            // 装備からダメージ修正を取得
-            var attachmentEffects = attachmentSystem.GetDamageModifiersForWeaponType(card.weaponType);
+            // 装備からダメージ修正を取得（仮実装）
+            // 実際のAttachmentSystemの実装に応じて修正が必要
+            // var attachmentEffects = attachmentSystem.GetDamageModifiers(card.weaponType);
             
-            foreach (var effect in attachmentEffects)
-            {
-                switch (effect.effectType)
-                {
-                    case AttachmentEffectType.DamageMultiplier:
-                        calculation.otherMultiplier *= effect.value;
-                        break;
-                    case AttachmentEffectType.DamageAddition:
-                        calculation.otherDamage += Mathf.RoundToInt(effect.value);
-                        break;
-                }
-            }
+            // 装備効果による修正（仮の値）
+            calculation.otherMultiplier = 1.0f;
+            calculation.otherDamage = 0;
 
             // その他修正の計算
             if (calculation.otherMultiplier != 1.0f)

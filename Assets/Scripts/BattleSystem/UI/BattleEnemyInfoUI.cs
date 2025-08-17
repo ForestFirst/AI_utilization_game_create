@@ -160,10 +160,9 @@ namespace BattleSystem.UI
         {
             if (battleManager != null)
             {
-                battleManager.OnEnemySpawned += HandleEnemySpawned;
-                battleManager.OnEnemyDamaged += HandleEnemyDamaged;
-                battleManager.OnEnemyDefeated += HandleEnemyDefeated;
-                battleManager.OnEnemyStateChanged += HandleEnemyStateChanged;
+                // 利用可能なイベントのみ購読
+                battleManager.OnTurnChanged += HandleTurnChanged;
+                battleManager.OnGameStateChanged += HandleGameStateChanged;
             }
         }
 
@@ -174,10 +173,8 @@ namespace BattleSystem.UI
         {
             if (battleManager != null)
             {
-                battleManager.OnEnemySpawned -= HandleEnemySpawned;
-                battleManager.OnEnemyDamaged -= HandleEnemyDamaged;
-                battleManager.OnEnemyDefeated -= HandleEnemyDefeated;
-                battleManager.OnEnemyStateChanged -= HandleEnemyStateChanged;
+                battleManager.OnTurnChanged -= HandleTurnChanged;
+                battleManager.OnGameStateChanged -= HandleGameStateChanged;
             }
         }
 
@@ -287,40 +284,27 @@ namespace BattleSystem.UI
         #region Event Handlers
 
         /// <summary>
-        /// 敵生成時のハンドラー
+        /// ターン変更時のハンドラー
         /// </summary>
-        /// <param name="enemy">生成された敵</param>
-        private void HandleEnemySpawned(EnemyInstance enemy)
+        /// <param name="newTurn">新しいターン</param>
+        private void HandleTurnChanged(int newTurn)
         {
-            CreateEnemyInfoContainer(enemy);
+            // ターンが変わった時に敵情報を更新
+            UpdateAllEnemyInfo();
         }
 
         /// <summary>
-        /// 敵ダメージ時のハンドラー
+        /// ゲーム状態変更時のハンドラー
         /// </summary>
-        /// <param name="enemy">ダメージを受けた敵</param>
-        /// <param name="damage">ダメージ量</param>
-        private void HandleEnemyDamaged(EnemyInstance enemy, int damage)
+        /// <param name="newState">新しいゲーム状態</param>
+        private void HandleGameStateChanged(GameState newState)
         {
-            UpdateEnemyInfo(enemy);
-        }
-
-        /// <summary>
-        /// 敵撃破時のハンドラー
-        /// </summary>
-        /// <param name="enemy">撃破された敵</param>
-        private void HandleEnemyDefeated(EnemyInstance enemy)
-        {
-            UpdateEnemyInfo(enemy);
-        }
-
-        /// <summary>
-        /// 敵状態変更時のハンドラー
-        /// </summary>
-        /// <param name="enemy">状態が変更された敵</param>
-        private void HandleEnemyStateChanged(EnemyInstance enemy)
-        {
-            UpdateEnemyInfo(enemy);
+            // ゲーム状態に応じてUI表示を調整
+            if (newState == GameState.GameOver || newState == GameState.Victory || newState == GameState.Defeat)
+            {
+                // 戦闘終了時は敵情報をクリア
+                ClearEnemyInfo();
+            }
         }
 
         #endregion
