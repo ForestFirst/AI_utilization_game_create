@@ -114,10 +114,44 @@ namespace BattleSystem
         }
     }
 
-    // 実際の敵インスタンス（戦闘中の敵オブジェクト）
+    /// <summary>
+    /// バフ/デバフ効果の管理
+    /// </summary>
+    [Serializable]
+    public class BuffEffect
+    {
+        public string buffName;
+        public float effectValue;        // 効果倍率（1.0が基準値）
+        public int remainingTurns;       // 残りターン数（-1で永続）
+        public bool isDebuff;            // デバフかどうか
+        
+        public BuffEffect(string name, float value, int turns, bool debuff = false)
+        {
+            buffName = name;
+            effectValue = value;
+            remainingTurns = turns;
+            isDebuff = debuff;
+        }
+        
+        public bool IsActive()
+        {
+            return remainingTurns != 0;
+        }
+        
+        public void DecrementTurn()
+        {
+            if (remainingTurns > 0)
+                remainingTurns--;
+        }
+    }
+    
+    /// <summary>
+    /// 実際の敵インスタンス（戦闘中の敵オブジェクト）- 拡張版
+    /// </summary>
     [Serializable]
     public class EnemyInstance
     {
+        [Header("基本データ")]
         public EnemyData enemyData;
         public int currentHp;
         public int currentAttackPower;
@@ -125,6 +159,17 @@ namespace BattleSystem
         public int actionCooldownRemaining; // 残りクールダウン
         public bool[] statusEffects;       // 状態異常配列
         public int turnsSinceSpawned;      // 召喚からの経過ターン
+        
+        [Header("ゲート連携")]
+        public int assignedGateId = -1;    // 所属ゲートID（-1で未割り当て）
+        
+        [Header("バフ/デバフシステム")]
+        public System.Collections.Generic.List<BuffEffect> activeBuffs; // アクティブなバフ/デバフ
+        
+        [Header("戦闘統計")]
+        public int damageDealt;            // 与えたダメージ累計
+        public int damageTaken;           // 受けたダメージ累計
+        public int turnsAlive;            // 生存ターン数
 
         public EnemyInstance(EnemyData data, int x, int y)
         {
@@ -136,6 +181,13 @@ namespace BattleSystem
             actionCooldownRemaining = 0;
             statusEffects = new bool[10]; // 状態異常の種類数に合わせて調整
             turnsSinceSpawned = 0;
+            
+            // 新規フィールドの初期化
+            assignedGateId = -1;
+            activeBuffs = new System.Collections.Generic.List<BuffEffect>();
+            damageDealt = 0;
+            damageTaken = 0;
+            turnsAlive = 0;
         }
 
         public bool IsAlive()
@@ -151,6 +203,146 @@ namespace BattleSystem
         public bool CanAct()
         {
             return IsAlive() && actionCooldownRemaining <= 0;
+        }
+        
+        /// <summary>
+        /// バフ/デバフの適用
+        /// </summary>
+        public void ApplyBuff(string buffName, float effectValue, int duration, bool isDebuff = false)
+        {
+            // 既存の同名バフを削除（重複回避）
+            activeBuffs.RemoveAll(buff => buff.buffName == buffName);
+            
+            // 新しいバフを追加
+            BuffEffect newBuff = new BuffEffect(buffName, effectValue, duration, isDebuff);
+            activeBuffs.Add(newBuff);
+            
+            Debug.Log($"{enemyData.enemyName}に{buffName}を適用: 効果値{effectValue}, 持続{duration}ターン");
+        }
+        
+        /// <summary>
+        /// HP回復処理
+        /// </summary>
+        public void Heal(int healAmount)
+        {
+            int actualHeal = Mathf.Min(healAmount, enemyData.baseHp - currentHp);
+            currentHp = Mathf.Min(enemyData.baseHp, currentHp + healAmount);
+            
+            if (actualHeal > 0)
+            {
+                Debug.Log($"{enemyData.enemyName}が{actualHeal}HP回復（{currentHp}/{enemyData.baseHp}）");
+            }
+        }
+        
+        /// <summary>
+        /// ダメージ処理の拡張（統計記録付き）
+        /// </summary>
+        public void TakeDamageWithStats(int damage)
+        {
+            int actualDamage = Mathf.Min(damage, currentHp);
+            currentHp = Mathf.Max(0, currentHp - damage);
+            damageTaken += actualDamage;
+            
+            Debug.Log($"{enemyData.enemyName}が{actualDamage}ダメージを受けた（{currentHp}/{enemyData.baseHp}）");
+        }
+        
+        /// <summary>
+        /// バフ/デバフの効果を計算した実攻撃力を取得
+        /// </summary>
+        public int GetEffectiveAttackPower()
+        {
+            float multiplier = 1.0f;
+            
+            foreach (BuffEffect buff in activeBuffs)
+            {
+                if (buff.IsActive() && (buff.buffName.Contains("Attack") || buff.buffName.Contains("GateBoost")))
+                {
+                    if (buff.isDebuff)
+                        multiplier *= (2.0f - buff.effectValue); // デバフは減算効果
+                    else
+                        multiplier *= buff.effectValue; // バフは乗算効果
+                }
+            }
+            
+            return Mathf.RoundToInt(currentAttackPower * multiplier);
+        }
+        
+        /// <summary>
+        /// バフ/デバフの効果を計算した実防御力を取得
+        /// </summary>
+        public int GetEffectiveDefense()
+        {
+            float multiplier = 1.0f;
+            
+            foreach (BuffEffect buff in activeBuffs)
+            {
+                if (buff.IsActive() && buff.buffName.Contains("Defense"))
+                {
+                    if (buff.isDebuff)
+                        multiplier *= (2.0f - buff.effectValue);
+                    else
+                        multiplier *= buff.effectValue;
+                }
+            }
+            
+            return Mathf.RoundToInt(enemyData.defense * multiplier);
+        }
+        
+        /// <summary>
+        /// ターン終了時のバフ/デバフ更新処理
+        /// </summary>
+        public void ProcessEndTurn()
+        {
+            turnsAlive++;
+            turnsSinceSpawned++;
+            
+            if (actionCooldownRemaining > 0)
+                actionCooldownRemaining--;
+                
+            // バフ/デバフのターン数減算と期限切れバフの削除
+            for (int i = activeBuffs.Count - 1; i >= 0; i--)
+            {
+                activeBuffs[i].DecrementTurn();
+                if (!activeBuffs[i].IsActive())
+                {
+                    Debug.Log($"{enemyData.enemyName}の{activeBuffs[i].buffName}が期限切れ");
+                    activeBuffs.RemoveAt(i);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 敵の詳細状態をデバッグログに出力
+        /// </summary>
+        public void LogStatus()
+        {
+            string buffList = "";
+            foreach (BuffEffect buff in activeBuffs)
+            {
+                buffList += $"{buff.buffName}({buff.effectValue}x{buff.remainingTurns}) ";
+            }
+            
+            Debug.Log($"[{enemyData.enemyName}] HP:{currentHp}/{enemyData.baseHp}, 攻撃力:{GetEffectiveAttackPower()}, 防御力:{GetEffectiveDefense()}, バフ:[{buffList}], ゲート:{assignedGateId}");
+        }
+    }
+    
+    /// <summary>
+    /// ゲート召喚パターンデータ（名前変更で重複回避）
+    /// </summary>
+    [Serializable]
+    public class GateSummonPatternData
+    {
+        public string patternName;
+        public int summonInterval;      // 召喚間隔（ターン）
+        public int summonCount;         // 一回の召喚数
+        public int[] allowedEnemyIds;   // 召喚可能敵ID配列
+        
+        public GateSummonPatternData()
+        {
+            patternName = "DefaultPattern";
+            summonInterval = 3;
+            summonCount = 1;
+            allowedEnemyIds = new int[] { 0 };
         }
     }
 }

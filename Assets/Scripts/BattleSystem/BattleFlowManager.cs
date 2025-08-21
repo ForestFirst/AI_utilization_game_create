@@ -352,30 +352,22 @@ namespace BattleSystem
         }
 
         // 敵召喚処理コルーチン
+        /// <summary>
+        /// 敵召喚処理コルーチン（新しい統合システム使用）
+        /// BattleField.csの戦略的召喚システムと統合
+        /// </summary>
         private IEnumerator ProcessEnemySummoningCoroutine()
         {
-            // 基本的な敵召喚ロジック（BattleManagerから移植・簡素化）
-            foreach (GateData gate in battleManager.BattleField.Gates)
+            // BattleField.csの新しい統合システムを使用
+            battleManager.BattleField.ProcessGateSummoning(battleManager.CurrentTurn);
+            
+            // ゲートの戦略効果も同時に処理
+            battleManager.BattleField.ProcessGateStrategicEffects();
+            
+            // 処理結果のログ出力（デバッグ用）
+            foreach (GateData gate in battleManager.BattleField.GetAliveGates())
             {
-                if (gate.IsDestroyed() || gate.summonPattern == null)
-                    continue;
-
-                int turnsSinceLastSummon = battleManager.CurrentTurn - gate.lastSummonTurn;
-                if (turnsSinceLastSummon >= gate.summonPattern.summonInterval)
-                {
-                    // 敵召喚実行
-                    for (int i = 0; i < gate.summonPattern.summonCount; i++)
-                    {
-                        GridPosition emptyPos = battleManager.BattleField.GetRandomEmptyPosition();
-                        if (emptyPos.x == -1)
-                            break;
-
-                        // 仮の敵召喚（詳細は後のフェーズで実装）
-                        Debug.Log($"ゲート {gate.gateId} から敵召喚：位置 ({emptyPos.x}, {emptyPos.y})");
-                    }
-                    
-                    gate.lastSummonTurn = battleManager.CurrentTurn;
-                }
+                Debug.Log($"ゲート {gate.gateName}({gate.gateType}): HP {gate.currentHp}/{gate.maxHp}, 最終召喚ターン: {gate.lastSummonTurn}");
             }
 
             yield return null;

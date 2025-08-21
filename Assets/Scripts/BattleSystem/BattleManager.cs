@@ -345,57 +345,22 @@ namespace BattleSystem
             }
         }
 
-        // 敵召喚の処理
+        /// <summary>
+        /// 敵召喚処理（新しい統合システム使用）
+        /// BattleField.csの戦略的召喚システムと統合
+        /// </summary>
         private void ProcessEnemySummoning()
         {
-            foreach (GateData gate in battleField.Gates)
-            {
-                if (gate.IsDestroyed())
-                    continue;
-
-                if (gate.summonPattern != null && ShouldSummonEnemy(gate))
-                {
-                    SummonEnemyFromGate(gate);
-                    gate.lastSummonTurn = currentTurn;
-                }
-            }
+            // BattleField.csの新しい統合システムを使用
+            battleField.ProcessGateSummoning(currentTurn);
+            
+            // ゲートの戦略効果も同時に処理
+            battleField.ProcessGateStrategicEffects();
         }
 
-        // 敵召喚判定
-        private bool ShouldSummonEnemy(GateData gate)
-        {
-            if (gate.summonPattern == null)
-                return false;
-
-            int turnsSinceLastSummon = currentTurn - gate.lastSummonTurn;
-            return turnsSinceLastSummon >= gate.summonPattern.summonInterval;
-        }
-
-        // ゲートからの敵召喚
-        private void SummonEnemyFromGate(GateData gate)
-        {
-            if (gate.summonPattern.allowedEnemyIds == null || gate.summonPattern.allowedEnemyIds.Length == 0)
-                return;
-
-            for (int i = 0; i < gate.summonPattern.summonCount; i++)
-            {
-                GridPosition emptyPos = battleField.GetRandomEmptyPosition();
-                if (emptyPos.x == -1) // 空きがない場合
-                    break;
-
-                int randomEnemyId = gate.summonPattern.allowedEnemyIds[
-                    UnityEngine.Random.Range(0, gate.summonPattern.allowedEnemyIds.Length)];
-                
-                EnemyData enemyData = enemyDatabase.GetEnemy(randomEnemyId);
-                if (enemyData != null)
-                {
-                    EnemyInstance newEnemy = new EnemyInstance(enemyData, emptyPos.x, emptyPos.y);
-                    battleField.PlaceEnemy(newEnemy, emptyPos);
-                }
-            }
-        }
-
-        // 勝利条件のチェック
+        /// <summary>
+        /// 勝利条件のチェック（仕様書準拠：制限ターン内にゲート破壊 OR 敵全滅）
+        /// </summary>
         private void CheckVictoryConditions()
         {
             if (currentState == GameState.Victory || currentState == GameState.Defeat)

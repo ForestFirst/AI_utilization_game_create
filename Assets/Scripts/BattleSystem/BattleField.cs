@@ -618,15 +618,17 @@ namespace BattleSystem
                 GridPosition emptyPos = GetRandomEmptyPosition();
                 if (emptyPos.x == -1) break; // 空きがない場合
                 
-                // 実際の敵召喚処理（EnemyDatabaseと連携）
-                // 仮実装：基本敵を召喚
-                EnemyData basicEnemyData = CreateEnemyDataForGate(gate);
-                EnemyInstance newEnemy = new EnemyInstance(basicEnemyData, emptyPos.x, emptyPos.y);
-                newEnemy.assignedGateId = gate.gateId;
-                
-                if (PlaceEnemy(newEnemy, emptyPos))
+                // 実際の敵召喚処理（EnemyDatabaseと連携、改良版）
+                EnemyData enemyDataToSummon = SelectEnemyForGate(gate);
+                if (enemyDataToSummon != null)
                 {
-                    Debug.Log($"ゲート{gate.gateName}({gate.gateType})から{basicEnemyData.enemyName}を召喚: ({emptyPos.x}, {emptyPos.y})");
+                    EnemyInstance newEnemy = new EnemyInstance(enemyDataToSummon, emptyPos.x, emptyPos.y);
+                    newEnemy.assignedGateId = gate.gateId;
+                    
+                    if (PlaceEnemy(newEnemy, emptyPos))
+                    {
+                        Debug.Log($"ゲート{gate.gateName}({gate.gateType})から{enemyDataToSummon.enemyName}を召喚: ({emptyPos.x}, {emptyPos.y})");
+                    }
                 }
             }
         }
@@ -650,14 +652,32 @@ namespace BattleSystem
         }
         
         /// <summary>
-        /// ゲートタイプに応じた敵データを作成（仮実装）
+        /// ゲートに応じた敵の選択（改良版、実際のEnemyDatabaseと連携可能）
         /// </summary>
-        private EnemyData CreateEnemyDataForGate(GateData gate)
+        private EnemyData SelectEnemyForGate(GateData gate)
         {
-            // 仮実装：ゲートタイプに応じた基本敵データを作成
+            // ゲートに割り当てられた敵IDがある場合はそれを使用
+            if (gate.allowedEnemyIds != null && gate.allowedEnemyIds.Length > 0)
+            {
+                int randomIndex = UnityEngine.Random.Range(0, gate.allowedEnemyIds.Length);
+                int selectedEnemyId = gate.allowedEnemyIds[randomIndex];
+                
+                // TODO: 実際のEnemyDatabaseからデータを取得
+                // return enemyDatabase.GetEnemy(selectedEnemyId);
+            }
+            
+            // フォールバック：ゲートタイプに応じたデフォルト敵を作成
+            return CreateDefaultEnemyForGateType(gate.gateType);
+        }
+        
+        /// <summary>
+        /// ゲートタイプに応じたデフォルト敵データを作成（仮実装）
+        /// </summary>
+        private EnemyData CreateDefaultEnemyForGateType(GateType gateType)
+        {
             EnemyData enemyData = new EnemyData();
             
-            switch (gate.gateType)
+            switch (gateType)
             {
                 case GateType.Elite:
                     enemyData.enemyName = "エリート敵";
