@@ -158,7 +158,7 @@ namespace BattleSystem
         public int turnsSinceSpawned;      // 召喚からの経過ターン
         
         [Header("バフ/デバフシステム")]
-        public System.Collections.Generic.List<BuffEffect> activeBuffs; // アクティブなバフ/デバフ
+        public System.Collections.Generic.List<BuffEffect> activeBuffs; // アクティブなバフ/デバフ（詳細版）
         public Dictionary<string, float> buffMultipliers;      // バフ効果倍率（互換性用）
         public Dictionary<string, int> buffDurations;          // バフ持続時間（互換性用）
         
@@ -186,7 +186,7 @@ namespace BattleSystem
             statusEffects = new bool[10]; // 状態異常の種類数に合わせて調整
             turnsSinceSpawned = 0;
             
-            // バフシステム初期化
+            // バフシステム初期化（詳細版と互換性版の両方をサポート）
             activeBuffs = new System.Collections.Generic.List<BuffEffect>();
             buffMultipliers = new Dictionary<string, float>();
             buffDurations = new Dictionary<string, int>();
@@ -314,56 +314,6 @@ namespace BattleSystem
         }
 
         /// <summary>
-        /// バフ/デバフの効果を計算した実攻撃力を取得
-        /// </summary>
-        public int GetEffectiveAttackPower()
-        {
-            float multiplier = 1.0f;
-            
-            foreach (BuffEffect buff in activeBuffs)
-            {
-                if (buff.IsActive() && (buff.buffName.Contains("Attack") || buff.buffName.Contains("GateBoost")))
-                {
-                    if (buff.isDebuff)
-                        multiplier *= (2.0f - buff.effectValue); // デバフは減算効果
-                    else
-                        multiplier *= buff.effectValue; // バフは乗算効果
-                }
-            }
-            
-            // 互換性用バフもチェック
-            if (HasBuff("AttackBoost"))
-                multiplier *= GetBuffMultiplier("AttackBoost");
-            
-            return Mathf.RoundToInt(currentAttackPower * multiplier);
-        }
-        
-        /// <summary>
-        /// バフ/デバフの効果を計算した実防御力を取得
-        /// </summary>
-        public int GetEffectiveDefense()
-        {
-            float multiplier = 1.0f;
-            
-            foreach (BuffEffect buff in activeBuffs)
-            {
-                if (buff.IsActive() && buff.buffName.Contains("Defense"))
-                {
-                    if (buff.isDebuff)
-                        multiplier *= (2.0f - buff.effectValue);
-                    else
-                        multiplier *= buff.effectValue;
-                }
-            }
-            
-            // 互換性用バフもチェック
-            if (HasBuff("DefenseBoost"))
-                multiplier *= GetBuffMultiplier("DefenseBoost");
-            
-            return Mathf.RoundToInt(currentDefense * multiplier);
-        }
-
-        /// <summary>
         /// ターン終了処理（バフ持続時間管理）
         /// </summary>
         public void OnTurnEnd()
@@ -375,7 +325,7 @@ namespace BattleSystem
             if (actionCooldownRemaining > 0)
                 actionCooldownRemaining--;
             
-            // バフ持続時間減少と期限切れ処理
+            // 詳細バフシステムの持続時間減少と期限切れ処理
             for (int i = activeBuffs.Count - 1; i >= 0; i--)
             {
                 activeBuffs[i].DecrementTurn();
@@ -402,6 +352,60 @@ namespace BattleSystem
                 buffMultipliers.Remove(buffName);
                 buffDurations.Remove(buffName);
             }
+        }
+
+        /// <summary>
+        /// 現在の実効攻撃力を取得（バフ効果込み）
+        /// </summary>
+        /// <returns>実効攻撃力</returns>
+        public int GetEffectiveAttackPower()
+        {
+            float multiplier = 1.0f;
+            
+            // 詳細バフシステムからの効果適用
+            foreach (BuffEffect buff in activeBuffs)
+            {
+                if (buff.IsActive() && (buff.buffName.Contains("Attack") || buff.buffName.Contains("GateBoost")))
+                {
+                    if (buff.isDebuff)
+                        multiplier *= (2.0f - buff.effectValue); // デバフは減算効果
+                    else
+                        multiplier *= buff.effectValue; // バフは乗算効果
+                }
+            }
+            
+            // 互換性用バフもチェック
+            if (HasBuff("AttackBoost"))
+                multiplier *= GetBuffMultiplier("AttackBoost");
+            
+            return Mathf.RoundToInt(currentAttackPower * multiplier);
+        }
+
+        /// <summary>
+        /// 現在の実効防御力を取得（バフ効果込み）
+        /// </summary>
+        /// <returns>実効防御力</returns>
+        public int GetEffectiveDefense()
+        {
+            float multiplier = 1.0f;
+            
+            // 詳細バフシステムからの効果適用
+            foreach (BuffEffect buff in activeBuffs)
+            {
+                if (buff.IsActive() && buff.buffName.Contains("Defense"))
+                {
+                    if (buff.isDebuff)
+                        multiplier *= (2.0f - buff.effectValue);
+                    else
+                        multiplier *= buff.effectValue;
+                }
+            }
+            
+            // 互換性用バフもチェック
+            if (HasBuff("DefenseBoost"))
+                multiplier *= GetBuffMultiplier("DefenseBoost");
+            
+            return Mathf.RoundToInt(currentDefense * multiplier);
         }
 
         /// <summary>
