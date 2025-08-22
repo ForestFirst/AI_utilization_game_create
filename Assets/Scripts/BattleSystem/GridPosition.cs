@@ -35,7 +35,7 @@ namespace BattleSystem
         
         public override int GetHashCode()
         {
-            return HashCode.Combine(x, y);
+            return x.GetHashCode() ^ y.GetHashCode();
         }
         
         public static bool operator ==(GridPosition a, GridPosition b)

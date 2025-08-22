@@ -41,11 +41,25 @@ namespace BattleSystem
         public float successRate;               // 成功率
     }
 
+    // コンボステップデータ
+    [Serializable]
+    public class ComboStep
+    {
+        public string stepName;                 // ステップ名
+        public string requiredWeaponType;       // 必要武器タイプ
+        public WeaponType weaponType;           // 武器タイプ（enum版）
+        public AttackAttribute requiredAttribute; // 必要属性
+        public int minDamage;                   // 最小ダメージ要求
+        public bool isOptional;                // オプションステップか
+        public string stepDescription;         // ステップ説明
+    }
+
     // コンボ効果データ
     [Serializable]
     public class ComboEffect
     {
         public ComboEffectType effectType;
+        public string effectName;               // 効果名
         public float damageMultiplier;          // ダメージ倍率（1.5 = 150%）
         public int additionalActions;           // 追加行動回数
         public AttackAttribute statusAttribute; // 状態異常の属性
@@ -69,6 +83,11 @@ namespace BattleSystem
         public bool canInterrupt;               // 中断可能フラグ
         public float interruptResistance;       // 中断耐性
         public int priority;                    // 発動優先度
+        
+        // UI用の追加フィールド
+        public List<ComboStep> steps;           // コンボステップリスト
+        public float timeLimit;                 // 制限時間
+        public ComboEffect comboEffect;         // 単一コンボ効果（UI用）
     }
 
     // コンボ進行状況
