@@ -81,47 +81,7 @@ namespace BattleSystem
         TimeLimit          // 制限ターン内達成
     }
 
-    // プレイヤーデータの基本構造
-    [Serializable]
-    public class PlayerData
-    {
-        public int maxHp;           // 最大HP
-        public int currentHp;       // 現在HP
-        public int baseAttackPower; // 基本攻撃力
-        public WeaponData[] equippedWeapons; // 装備武器配列（4個）
-        public int[] weaponCooldowns;        // 武器クールダウン配列
-
-        public PlayerData()
-        {
-            maxHp = 15000;
-            currentHp = 15000;
-            baseAttackPower = 100;
-            equippedWeapons = new WeaponData[4];
-            weaponCooldowns = new int[4];
-        }
-
-        public bool IsAlive()
-        {
-            return currentHp > 0;
-        }
-
-        public void TakeDamage(int damage)
-        {
-            currentHp = Mathf.Max(0, currentHp - damage);
-        }
-
-        public void Heal(int healAmount)
-        {
-            currentHp = Mathf.Min(maxHp, currentHp + healAmount);
-        }
-
-        public bool CanUseWeapon(int weaponIndex)
-        {
-            return weaponIndex >= 0 && weaponIndex < 4 && 
-                   equippedWeapons[weaponIndex] != null && 
-                   weaponCooldowns[weaponIndex] <= 0;
-        }
-    }
+    // PlayerDataクラスはPlayerWeaponData.csで定義済み
 
     // 戦闘結果データ
     [Serializable]
@@ -165,6 +125,7 @@ namespace BattleSystem
         public event Action<GameState> OnGameStateChanged;
         public event Action<int> OnTurnChanged;
         public event Action<PlayerData> OnPlayerDataChanged;
+        public event Action<int, int> OnPlayerHealthChanged;      // プレイヤーHP変更イベント (currentHp, maxHp)
         public event Action<BattleResult> OnBattleEnded;
         public event Action<TargetSelection> OnTargetSelected;    // ターゲット選択時
         public event Action OnTargetCleared;                      // ターゲットクリア時
@@ -198,7 +159,9 @@ namespace BattleSystem
             turnTimer = 0f;
             
             // 戦闘フィールドの初期化
-            battleField = new BattleField(gateCount);
+            GameObject battleFieldObj = new GameObject("BattleField");
+            battleField = battleFieldObj.AddComponent<BattleField>();
+            battleField.InitializeBattleField(gateCount);
             
             // プレイヤーデータの初期化
             playerData = new PlayerData();
@@ -289,6 +252,7 @@ namespace BattleSystem
             }
             
             OnPlayerDataChanged?.Invoke(playerData);
+            OnPlayerHealthChanged?.Invoke(playerData.currentHp, playerData.maxHp);
         }
 
         // プレイヤーターン終了
@@ -342,6 +306,7 @@ namespace BattleSystem
                 int damage = enemy.currentAttackPower;
                 playerData.TakeDamage(damage);
                 OnPlayerDataChanged?.Invoke(playerData);
+            OnPlayerHealthChanged?.Invoke(playerData.currentHp, playerData.maxHp);
             }
         }
 
