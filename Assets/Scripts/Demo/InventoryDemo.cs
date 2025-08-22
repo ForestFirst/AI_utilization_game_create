@@ -259,10 +259,10 @@ namespace InventorySystem.Demo
         {
             var testWeapons = new[]
             {
-                new WeaponData { weaponName = "テスト剣", basePower = 50, criticalRate = 15, weaponType = WeaponType.Sword },
-                new WeaponData { weaponName = "テスト斧", basePower = 70, criticalRate = 10, weaponType = WeaponType.Axe },
-                new WeaponData { weaponName = "テスト槍", basePower = 60, criticalRate = 20, weaponType = WeaponType.Spear },
-                new WeaponData { weaponName = "テスト弓", basePower = 45, criticalRate = 25, weaponType = WeaponType.Bow }
+                CreateTestWeapon("テスト剣", 50, 15, WeaponType.Sword, AttackAttribute.Fire),
+                CreateTestWeapon("テスト斧", 70, 10, WeaponType.Axe, AttackAttribute.Earth),
+                CreateTestWeapon("テスト槍", 60, 20, WeaponType.Spear, AttackAttribute.Thunder),
+                CreateTestWeapon("テスト弓", 45, 25, WeaponType.Bow, AttackAttribute.Wind)
             };
             
             foreach (var weapon in testWeapons)
@@ -271,20 +271,87 @@ namespace InventorySystem.Demo
             }
         }
         
+        /// <summary>
+        /// テスト用WeaponData作成ヘルパー
+        /// </summary>
+        private WeaponData CreateTestWeapon(string name, int power, int critRate, WeaponType weaponType, AttackAttribute attackAttr)
+        {
+            return new WeaponData
+            {
+                weaponName = name,
+                basePower = power,
+                criticalRate = critRate,
+                weaponType = weaponType,
+                attackAttribute = attackAttr,
+                attackRange = AttackRange.SingleFront,
+                cooldownTurns = 0,
+                specialEffect = "テスト武器",
+                effectValue = 0,
+                effectDuration = 0,
+                canUseConsecutively = true
+            };
+        }
+        
         private void AddTestAttachments()
         {
             var testAttachments = new[]
             {
-                new AttachmentData { attachmentId = 1, attachmentName = "炎のアタッチメント", rarity = AttachmentRarity.Common, description = "炎ダメージ+20%" },
-                new AttachmentData { attachmentId = 2, attachmentName = "氷のアタッチメント", rarity = AttachmentRarity.Rare, description = "氷ダメージ+30%" },
-                new AttachmentData { attachmentId = 3, attachmentName = "雷のアタッチメント", rarity = AttachmentRarity.Epic, description = "雷ダメージ+40%" },
-                new AttachmentData { attachmentId = 4, attachmentName = "伝説のアタッチメント", rarity = AttachmentRarity.Legendary, description = "全ダメージ+50%" }
+                CreateTestAttachment(1, "炎のアタッチメント", AttachmentRarity.Common, AttachmentCategory.Attack, "炎ダメージ+20%"),
+                CreateTestAttachment(2, "氷のアタッチメント", AttachmentRarity.Rare, AttachmentCategory.Attack, "氷ダメージ+30%"),
+                CreateTestAttachment(3, "雷のアタッチメント", AttachmentRarity.Epic, AttachmentCategory.Combo, "雷ダメージ+40%"),
+                CreateTestAttachment(4, "伝説のアタッチメント", AttachmentRarity.Legendary, AttachmentCategory.Utility, "全ダメージ+50%")
             };
             
             foreach (var attachment in testAttachments)
             {
                 inventoryUI.AddTestAttachment(attachment);
                 Debug.Log($"テストアタッチメント追加: {attachment.attachmentName}");
+            }
+        }
+        
+        /// <summary>
+        /// テスト用AttachmentData作成ヘルパー
+        /// </summary>
+        private AttachmentData CreateTestAttachment(int id, string name, AttachmentRarity rarity, AttachmentCategory category, string desc)
+        {
+            return new AttachmentData
+            {
+                attachmentId = id,
+                attachmentName = name,
+                rarity = rarity,
+                category = category,
+                description = desc,
+                effects = new AttachmentEffect[]
+                {
+                    new AttachmentEffect
+                    {
+                        effectType = AttachmentEffectType.AttackPowerBoost,
+                        effectValue = GetRarityBasedValue(rarity),
+                        flatValue = 0,
+                        isPercentage = true,
+                        stackable = false,
+                        conditionDescription = "常時発動"
+                    }
+                },
+                flavorText = $"テスト用の{name}です。",
+                isUnique = false,
+                attachmentIcon = null,
+                associatedComboName = ""
+            };
+        }
+        
+        /// <summary>
+        /// レアリティに基づく効果値取得
+        /// </summary>
+        private float GetRarityBasedValue(AttachmentRarity rarity)
+        {
+            switch (rarity)
+            {
+                case AttachmentRarity.Common: return 0.20f; // 20%
+                case AttachmentRarity.Rare: return 0.30f;   // 30%
+                case AttachmentRarity.Epic: return 0.40f;   // 40%
+                case AttachmentRarity.Legendary: return 0.50f; // 50%
+                default: return 0.10f;
             }
         }
         

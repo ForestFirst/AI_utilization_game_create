@@ -38,7 +38,7 @@ namespace BattleSystem
         // アタッチメントシステム
         private List<AttachmentData> attachmentInventory;
         private AttachmentData selectedAttachment;
-        private List<ActiveComboData> activeCombos;
+        private List<ComboProgress> activeCombos;
 
         // UI状態
         private Dictionary<string, GameObject> weaponButtons;
@@ -80,7 +80,7 @@ namespace BattleSystem
             CreateSampleAttachments();
 
             // アクティブコンボ
-            activeCombos = new List<ActiveComboData>();
+            activeCombos = new List<ComboProgress>();
             CreateSampleActiveCombos();
 
             weaponButtons = new Dictionary<string, GameObject>();
@@ -148,15 +148,53 @@ namespace BattleSystem
         /// </summary>
         private void CreateSampleActiveCombos()
         {
-            activeCombos.AddRange(new[]
+            activeCombos.Add(CreateSampleComboProgress("炎の加護", "ダメージ+130% + 炎上付与", 1, 1));
+            activeCombos.Add(CreateSampleComboProgress("雷撃連打", "2回攻撃 + 麻痺付与", 1, 2));
+            activeCombos.Add(CreateSampleComboProgress("炎氷爆発", "ダメージ+165% + 凍結付与", 0, 3));
+            activeCombos.Add(CreateSampleComboProgress("属性循環", "全体攻撃 + 状態異常無効", 2, 3));
+            activeCombos.Add(CreateSampleComboProgress("風雷激流", "ダメージ+154% + 連鎖攻撃", 0, 2));
+            activeCombos.Add(CreateSampleComboProgress("光闇螺旋", "ダメージ+225% + HP50%回復", 1, 2));
+        }
+        
+        /// <summary>
+        /// サンプルComboProgress作成ヘルパー
+        /// </summary>
+        private ComboProgress CreateSampleComboProgress(string name, string effect, int currentSteps, int maxSteps)
+        {
+            var comboData = new ComboData
             {
-                new ActiveComboData { name = "炎の加護", progress = 1, maxSteps = 1, effect = "ダメージ+130% + 炎上付与" },
-                new ActiveComboData { name = "雷撃連打", progress = 1, maxSteps = 2, effect = "2回攻撃 + 麻痺付与" },
-                new ActiveComboData { name = "炎氷爆発", progress = 0, maxSteps = 3, effect = "ダメージ+165% + 凍結付与" },
-                new ActiveComboData { name = "属性循環", progress = 2, maxSteps = 3, effect = "全体攻撃 + 状態異常無効" },
-                new ActiveComboData { name = "風雷激流", progress = 0, maxSteps = 2, effect = "ダメージ+154% + 連鎖攻撃" },
-                new ActiveComboData { name = "光闇螺旋", progress = 1, maxSteps = 2, effect = "ダメージ+225% + HP50%回復" }
-            });
+                comboName = name,
+                comboDescription = effect,
+                requiredWeaponCount = maxSteps,
+                effects = new ComboEffect[]
+                {
+                    new ComboEffect
+                    {
+                        effectType = ComboEffectType.DamageMultiplier,
+                        effectName = effect,
+                        damageMultiplier = 1.3f,
+                        effectDescription = effect
+                    }
+                }
+            };
+            
+            var progress = new ComboProgress
+            {
+                comboData = comboData,
+                usedWeaponIndices = new List<int>(),
+                usedAttackAttributes = new List<AttackAttribute>(),
+                usedWeaponTypes = new List<WeaponType>()
+            };
+            
+            // 進行状況をシミュレート
+            for (int i = 0; i < currentSteps; i++)
+            {
+                progress.usedWeaponIndices.Add(i);
+                progress.usedAttackAttributes.Add(AttackAttribute.Fire);
+                progress.usedWeaponTypes.Add(WeaponType.Sword);
+            }
+            
+            return progress;
         }
 
         /// <summary>
@@ -853,9 +891,9 @@ namespace BattleSystem
         /// <summary>
         /// コンボアイテム作成
         /// </summary>
-        private void CreateComboItem(ActiveComboData combo, Transform parent)
+        private void CreateComboItem(ComboProgress combo, Transform parent)
         {
-            var itemObj = new GameObject($"ComboItem_{combo.name}");
+            var itemObj = new GameObject($"ComboItem_{combo.comboData.comboName}");
             itemObj.transform.SetParent(parent, false);
 
             var layoutElement = itemObj.AddComponent<LayoutElement>();
@@ -877,7 +915,7 @@ namespace BattleSystem
             nameRect.anchoredPosition = Vector2.zero;
 
             var nameText = nameObj.AddComponent<Text>();
-            nameText.text = combo.name;
+            nameText.text = combo.comboData.comboName;
             nameText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             nameText.fontSize = 14;
             nameText.color = new Color(0.8f, 0.6f, 1f);
@@ -895,7 +933,7 @@ namespace BattleSystem
             effectRect.anchoredPosition = Vector2.zero;
 
             var effectText = effectObj.AddComponent<Text>();
-            effectText.text = combo.effect;
+            effectText.text = combo.comboData.comboDescription;
             effectText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             effectText.fontSize = 10;
             effectText.color = new Color(0.7f, 0.5f, 0.9f);
@@ -908,7 +946,7 @@ namespace BattleSystem
         /// <summary>
         /// 進行バー作成
         /// </summary>
-        private void CreateProgressBar(ActiveComboData combo, Transform parent)
+        private void CreateProgressBar(ComboProgress combo, Transform parent)
         {
             var barBgObj = new GameObject("ProgressBarBG");
             barBgObj.transform.SetParent(parent, false);
@@ -928,7 +966,10 @@ namespace BattleSystem
 
             var barFillRect = barFillObj.AddComponent<RectTransform>();
             barFillRect.anchorMin = Vector2.zero;
-            barFillRect.anchorMax = new Vector2((float)combo.progress / combo.maxSteps, 1f);
+            int currentProgress = combo.usedWeaponIndices.Count;
+            int maxSteps = combo.comboData.requiredWeaponCount;
+            float fillRatio = maxSteps > 0 ? (float)currentProgress / maxSteps : 0f;
+            barFillRect.anchorMax = new Vector2(fillRatio, 1f);
             barFillRect.sizeDelta = Vector2.zero;
             barFillRect.anchoredPosition = Vector2.zero;
 
@@ -946,7 +987,7 @@ namespace BattleSystem
             progressTextRect.anchoredPosition = Vector2.zero;
 
             var progressText = progressTextObj.AddComponent<Text>();
-            progressText.text = $"{combo.progress}/{combo.maxSteps}";
+            progressText.text = $"{currentProgress}/{maxSteps}";
             progressText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             progressText.fontSize = 10;
             progressText.color = new Color(0.7f, 0.5f, 0.9f);
@@ -1383,19 +1424,7 @@ namespace BattleSystem
         Attachments
     }
 
-    // 既存のAttachmentSystemのAttachmentDataとAttachmentRarityを使用
-
-    /// <summary>
-    /// アクティブコンボデータ
-    /// </summary>
-    [System.Serializable]
-    public class ActiveComboData
-    {
-        public string name;
-        public int progress;
-        public int maxSteps;
-        public string effect;
-    }
+    // 既存のAttachmentSystemのAttachmentDataとAttachmentRarity、ComboSystemのComboProgressを使用
 
     #endregion
 }
