@@ -618,7 +618,7 @@ namespace BattleSystem
             iconRect.anchoredPosition = Vector2.zero;
 
             var iconImage = iconObj.AddComponent<Image>();
-            iconImage.color = GetWeaponColor(weapon.weaponAttribute);
+            iconImage.color = GetWeaponColor(weapon.weaponType);
 
             // 武器情報テキスト
             var infoObj = new GameObject("WeaponInfo");
@@ -631,7 +631,7 @@ namespace BattleSystem
             infoRect.anchoredPosition = Vector2.zero;
 
             var infoText = infoObj.AddComponent<Text>();
-            infoText.text = $"{weapon.attackPower}\n{weapon.criticalRate}%";
+            infoText.text = $"{weapon.basePower}\n{weapon.criticalRate}%";
             infoText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             infoText.fontSize = 14;
             infoText.color = Color.white;
@@ -644,20 +644,20 @@ namespace BattleSystem
         }
 
         /// <summary>
-        /// 武器属性別色取得
+        /// 武器タイプ別色取得
         /// </summary>
-        private Color GetWeaponColor(WeaponAttribute attribute)
+        private Color GetWeaponColor(WeaponType weaponType)
         {
-            switch (attribute)
+            switch (weaponType)
             {
-                case WeaponAttribute.Sword: return Color.white;
-                case WeaponAttribute.Axe: return Color.gray;
-                case WeaponAttribute.Spear: return Color.cyan;
-                case WeaponAttribute.Bow: return Color.green;
-                case WeaponAttribute.Gun: return Color.yellow;
-                case WeaponAttribute.Shield: return Color.blue;
-                case WeaponAttribute.Magic: return Color.magenta;
-                case WeaponAttribute.Tool: return new Color(0.8f, 0.6f, 0.2f);
+                case WeaponType.Sword: return Color.white;
+                case WeaponType.Axe: return Color.gray;
+                case WeaponType.Spear: return Color.cyan;
+                case WeaponType.Bow: return Color.green;
+                case WeaponType.Gun: return Color.yellow;
+                case WeaponType.Shield: return Color.blue;
+                case WeaponType.Magic: return Color.magenta;
+                case WeaponType.Tool: return new Color(0.8f, 0.6f, 0.2f);
                 default: return Color.white;
             }
         }
@@ -1080,7 +1080,7 @@ namespace BattleSystem
         /// </summary>
         private void CreateAttachmentItem(AttachmentData attachment, Transform parent)
         {
-            var itemObj = new GameObject($"AttachmentItem_{attachment.id}");
+            var itemObj = new GameObject($"AttachmentItem_{attachment.attachmentId}");
             itemObj.transform.SetParent(parent, false);
 
             var layoutElement = itemObj.AddComponent<LayoutElement>();
@@ -1113,7 +1113,7 @@ namespace BattleSystem
             // ボタンイベント
             button.onClick.AddListener(() => OnAttachmentSelected(attachment));
 
-            attachmentButtons[attachment.name] = itemObj;
+            attachmentButtons[attachment.attachmentName] = itemObj;
         }
 
         /// <summary>
@@ -1204,7 +1204,7 @@ namespace BattleSystem
         private void OnAttachmentSelected(AttachmentData attachment)
         {
             selectedAttachment = attachment;
-            Debug.Log($"Selected attachment: {attachment.name}");
+            Debug.Log($"Selected attachment: {attachment.attachmentName}");
             // アタッチメント詳細UI更新（実装省略）
         }
 
@@ -1383,29 +1383,7 @@ namespace BattleSystem
         Attachments
     }
 
-    /// <summary>
-    /// アタッチメントデータ
-    /// </summary>
-    [System.Serializable]
-    public class AttachmentData
-    {
-        public int id;
-        public string name;
-        public AttachmentRarity rarity;
-        public string comboRequirement;
-        public string effect;
-    }
-
-    /// <summary>
-    /// アタッチメントレアリティ
-    /// </summary>
-    public enum AttachmentRarity
-    {
-        Common,
-        Rare,
-        Epic,
-        Legendary
-    }
+    // 既存のAttachmentSystemのAttachmentDataとAttachmentRarityを使用
 
     /// <summary>
     /// アクティブコンボデータ

@@ -259,10 +259,10 @@ namespace InventorySystem.Demo
         {
             var testWeapons = new[]
             {
-                new WeaponData { weaponName = "テスト剣", attackPower = 50, criticalRate = 15, weaponAttribute = WeaponAttribute.Sword },
-                new WeaponData { weaponName = "テスト斧", attackPower = 70, criticalRate = 10, weaponAttribute = WeaponAttribute.Axe },
-                new WeaponData { weaponName = "テスト槍", attackPower = 60, criticalRate = 20, weaponAttribute = WeaponAttribute.Spear },
-                new WeaponData { weaponName = "テスト弓", attackPower = 45, criticalRate = 25, weaponAttribute = WeaponAttribute.Bow }
+                new WeaponData { weaponName = "テスト剣", basePower = 50, criticalRate = 15, weaponType = WeaponType.Sword },
+                new WeaponData { weaponName = "テスト斧", basePower = 70, criticalRate = 10, weaponType = WeaponType.Axe },
+                new WeaponData { weaponName = "テスト槍", basePower = 60, criticalRate = 20, weaponType = WeaponType.Spear },
+                new WeaponData { weaponName = "テスト弓", basePower = 45, criticalRate = 25, weaponType = WeaponType.Bow }
             };
             
             foreach (var weapon in testWeapons)
@@ -275,15 +275,16 @@ namespace InventorySystem.Demo
         {
             var testAttachments = new[]
             {
-                new AttachmentData { id = 1, name = "炎のアタッチメント", rarity = AttachmentRarity.Common, comboRequirement = "炎属性x3", effect = "炎ダメージ+20%" },
-                new AttachmentData { id = 2, name = "氷のアタッチメント", rarity = AttachmentRarity.Rare, comboRequirement = "氷属性x3", effect = "氷ダメージ+30%" },
-                new AttachmentData { id = 3, name = "雷のアタッチメント", rarity = AttachmentRarity.Epic, comboRequirement = "雷属性x4", effect = "雷ダメージ+40%" },
-                new AttachmentData { id = 4, name = "伝説のアタッチメント", rarity = AttachmentRarity.Legendary, comboRequirement = "全属性x5", effect = "全ダメージ+50%" }
+                new AttachmentData { attachmentId = 1, attachmentName = "炎のアタッチメント", rarity = AttachmentRarity.Common, description = "炎ダメージ+20%" },
+                new AttachmentData { attachmentId = 2, attachmentName = "氷のアタッチメント", rarity = AttachmentRarity.Rare, description = "氷ダメージ+30%" },
+                new AttachmentData { attachmentId = 3, attachmentName = "雷のアタッチメント", rarity = AttachmentRarity.Epic, description = "雷ダメージ+40%" },
+                new AttachmentData { attachmentId = 4, attachmentName = "伝説のアタッチメント", rarity = AttachmentRarity.Legendary, description = "全ダメージ+50%" }
             };
             
             foreach (var attachment in testAttachments)
             {
                 inventoryUI.AddTestAttachment(attachment);
+                Debug.Log($"テストアタッチメント追加: {attachment.attachmentName}");
             }
         }
         
