@@ -108,8 +108,8 @@ namespace BattleSystem.Combat
 
             var calculation = new DamageCalculationInfo
             {
-                cardName = card.cardName,
-                baseDamage = card.baseDamage
+                cardName = card.displayName,
+                baseDamage = card.weaponData.basePower
             };
 
             // コンボ効果の計算
@@ -303,7 +303,7 @@ namespace BattleSystem.Combat
         private void ApplyEnemyDefenseEffects(ref DamageCalculationInfo calculation, EnemyInstance enemy)
         {
             // 敵の防御力による軽減
-            var defenseReduction = Mathf.RoundToInt(calculation.baseDamage * enemy.defenseRatio);
+            var defenseReduction = enemy.GetEffectiveDefense();
             calculation.baseDamage = Mathf.Max(1, calculation.baseDamage - defenseReduction);
 
             // 敵のバフ・デバフ効果

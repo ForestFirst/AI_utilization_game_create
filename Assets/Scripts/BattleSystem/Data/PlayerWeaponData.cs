@@ -99,7 +99,7 @@ namespace BattleSystem
             {
                 foreach (var weapon in weapons)
                 {
-                    if (weapon != null && weapon.weaponType == weaponType)
+                    if (weapon != null && weapon.weaponType.ToString() == weaponType)
                     {
                         result.Add(weapon);
                     }

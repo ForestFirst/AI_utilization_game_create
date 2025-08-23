@@ -196,13 +196,13 @@ namespace BattleSystem.UI
         {
             var container = new EnemyInfoContainer
             {
-                enemyId = enemyInstance.instanceId,
+                enemyId = enemyInstance.enemyData.enemyId,
                 enemyInstance = enemyInstance
             };
 
             // 敵情報パネル作成
             container.containerPanel = layoutManager.CreateUIPanel(
-                $"Enemy_{enemyInstance.instanceId}",
+                $"Enemy_{enemyInstance.enemyData.enemyId}",
                 enemyContentContainer,
                 Vector2.zero,
                 new Vector2(260, 80),
@@ -259,7 +259,7 @@ namespace BattleSystem.UI
             );
             container.statusText.fontSize = 10;
 
-            enemyInfoContainers[enemyInstance.instanceId] = container;
+            enemyInfoContainers[enemyInstance.enemyData.enemyId] = container;
             return container;
         }
 
@@ -300,7 +300,7 @@ namespace BattleSystem.UI
         private void HandleGameStateChanged(GameState newState)
         {
             // ゲーム状態に応じてUI表示を調整
-            if (newState == GameState.GameOver || newState == GameState.Victory || newState == GameState.Defeat)
+            if (newState == GameState.Victory || newState == GameState.Defeat)
             {
                 // 戦闘終了時は敵情報をクリア
                 ClearEnemyInfo();
@@ -317,7 +317,7 @@ namespace BattleSystem.UI
         /// <param name="enemy">更新対象の敵</param>
         public void UpdateEnemyInfo(EnemyInstance enemy)
         {
-            if (enemyInfoContainers.TryGetValue(enemy.instanceId, out var container))
+            if (enemyInfoContainers.TryGetValue(enemy.enemyData.enemyId, out var container))
             {
                 // HPの更新
                 container.hpSlider.value = enemy.currentHp;

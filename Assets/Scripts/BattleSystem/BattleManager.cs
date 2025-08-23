@@ -359,7 +359,7 @@ namespace BattleSystem
                 return;
 
             // プレイヤーHP0チェック
-            if (!playerData.IsAlive())
+            if (!playerData.IsAlive)
             {
                 battleResult.isVictory = false;
                 ChangeGameState(GameState.Defeat);

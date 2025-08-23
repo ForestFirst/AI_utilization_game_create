@@ -178,7 +178,7 @@ namespace BattleSystem
             
             if (playerStatusText != null)
             {
-                playerStatusText.text = playerData.IsAlive() ? "機能正常" : "機能停止";
+                playerStatusText.text = playerData.IsAlive ? "機能正常" : "機能停止";
             }
         }
         

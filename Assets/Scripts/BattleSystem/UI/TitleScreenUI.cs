@@ -26,16 +26,37 @@ namespace BattleSystem.UI
         // アニメーション用
         private float glowTime = 0f;
         private ParticleSystem[] particles;
+        
+        // システム参照
+        private SceneTransitionManager sceneTransition;
+        private GameEventManager eventManager;
 
         #region Unity Lifecycle
 
         private void Start()
         {
+            // システム参照の初期化
+            InitializeReferences();
+            
             if (autoCreateUI)
             {
                 CreateTitleUI();
             }
             SetupEventSystem();
+        }
+        
+        /// <summary>
+        /// システム参照の初期化
+        /// </summary>
+        private void InitializeReferences()
+        {
+            sceneTransition = SceneTransitionManager.Instance;
+            eventManager = GameEventManager.Instance;
+            
+            if (sceneTransition == null)
+            {
+                Debug.LogWarning("[TitleScreenUI] SceneTransitionManager not found!");
+            }
         }
 
         private void Update()
@@ -460,8 +481,13 @@ namespace BattleSystem.UI
         {
             Debug.Log("ゲーム開始");
             
-            // ステージ選択画面に遷移
-            if (!string.IsNullOrEmpty(gameSceneName))
+            // SceneTransitionManagerを使用してシーン遷移
+            if (sceneTransition != null)
+            {
+                GameEventManager.TriggerUIScreenShow("StageSelection");
+                sceneTransition.TransitionToScene("StageSelectionScene");
+            }
+            else if (!string.IsNullOrEmpty(gameSceneName))
             {
                 SceneManager.LoadScene(gameSceneName);
             }

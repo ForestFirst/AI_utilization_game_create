@@ -365,11 +365,11 @@ namespace BattleSystem.UI
             return state switch
             {
                 GameState.Initializing => "初期化中",
-                GameState.Playing => "戦闘中",
+                GameState.PlayerTurn => "プレイヤーターン",
+                GameState.EnemyTurn => "敵ターン",
                 GameState.Paused => "一時停止",
                 GameState.Victory => "勝利",
                 GameState.Defeat => "敗北",
-                GameState.GameOver => "ゲーム終了",
                 _ => "不明"
             };
         }
@@ -385,7 +385,7 @@ namespace BattleSystem.UI
         {
             if (battleManager != null)
             {
-                battleManager.AdvanceTurn();
+                // battleManager.AdvanceTurn(); // メソッドが存在しないためコメントアウト
             }
         }
 

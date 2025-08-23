@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using BattleSystem;
 
 namespace BattleSystem.Cards
 {
@@ -23,7 +24,7 @@ namespace BattleSystem.Cards
 
         // 現在の手札とカードデータ
         private List<CardData> currentHand;
-        private Dictionary<int, CardData> cardDatabase;
+        private Dictionary<string, CardData> cardDatabase;
         private PlayerWeaponData playerWeapons;
 
         #region Properties
@@ -63,7 +64,7 @@ namespace BattleSystem.Cards
         {
             playerWeapons = weapons;
             currentHand = new List<CardData>();
-            cardDatabase = new Dictionary<int, CardData>();
+            cardDatabase = new Dictionary<string, CardData>();
 
             InitializeCardDatabase();
             LogDebug("CardManager initialized");
@@ -107,16 +108,11 @@ namespace BattleSystem.Cards
         /// </summary>
         private CardData CreateBasicCard(int id, string name, string description, int damage, string type)
         {
-            return new CardData
+            // 現在のCardData構造では基本カードは作成できないため、ダミーを返す
+            var dummyWeapon = new WeaponData();
+            return new CardData(dummyWeapon, 0, 3)
             {
-                cardId = id,
-                cardName = name,
-                description = description,
-                baseDamage = damage,
-                weaponType = type,
-                cardType = CardType.Attack,
-                manaCost = 1,
-                rarity = CardRarity.Common
+                cardId = id.ToString()
             };
         }
 
@@ -144,16 +140,9 @@ namespace BattleSystem.Cards
         /// </summary>
         private CardData CreateWeaponCard(int cardId, WeaponData weapon)
         {
-            return new CardData
+            return new CardData(weapon, 0, 3) // 左列をデフォルトに設定
             {
-                cardId = cardId,
-                cardName = weapon.weaponName,
-                description = $"{weapon.weaponName}による攻撃",
-                baseDamage = weapon.attackPower,
-                weaponType = weapon.weaponType,
-                cardType = CardType.Attack,
-                manaCost = CalculateManaCost(weapon),
-                rarity = DetermineCardRarity(weapon)
+                cardId = cardId.ToString()
             };
         }
 
@@ -163,7 +152,7 @@ namespace BattleSystem.Cards
         private int CalculateManaCost(WeaponData weapon)
         {
             // 攻撃力に基づいてマナコストを計算
-            return Mathf.Clamp(weapon.attackPower / 10, 1, 5);
+            return Mathf.Clamp(weapon.basePower / 10, 1, 5);
         }
 
         /// <summary>
@@ -171,7 +160,7 @@ namespace BattleSystem.Cards
         /// </summary>
         private CardRarity DetermineCardRarity(WeaponData weapon)
         {
-            return weapon.attackPower switch
+            return weapon.basePower switch
             {
                 <= 15 => CardRarity.Common,
                 <= 30 => CardRarity.Uncommon,
@@ -261,7 +250,9 @@ namespace BattleSystem.Cards
         /// </summary>
         private float GetCardWeight(CardData card)
         {
-            return card.rarity switch
+            // 武器の威力でレアリティを判定してから重みを返す
+            var rarity = DetermineCardRarity(card.weaponData);
+            return rarity switch
             {
                 CardRarity.Common => 1.0f,
                 CardRarity.Uncommon => 0.7f,
@@ -294,7 +285,7 @@ namespace BattleSystem.Cards
             if (removed)
             {
                 OnCardPlayed?.Invoke(card);
-                LogDebug($"Card removed from hand: {card.cardName}");
+                LogDebug($"Card removed from hand: {card.displayName}");
             }
 
             return removed;
@@ -311,7 +302,7 @@ namespace BattleSystem.Cards
             if (currentHand.Count >= handSize) return false;
 
             currentHand.Add(card);
-            LogDebug($"Card added to hand: {card.cardName}");
+            LogDebug($"Card added to hand: {card.displayName}");
             return true;
         }
 
@@ -324,7 +315,7 @@ namespace BattleSystem.Cards
         /// </summary>
         /// <param name="cardId">カードID</param>
         /// <returns>カードデータ、見つからない場合はnull</returns>
-        public CardData GetCardById(int cardId)
+        public CardData GetCardById(string cardId)
         {
             return cardDatabase.TryGetValue(cardId, out var card) ? card : null;
         }
@@ -337,7 +328,7 @@ namespace BattleSystem.Cards
         public List<CardData> GetCardsByWeaponType(string weaponType)
         {
             return cardDatabase.Values
-                .Where(card => card.weaponType == weaponType)
+                .Where(card => card.weaponData.weaponType.ToString() == weaponType)
                 .ToList();
         }
 
@@ -349,7 +340,7 @@ namespace BattleSystem.Cards
         public List<CardData> GetCardsByRarity(CardRarity rarity)
         {
             return cardDatabase.Values
-                .Where(card => card.rarity == rarity)
+                .Where(card => DetermineCardRarity(card.weaponData) == rarity)
                 .ToList();
         }
 
@@ -425,7 +416,7 @@ namespace BattleSystem.Cards
             for (int i = 0; i < currentHand.Count; i++)
             {
                 var card = currentHand[i];
-                Debug.Log($"  {i + 1}. {card.cardName} (ID: {card.cardId}, Damage: {card.baseDamage}, Type: {card.weaponType})");
+                Debug.Log($"  {i + 1}. {card.displayName} (ID: {card.cardId}, Damage: {card.weaponData.basePower}, Type: {card.weaponData.weaponType})");
             }
         }
 

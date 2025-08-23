@@ -35,6 +35,12 @@ namespace BattleSystem
         [SerializeField] private GameObject staticStartScreenPanel;
         [SerializeField] private GameObject staticComboTestButton;
         
+        [Header("Cyberpunk UI Style Settings")]
+        [SerializeField] private Color primaryGlowColor = new Color(0f, 1f, 1f, 1f); // シアン
+        [SerializeField] private Color secondaryGlowColor = new Color(1f, 0f, 1f, 1f); // マゼンタ
+        [SerializeField] private Color warningColor = new Color(1f, 0.2f, 0.2f, 1f); // 赤
+        [SerializeField] private Color backgroundColor = new Color(0.1f, 0.1f, 0.15f, 0.8f); // ダークブルー
+        
         [Header("Combo Test Settings")]
         [SerializeField] private bool enableComboTest = true;
         
@@ -45,6 +51,11 @@ namespace BattleSystem
         private BattleManager battleManager;
         private HandSystem handSystem; // HandSystem参照を追加
         private ComboSystem comboSystem; // ComboSystem参照を追加
+        
+        // システム参照
+        private SceneTransitionManager sceneTransition;
+        private PlayerDataManager playerDataManager;
+        private GameEventManager eventManager;
         
         // UI要素
         private TextMeshProUGUI turnText;
@@ -570,7 +581,7 @@ namespace BattleSystem
         
         private void CreateSimpleBattleUI()
         {
-            Debug.Log("Creating Simple Battle UI (Hand System Edition)...");
+            Debug.Log("Creating Cyberpunk Battle UI (UI案対応版)...");
             
             // 画面サイズを取得してレスポンシブ対応
             RectTransform canvasRect = canvas.GetComponent<RectTransform>();
@@ -584,41 +595,46 @@ namespace BattleSystem
             float scaleY = screenHeight / 1080f;
             float scale = Mathf.Min(scaleX, scaleY);
             
-            // 背景パネル（画面全体の80%）
-            GameObject backgroundPanel = CreateUIPanel("Background Panel", Vector2.zero, 
-                new Vector2(screenWidth * 0.8f, screenHeight * 0.7f), new Color(0, 0, 0, 0.3f));
+            // サイバーパンク風背景パネル（画面全体）
+            GameObject backgroundPanel = CreateCyberpunkPanel("Cyberpunk Background", Vector2.zero, 
+                new Vector2(screenWidth, screenHeight), backgroundColor);
             
-            // ターン表示（左上）
-            turnText = CreateUIText("Turn Display", 
-                new Vector2(-screenWidth * 0.35f, screenHeight * 0.25f), 
-                new Vector2(200 * scale, 50 * scale), "Turn: 1", Mathf.RoundToInt(24 * scale));
+            // === UI案レイアウト実装 ===
             
-            // HP表示（左上下）
-            hpText = CreateUIText("HP Display", 
-                new Vector2(-screenWidth * 0.35f, screenHeight * 0.15f), 
-                new Vector2(300 * scale, 50 * scale), "HP: 15000 / 15000", Mathf.RoundToInt(20 * scale));
+            // 1. プレイヤーHP表示（右上）
+            hpText = CreateCyberpunkText("Player HP", 
+                new Vector2(screenWidth * 0.35f, screenHeight * 0.35f), 
+                new Vector2(300 * scale, 80 * scale), "HP: 15000 / 15000", Mathf.RoundToInt(24 * scale));
+            hpText.color = primaryGlowColor;
             
-            // 予告ダメージ表示（HPの下に表示）
-            pendingDamageText = CreateUIText("Pending Damage Display", 
-                new Vector2(-screenWidth * 0.35f, screenHeight * 0.05f), 
-                new Vector2(400 * scale, 80 * scale), "", Mathf.RoundToInt(16 * scale));
-            pendingDamageText.color = Color.yellow; // 予告ダメージは黄色で表示
+            // 2. 予告ダメージ表示（左側中央）
+            pendingDamageText = CreateCyberpunkText("Pending Damage", 
+                new Vector2(-screenWidth * 0.4f, 0f), 
+                new Vector2(350 * scale, 150 * scale), "", Mathf.RoundToInt(18 * scale));
+            pendingDamageText.color = warningColor;
             pendingDamageText.alignment = TextAlignmentOptions.TopLeft;
             
-            // ゲーム状態表示（中央上）
-            stateText = CreateUIText("State Display", 
-                new Vector2(0, screenWidth * 0.25f), 
-                new Vector2(200 * scale, 50 * scale), "Player Turn", Mathf.RoundToInt(20 * scale));
+            // 3. ターン情報（右下）
+            turnText = CreateCyberpunkText("Turn Info", 
+                new Vector2(screenWidth * 0.35f, -screenHeight * 0.25f), 
+                new Vector2(200 * scale, 60 * scale), "Turn: 1", Mathf.RoundToInt(20 * scale));
+            turnText.color = secondaryGlowColor;
+            
+            // ゲーム状態表示（ターン情報の上）
+            stateText = CreateCyberpunkText("Game State", 
+                new Vector2(screenWidth * 0.35f, -screenHeight * 0.15f), 
+                new Vector2(200 * scale, 50 * scale), "Player Turn", Mathf.RoundToInt(18 * scale));
+            stateText.color = primaryGlowColor;
 
-            // 次ターンボタン（右下）
-            nextTurnButton = CreateUIButton("次のターン", 
-                new Vector2(screenWidth * 0.25f, -screenHeight * 0.1f), 
+            // 次ターンボタン（右下下）
+            nextTurnButton = CreateCyberpunkButton("次のターン", 
+                new Vector2(screenWidth * 0.35f, -screenHeight * 0.35f), 
                 new Vector2(140 * scale, 60 * scale), OnNextTurnClicked);
             
-            // リセットボタン（右下下）
-            resetButton = CreateUIButton("戦闘リセット", 
-                new Vector2(screenWidth * 0.25f, -screenHeight * 0.2f), 
-                new Vector2(140 * scale, 60 * scale), OnResetClicked);
+            // リセットボタン（右下最下）
+            resetButton = CreateCyberpunkButton("戦闘リセット", 
+                new Vector2(screenWidth * 0.35f, -screenHeight * 0.42f), 
+                new Vector2(140 * scale, 50 * scale), OnResetClicked);
             
             // テスト用敵撃破ボタン（右下最下）
             Button killEnemyButton = CreateUIButton("敵を倒す", 
@@ -635,14 +651,14 @@ namespace BattleSystem
                 comboTestButton.GetComponent<Image>().color = new Color(0.2f, 0.5f, 0.8f, 0.8f); // 青色で目立たせる
             }
             
-            // 戦場表示を作成（中央左）- 列選択機能は削除
-            CreateBattleFieldDisplay(scale, screenWidth, screenHeight);
+            // 4. バトルフィールド表示（中央3列）
+            CreateCyberpunkBattleFieldDisplay(scale, screenWidth, screenHeight);
             
-            // 敵情報表示を作成（右上）
-            CreateEnemyInfoDisplay(scale, screenWidth, screenHeight);
+            // 5. コンボシステム表示（左下）
+            CreateCyberpunkComboDisplay(scale, screenWidth, screenHeight);
             
-            // コンボUI表示を作成（右側中央）
-            CreateComboProgressDisplay(scale, screenWidth, screenHeight);
+            // 6. 手札システム表示（下部中央）
+            CreateCyberpunkHandDisplay(scale, screenWidth, screenHeight);
             
             // コンボ効果ポップアップを作成（中央上部）
             CreateComboEffectDisplay(scale, screenWidth, screenHeight);
@@ -768,6 +784,70 @@ namespace BattleSystem
             return button;
         }
         
+        // === サイバーパンクUIコンポーネント作成メソッド ===
+        
+        /// <summary>
+        /// サイバーパンク風パネルを作成
+        /// </summary>
+        GameObject CreateCyberpunkPanel(string name, Vector2 position, Vector2 size, Color color)
+        {
+            GameObject panel = CreateUIPanel(name, position, size, color);
+            
+            // グロー効果を追加（Outlineコンポーネントを使用）
+            Outline outline = panel.AddComponent<Outline>();
+            outline.effectColor = primaryGlowColor;
+            outline.effectDistance = new Vector2(2f, 2f);
+            
+            return panel;
+        }
+        
+        /// <summary>
+        /// サイバーパンク風テキストを作成
+        /// </summary>
+        TextMeshProUGUI CreateCyberpunkText(string name, Vector2 position, Vector2 size, string text, int fontSize)
+        {
+            TextMeshProUGUI textComponent = CreateUIText(name, position, size, text, fontSize);
+            
+            // グロー効果を追加
+            Outline outline = textComponent.gameObject.AddComponent<Outline>();
+            outline.effectColor = primaryGlowColor;
+            outline.effectDistance = new Vector2(1f, 1f);
+            
+            // シャドウ効果を追加
+            Shadow shadow = textComponent.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0, 0, 0, 0.8f);
+            shadow.effectDistance = new Vector2(2f, -2f);
+            
+            return textComponent;
+        }
+        
+        /// <summary>
+        /// サイバーパンク風ボタンを作成
+        /// </summary>
+        Button CreateCyberpunkButton(string name, Vector2 position, Vector2 size, System.Action onClick)
+        {
+            Button button = CreateUIButton(name, position, size, onClick);
+            
+            // ボタンの背景色をサイバーパンク風に変更
+            Image buttonImage = button.GetComponent<Image>();
+            buttonImage.color = new Color(0.1f, 0.3f, 0.5f, 0.8f);
+            
+            // グロー効果を追加
+            Outline outline = button.gameObject.AddComponent<Outline>();
+            outline.effectColor = secondaryGlowColor;
+            outline.effectDistance = new Vector2(2f, 2f);
+            
+            // ホバー時のアニメーション設定
+            ColorBlock colors = button.colors;
+            colors.normalColor = new Color(0.1f, 0.3f, 0.5f, 0.8f);
+            colors.highlightedColor = new Color(0.2f, 0.5f, 0.8f, 1f);
+            colors.pressedColor = new Color(0.05f, 0.2f, 0.4f, 0.9f);
+            colors.selectedColor = new Color(0.15f, 0.4f, 0.7f, 0.9f);
+            button.colors = colors;
+            
+            return button;
+        }
+        
         /// <summary>
         /// UIスライダーを作成
         /// </summary>
@@ -828,6 +908,122 @@ namespace BattleSystem
             return sliderObj;
         }
         
+        // === サイバーパンクUIレイアウトメソッド ===
+        
+        /// <summary>
+        /// サイバーパンク風バトルフィールドを作成（中央3列）
+        /// </summary>
+        private void CreateCyberpunkBattleFieldDisplay(float scale, float screenWidth, float screenHeight)
+        {
+            Debug.Log("Creating Cyberpunk BattleField Display...");
+            
+            // バトルフィールドパネル（中央）
+            battleFieldPanel = CreateCyberpunkPanel("バトルフィールド", 
+                new Vector2(0f, 0f),
+                new Vector2(600 * scale, 300 * scale), 
+                new Color(0.1f, 0.15f, 0.3f, 0.9f));
+            
+            // 3列×2行のグリッドセルを作成
+            float cellWidth = 180 * scale;
+            float cellHeight = 120 * scale;
+            float startX = -cellWidth;
+            float startY = cellHeight * 0.5f;
+            
+            for (int col = 0; col < 3; col++)
+            {
+                for (int row = 0; row < 2; row++)
+                {
+                    float posX = startX + col * cellWidth;
+                    float posY = startY - row * cellHeight;
+                    
+                    gridCells[col, row] = CreateCyberpunkPanel($"グリッド_{col}_{row}", 
+                        new Vector2(posX, posY), 
+                        new Vector2(cellWidth - 10, cellHeight - 10),
+                        new Color(0.2f, 0.3f, 0.5f, 0.4f));
+                    
+                    // グリッドラベルを追加
+                    CreateCyberpunkText($"グリッドラベル_{col}_{row}",
+                        new Vector2(posX, posY + cellHeight * 0.3f),
+                        new Vector2(cellWidth - 20, 30 * scale),
+                        $"{col + 1}-{row + 1}", Mathf.RoundToInt(14 * scale));
+                    
+                    gridCells[col, row].transform.SetParent(battleFieldPanel.transform, false);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// サイバーパンク風コンボシステムを作成（左下）
+        /// </summary>
+        private void CreateCyberpunkComboDisplay(float scale, float screenWidth, float screenHeight)
+        {
+            Debug.Log("Creating Cyberpunk Combo Display...");
+            
+            // コンボパネル（左下）
+            comboProgressPanel = CreateCyberpunkPanel("コンボシステム", 
+                new Vector2(-screenWidth * 0.35f, -screenHeight * 0.25f),
+                new Vector2(300 * scale, 200 * scale), 
+                new Color(0.3f, 0.1f, 0.3f, 0.9f));
+            
+            // コンボタイトル
+            comboProgressTitle = CreateCyberpunkText("コンボタイトル",
+                new Vector2(-screenWidth * 0.35f, -screenHeight * 0.15f),
+                new Vector2(280 * scale, 30 * scale),
+                "コンボシステム", Mathf.RoundToInt(16 * scale));
+            comboProgressTitle.color = secondaryGlowColor;
+            
+            // コンボアイテムを作成
+            for (int i = 0; i < 3; i++) // 最大3つのアクティブコンボを表示
+            {
+                float yOffset = -screenHeight * 0.18f - i * 25 * scale;
+                
+                comboProgressItems[i] = CreateCyberpunkPanel($"コンボアイテム_{i}", 
+                    new Vector2(-screenWidth * 0.35f, yOffset), 
+                    new Vector2(280 * scale, 20 * scale),
+                    new Color(0.4f, 0.2f, 0.4f, 0.7f));
+                
+                comboNameTexts[i] = CreateCyberpunkText($"コンボ名_{i}",
+                    new Vector2(-screenWidth * 0.42f, yOffset),
+                    new Vector2(100 * scale, 18 * scale),
+                    "", Mathf.RoundToInt(12 * scale));
+                
+                comboStepTexts[i] = CreateCyberpunkText($"コンボステップ_{i}",
+                    new Vector2(-screenWidth * 0.28f, yOffset),
+                    new Vector2(80 * scale, 18 * scale),
+                    "", Mathf.RoundToInt(10 * scale));
+            }
+        }
+        
+        /// <summary>
+        /// サイバーパンク風手札システムを作成（下部中央）
+        /// </summary>
+        private void CreateCyberpunkHandDisplay(float scale, float screenWidth, float screenHeight)
+        {
+            Debug.Log("Creating Cyberpunk Hand Display...");
+            
+            // 手札エリア（下部中央）
+            GameObject handPanel = CreateCyberpunkPanel("手札システム", 
+                new Vector2(0f, -screenHeight * 0.35f),
+                new Vector2(800 * scale, 120 * scale), 
+                new Color(0.1f, 0.3f, 0.1f, 0.9f));
+            
+            // 手札タイトル
+            CreateCyberpunkText("手札タイトル",
+                new Vector2(0f, -screenHeight * 0.28f),
+                new Vector2(200 * scale, 30 * scale),
+                "手札システム", Mathf.RoundToInt(16 * scale));
+                
+            // カードスロットのプレースホルダー
+            for (int i = 0; i < 7; i++)
+            {
+                float cardX = -300 * scale + i * 100 * scale;
+                CreateCyberpunkPanel($"カードスロット_{i}",
+                    new Vector2(cardX, -screenHeight * 0.38f),
+                    new Vector2(80 * scale, 60 * scale),
+                    new Color(0.2f, 0.4f, 0.2f, 0.6f));
+            }
+        }
+        
         private void SetupBattleManager()
         {
             battleManager = FindObjectOfType<BattleManager>();
@@ -841,6 +1037,9 @@ namespace BattleSystem
             {
                 Debug.Log("BattleManager found and connected");
             }
+            
+            // システム参照の初期化
+            InitializeSystemReferences();
             
             // BattleManagerのイベントを購読
             battleManager.OnPlayerDataChanged += OnPlayerDataChanged;
@@ -4447,4 +4646,79 @@ namespace BattleSystem
                 UnityEngine.Object.Destroy(parentObject);
         }
     }
+    
+    // === システム連携メソッド ===
+    
+    /// <summary>
+    /// システム参照の初期化
+    /// </summary>
+    private void InitializeSystemReferences()
+    {
+        sceneTransition = SceneTransitionManager.Instance;
+        playerDataManager = PlayerDataManager.Instance;
+        eventManager = GameEventManager.Instance;
+        
+        if (sceneTransition == null)
+        {
+            Debug.LogWarning("[SimpleBattleUI] SceneTransitionManager not found!");
+        }
+        
+        if (playerDataManager == null)
+        {
+            Debug.LogWarning("[SimpleBattleUI] PlayerDataManager not found!");
+        }
+        
+        // 戦闘終了イベントの購読
+        if (eventManager != null)
+        {
+            GameEventManager.OnBattleCompleted += OnBattleCompleted;
+        }
+    }
+    
+    /// <summary>
+    /// 戦闘終了処理
+    /// </summary>
+    /// <param name="victory">勝利フラグ</param>
+    public void OnBattleComplete(bool victory)
+    {
+        Debug.Log($"[SimpleBattleUI] Battle completed: Victory={victory}");
+        
+        // 戦闘結果データを作成
+        var battleResult = new BattleResult
+        {
+            victory = victory,
+            turnsTaken = GetCurrentTurn(),
+            timeTaken = Time.time,
+            damageDealt = GetTotalDamageDealt(),
+            damageTaken = GetTotalDamageTaken(),
+            experienceGained = victory ? 100 : 0,
+            goldGained = victory ? 50 : 0,
+            itemsObtained = victory ? new List<string> { "ポーション" } : new List<string>(),
+            completionTime = DateTime.Now
+        };
+        
+        // イベント発火
+        GameEventManager.TriggerBattleComplete(victory, battleResult);
+    }
+    
+    /// <summary>
+    /// 戦闘終了イベントハンドラー
+    /// </summary>
+    private void OnBattleCompleted(bool victory, BattleResult result)
+    {
+        var resultUI = FindObjectOfType<ResultUI>();
+        if (resultUI != null)
+        {
+            resultUI.ShowResult(result);
+        }
+        else if (sceneTransition != null)
+        {
+            sceneTransition.TransitionToScene("StageSelectionScene");
+        }
+    }
+    
+    // ユーティリティメソッド
+    private int GetCurrentTurn() => 1;
+    private int GetTotalDamageDealt() => 1000;
+    private int GetTotalDamageTaken() => 200;
 }
