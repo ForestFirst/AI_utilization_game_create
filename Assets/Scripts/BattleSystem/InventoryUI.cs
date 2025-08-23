@@ -254,7 +254,7 @@ namespace BattleSystem
         }
 
         /// <summary>
-        /// 背景作成
+        /// 背景作成（グラデーション効果付き）
         /// </summary>
         private void CreateBackground(Transform parent)
         {
@@ -269,6 +269,9 @@ namespace BattleSystem
 
             var background = backgroundObj.AddComponent<Image>();
             background.color = new Color(0.05f, 0.07f, 0.1f, 1f); // ダークブルーグレー
+            
+            // サイバーパンク風グラデーション効果追加
+            CreateCyberpunkEffects(backgroundObj.transform);
         }
 
         /// <summary>
@@ -378,6 +381,38 @@ namespace BattleSystem
             return textComponent;
         }
 
+        /// <summary>
+        /// サイバーパンク風エフェクト作成
+        /// </summary>
+        private void CreateCyberpunkEffects(Transform parent)
+        {
+            // 左側のグラデーション
+            var leftGrad = new GameObject("LeftGradient");
+            leftGrad.transform.SetParent(parent, false);
+            
+            var leftRect = leftGrad.AddComponent<RectTransform>();
+            leftRect.anchorMin = new Vector2(0, 0);
+            leftRect.anchorMax = new Vector2(0.3f, 1);
+            leftRect.sizeDelta = Vector2.zero;
+            leftRect.anchoredPosition = Vector2.zero;
+            
+            var leftImage = leftGrad.AddComponent<Image>();
+            leftImage.color = new Color(0.1f, 0.2f, 0.4f, 0.3f);
+            
+            // 右側のグラデーション
+            var rightGrad = new GameObject("RightGradient");
+            rightGrad.transform.SetParent(parent, false);
+            
+            var rightRect = rightGrad.AddComponent<RectTransform>();
+            rightRect.anchorMin = new Vector2(0.7f, 0);
+            rightRect.anchorMax = new Vector2(1, 1);
+            rightRect.sizeDelta = Vector2.zero;
+            rightRect.anchoredPosition = Vector2.zero;
+            
+            var rightImage = rightGrad.AddComponent<Image>();
+            rightImage.color = new Color(0.2f, 0.1f, 0.3f, 0.3f);
+        }
+        
         #endregion
 
         #region Tab System
@@ -454,7 +489,7 @@ namespace BattleSystem
         }
 
         /// <summary>
-        /// タブボタンの外観更新
+        /// タブボタンの外観更新（サイバーパンク風効果）
         /// </summary>
         private void UpdateTabButtonAppearance(InventoryTab tab, bool isActive)
         {
@@ -464,13 +499,19 @@ namespace BattleSystem
 
             if (isActive)
             {
-                image.color = new Color(0.2f, 0.4f, 0.8f, 0.8f); // 青色
-                text.color = new Color(0.8f, 0.9f, 1f, 1f);
+                image.color = new Color(0.1f, 0.6f, 1f, 0.9f); // ネオンブルー
+                text.color = new Color(0.9f, 1f, 1f, 1f);
+                
+                // アクティブタブにグロウ効果追加
+                CreateGlowEffect(button.transform);
             }
             else
             {
-                image.color = new Color(0.3f, 0.3f, 0.3f, 0.8f); // グレー
-                text.color = new Color(0.7f, 0.7f, 0.7f, 1f);
+                image.color = new Color(0.2f, 0.25f, 0.3f, 0.7f); // ダークグレー
+                text.color = new Color(0.6f, 0.7f, 0.8f, 1f);
+                
+                // グロウ効果除去
+                RemoveGlowEffect(button.transform);
             }
         }
 
@@ -656,7 +697,7 @@ namespace BattleSystem
             iconRect.anchoredPosition = Vector2.zero;
 
             var iconImage = iconObj.AddComponent<Image>();
-            iconImage.color = GetWeaponColor(weapon.weaponType);
+            iconImage.color = GetWeaponColor(weapon.weaponAttribute);
 
             // 武器情報テキスト
             var infoObj = new GameObject("WeaponInfo");
@@ -669,7 +710,7 @@ namespace BattleSystem
             infoRect.anchoredPosition = Vector2.zero;
 
             var infoText = infoObj.AddComponent<Text>();
-            infoText.text = $"{weapon.basePower}\n{weapon.criticalRate}%";
+            infoText.text = $"{weapon.attackPower}\n{weapon.criticalRate}%";
             infoText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             infoText.fontSize = 14;
             infoText.color = Color.white;
@@ -682,20 +723,20 @@ namespace BattleSystem
         }
 
         /// <summary>
-        /// 武器タイプ別色取得
+        /// 武器属性別色取得
         /// </summary>
-        private Color GetWeaponColor(WeaponType weaponType)
+        private Color GetWeaponColor(WeaponAttribute weaponAttribute)
         {
-            switch (weaponType)
+            switch (weaponAttribute)
             {
-                case WeaponType.Sword: return Color.white;
-                case WeaponType.Axe: return Color.gray;
-                case WeaponType.Spear: return Color.cyan;
-                case WeaponType.Bow: return Color.green;
-                case WeaponType.Gun: return Color.yellow;
-                case WeaponType.Shield: return Color.blue;
-                case WeaponType.Magic: return Color.magenta;
-                case WeaponType.Tool: return new Color(0.8f, 0.6f, 0.2f);
+                case WeaponAttribute.Sword: return Color.white;
+                case WeaponAttribute.Axe: return Color.gray;
+                case WeaponAttribute.Spear: return Color.cyan;
+                case WeaponAttribute.Bow: return Color.green;
+                case WeaponAttribute.Gun: return Color.yellow;
+                case WeaponAttribute.Shield: return Color.blue;
+                case WeaponAttribute.Magic: return Color.magenta;
+                case WeaponAttribute.Tool: return new Color(0.8f, 0.6f, 0.2f);
                 default: return Color.white;
             }
         }
@@ -1121,7 +1162,7 @@ namespace BattleSystem
         /// </summary>
         private void CreateAttachmentItem(AttachmentData attachment, Transform parent)
         {
-            var itemObj = new GameObject($"AttachmentItem_{attachment.attachmentId}");
+            var itemObj = new GameObject($"AttachmentItem_{attachment.id}");
             itemObj.transform.SetParent(parent, false);
 
             var layoutElement = itemObj.AddComponent<LayoutElement>();
@@ -1151,10 +1192,16 @@ namespace BattleSystem
             iconText.alignment = TextAnchor.MiddleCenter;
             iconText.fontStyle = FontStyle.Bold;
 
+            // レアリティ別スパークルエフェクト追加
+            if (attachment.rarity == AttachmentRarity.Epic || attachment.rarity == AttachmentRarity.Legendary)
+            {
+                CreateSparkleEffect(itemObj.transform, attachment.rarity);
+            }
+
             // ボタンイベント
             button.onClick.AddListener(() => OnAttachmentSelected(attachment));
 
-            attachmentButtons[attachment.attachmentName] = itemObj;
+            attachmentButtons[attachment.name] = itemObj;
         }
 
         /// <summary>
@@ -1245,10 +1292,66 @@ namespace BattleSystem
         private void OnAttachmentSelected(AttachmentData attachment)
         {
             selectedAttachment = attachment;
-            Debug.Log($"Selected attachment: {attachment.attachmentName}");
+            Debug.Log($"Selected attachment: {attachment.name}");
             // アタッチメント詳細UI更新（実装省略）
         }
 
+        /// <summary>
+        /// スパークルエフェクト作成
+        /// </summary>
+        private void CreateSparkleEffect(Transform parent, AttachmentRarity rarity)
+        {
+            var sparkleObj = new GameObject("SparkleEffect");
+            sparkleObj.transform.SetParent(parent, false);
+            
+            var sparkleRect = sparkleObj.AddComponent<RectTransform>();
+            sparkleRect.anchorMin = Vector2.zero;
+            sparkleRect.anchorMax = Vector2.one;
+            sparkleRect.sizeDelta = Vector2.zero;
+            sparkleRect.anchoredPosition = Vector2.zero;
+            
+            var sparkleText = sparkleObj.AddComponent<Text>();
+            sparkleText.text = rarity == AttachmentRarity.Legendary ? "✦✧✦" : "✧";
+            sparkleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            sparkleText.fontSize = 8;
+            sparkleText.color = rarity == AttachmentRarity.Legendary ? 
+                new Color(1f, 0.8f, 0.2f, 0.8f) : new Color(0.8f, 0.4f, 1f, 0.7f);
+            sparkleText.alignment = TextAnchor.UpperRight;
+            sparkleText.fontStyle = FontStyle.Bold;
+        }
+        
+        /// <summary>
+        /// グロウ効果作成
+        /// </summary>
+        private void CreateGlowEffect(Transform parent)
+        {
+            RemoveGlowEffect(parent); // 既存のグロウ効果を削除
+            
+            var glowObj = new GameObject("GlowEffect");
+            glowObj.transform.SetParent(parent, false);
+            
+            var glowRect = glowObj.AddComponent<RectTransform>();
+            glowRect.anchorMin = new Vector2(-0.1f, -0.1f);
+            glowRect.anchorMax = new Vector2(1.1f, 1.1f);
+            glowRect.sizeDelta = Vector2.zero;
+            glowRect.anchoredPosition = Vector2.zero;
+            
+            var glowImage = glowObj.AddComponent<Image>();
+            glowImage.color = new Color(0.1f, 0.6f, 1f, 0.3f);
+        }
+        
+        /// <summary>
+        /// グロウ効果除去
+        /// </summary>
+        private void RemoveGlowEffect(Transform parent)
+        {
+            var existingGlow = parent.Find("GlowEffect");
+            if (existingGlow != null)
+            {
+                DestroyImmediate(existingGlow.gameObject);
+            }
+        }
+        
         #endregion
 
         #region Helper Methods
