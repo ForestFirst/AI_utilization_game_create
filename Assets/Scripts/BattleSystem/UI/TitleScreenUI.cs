@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
@@ -329,8 +330,42 @@ namespace BattleSystem.UI
             particleImg.color = new Color(0f, 1f, 1f, 0.7f);
 
             // 簡易アニメーション（TODO: より洗練されたエフェクトに置き換え可能）
-            var animator = particleObj.AddComponent<SimpleParticleAnimator>();
-            animator.Initialize(UnityEngine.Random.Range(2f, 6f));
+            StartCoroutine(AnimateParticle(particleObj, UnityEngine.Random.Range(2f, 6f)));
+        }
+
+        /// <summary>
+        /// パーティクルアニメーション
+        /// </summary>
+        private IEnumerator AnimateParticle(GameObject particle, float duration)
+        {
+            if (particle == null) yield break;
+            
+            var rectTransform = particle.GetComponent<RectTransform>();
+            var image = particle.GetComponent<Image>();
+            
+            if (rectTransform == null || image == null) yield break;
+            
+            Vector2 startPos = rectTransform.anchoredPosition;
+            Vector2 endPos = startPos + new Vector2(UnityEngine.Random.Range(-100, 100), UnityEngine.Random.Range(-100, 100));
+            Color startColor = image.color;
+            Color endColor = new Color(startColor.r, startColor.g, startColor.b, 0f);
+            
+            float elapsedTime = 0f;
+            
+            while (elapsedTime < duration)
+            {
+                if (particle == null) yield break;
+                
+                float progress = elapsedTime / duration;
+                rectTransform.anchoredPosition = Vector2.Lerp(startPos, endPos, progress);
+                image.color = Color.Lerp(startColor, endColor, progress);
+                
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
+            
+            if (particle != null)
+                Destroy(particle);
         }
 
         #endregion

@@ -69,10 +69,10 @@ namespace BattleSystem
             // 装備中武器（4つ固定）
             equippedWeapons = new List<WeaponData>
             {
-                CreateSampleWeapon("ソードブレード", 125, 15, WeaponAttribute.Sword, AttackAttribute.None),
-                CreateSampleWeapon("フレイムスロアー", 80, 9, WeaponAttribute.Gun, AttackAttribute.Fire),
-                CreateSampleWeapon("サンダーボルト", 90, 10, WeaponAttribute.Magic, AttackAttribute.Thunder),
-                CreateSampleWeapon("アイスランス", 85, 8, WeaponAttribute.Spear, AttackAttribute.Ice)
+                CreateSampleWeapon("ソードブレード", 125, 15, WeaponType.Sword, AttackAttribute.None),
+                CreateSampleWeapon("フレイムスロアー", 80, 9, WeaponType.Gun, AttackAttribute.Fire),
+                CreateSampleWeapon("サンダーボルト", 90, 10, WeaponType.Magic, AttackAttribute.Thunder),
+                CreateSampleWeapon("アイスランス", 85, 8, WeaponType.Spear, AttackAttribute.Ice)
             };
 
             // アタッチメントインベントリ
@@ -90,15 +90,15 @@ namespace BattleSystem
         /// <summary>
         /// サンプル武器作成
         /// </summary>
-        private WeaponData CreateSampleWeapon(string name, int power, int crit, WeaponAttribute weaponAttr, AttackAttribute attackAttr)
+        private WeaponData CreateSampleWeapon(string name, int power, int crit, WeaponType weaponType, AttackAttribute attackAttr)
         {
-            var weapon = ScriptableObject.CreateInstance<WeaponData>();
+            var weapon = new WeaponData();
             weapon.weaponName = name;
-            weapon.attackPower = power;
+            weapon.basePower = power;
             weapon.criticalRate = crit;
-            weapon.weaponAttribute = weaponAttr;
+            weapon.weaponType = weaponType;
             weapon.attackAttribute = attackAttr;
-            weapon.cooldownTime = 0;
+            weapon.cooldownTurns = 0;
             return weapon;
         }
 
@@ -129,15 +129,28 @@ namespace BattleSystem
                 ("完全兵装", AttachmentRarity.Legendary, "剣→斧→槍→弓→銃", "ダメージ+450% + 5ターン全武器自動使用")
             };
 
-            foreach (var (name, rarity, combo, effect) in attachments)
+            for (int i = 0; i < attachments.Length; i++)
             {
+                var (name, rarity, combo, effect) = attachments[i];
                 var attachment = new AttachmentData
                 {
-                    id = attachmentInventory.Count + 1,
-                    name = name,
+                    attachmentId = i + 1,
+                    attachmentName = name,
                     rarity = rarity,
-                    comboRequirement = combo,
-                    effect = effect
+                    category = AttachmentCategory.Attack,
+                    description = effect,
+                    flavorText = combo,
+                    associatedComboName = combo,
+                    effects = new AttachmentEffect[]
+                    {
+                        new AttachmentEffect
+                        {
+                            effectType = AttachmentEffectType.AttackPowerBoost,
+                            effectValue = 0.3f,
+                            isPercentage = true,
+                            stackable = false
+                        }
+                    }
                 };
                 attachmentInventory.Add(attachment);
             }
@@ -697,7 +710,7 @@ namespace BattleSystem
             iconRect.anchoredPosition = Vector2.zero;
 
             var iconImage = iconObj.AddComponent<Image>();
-            iconImage.color = GetWeaponColor(weapon.weaponAttribute);
+            iconImage.color = GetWeaponColor(weapon.weaponType);
 
             // 武器情報テキスト
             var infoObj = new GameObject("WeaponInfo");
@@ -710,7 +723,7 @@ namespace BattleSystem
             infoRect.anchoredPosition = Vector2.zero;
 
             var infoText = infoObj.AddComponent<Text>();
-            infoText.text = $"{weapon.attackPower}\n{weapon.criticalRate}%";
+            infoText.text = $"{weapon.basePower}\n{weapon.criticalRate}%";
             infoText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             infoText.fontSize = 14;
             infoText.color = Color.white;
@@ -723,20 +736,20 @@ namespace BattleSystem
         }
 
         /// <summary>
-        /// 武器属性別色取得
+        /// 武器タイプ別色取得
         /// </summary>
-        private Color GetWeaponColor(WeaponAttribute weaponAttribute)
+        private Color GetWeaponColor(WeaponType weaponType)
         {
-            switch (weaponAttribute)
+            switch (weaponType)
             {
-                case WeaponAttribute.Sword: return Color.white;
-                case WeaponAttribute.Axe: return Color.gray;
-                case WeaponAttribute.Spear: return Color.cyan;
-                case WeaponAttribute.Bow: return Color.green;
-                case WeaponAttribute.Gun: return Color.yellow;
-                case WeaponAttribute.Shield: return Color.blue;
-                case WeaponAttribute.Magic: return Color.magenta;
-                case WeaponAttribute.Tool: return new Color(0.8f, 0.6f, 0.2f);
+                case WeaponType.Sword: return Color.white;
+                case WeaponType.Axe: return Color.gray;
+                case WeaponType.Spear: return Color.cyan;
+                case WeaponType.Bow: return Color.green;
+                case WeaponType.Gun: return Color.yellow;
+                case WeaponType.Shield: return Color.blue;
+                case WeaponType.Magic: return Color.magenta;
+                case WeaponType.Tool: return new Color(0.8f, 0.6f, 0.2f);
                 default: return Color.white;
             }
         }
@@ -1162,7 +1175,7 @@ namespace BattleSystem
         /// </summary>
         private void CreateAttachmentItem(AttachmentData attachment, Transform parent)
         {
-            var itemObj = new GameObject($"AttachmentItem_{attachment.id}");
+            var itemObj = new GameObject($"AttachmentItem_{attachment.attachmentId}");
             itemObj.transform.SetParent(parent, false);
 
             var layoutElement = itemObj.AddComponent<LayoutElement>();
@@ -1201,7 +1214,7 @@ namespace BattleSystem
             // ボタンイベント
             button.onClick.AddListener(() => OnAttachmentSelected(attachment));
 
-            attachmentButtons[attachment.name] = itemObj;
+            attachmentButtons[attachment.attachmentName] = itemObj;
         }
 
         /// <summary>
@@ -1292,7 +1305,7 @@ namespace BattleSystem
         private void OnAttachmentSelected(AttachmentData attachment)
         {
             selectedAttachment = attachment;
-            Debug.Log($"Selected attachment: {attachment.name}");
+            Debug.Log($"Selected attachment: {attachment.attachmentName}");
             // アタッチメント詳細UI更新（実装省略）
         }
 
@@ -1441,7 +1454,7 @@ namespace BattleSystem
         public void AddTestAttachment(AttachmentData attachment)
         {
             attachmentInventory.Add(attachment);
-            Debug.Log($"Test attachment added: {attachment.name}");
+            Debug.Log($"Test attachment added: {attachment.attachmentName}");
             
             // アタッチメントタブが現在表示されている場合は更新
             if (currentTab == InventoryTab.Attachments)
