@@ -672,7 +672,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0
@@ -709,7 +709,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   autoCreateUI: 1
+  useStaticUIReferences: 0
   defaultFont: {fileID: 0}
+  staticTurnText: {fileID: 0}
+  staticHpText: {fileID: 0}
+  staticStateText: {fileID: 0}
+  staticPendingDamageText: {fileID: 0}
+  staticNextTurnButton: {fileID: 0}
+  staticResetButton: {fileID: 0}
+  staticEnemyInfoPanel: {fileID: 0}
+  staticBattleFieldPanel: {fileID: 0}
+  staticComboProgressPanel: {fileID: 0}
+  staticStartScreenPanel: {fileID: 0}
+  staticComboTestButton: {fileID: 0}
+  enableComboTest: 1
 --- !u!1 &1195374686
 GameObject:
   m_ObjectHideFlags: 0
@@ -820,9 +833,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   attachmentDatabase: {fileID: 0}
-  maxAttachmentSlots: 1
+  initialAttachmentSlots: 10
   selectionOptionsCount: 4
   allowDuplicates: 0
+  allowUnlimitedSlots: 1
+  weaponDatabase: {fileID: 0}
+  maxEquippedWeapons: 5
+  autoEquipWeaponsOnStart: 1
   allowEnhancement: 1
   maxEnhancementLevel: 5
 --- !u!114 &1437969664
