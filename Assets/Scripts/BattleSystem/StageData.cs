@@ -106,6 +106,9 @@ namespace BattleSystem
         public StageDifficulty difficulty;  // 難易度
         public StageType stageType;         // ステージタイプ
         
+        // UI互換性プロパティ
+        public string description => stageDescription;
+        
         [Header("ステージ設定")]
         public int recommendedLevel;        // 推奨レベル
         public int maxTurns;               // 最大ターン数（0=無制限）

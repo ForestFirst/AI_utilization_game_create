@@ -83,18 +83,7 @@ namespace BattleSystem
 
     // PlayerDataクラスはPlayerWeaponData.csで定義済み
 
-    // 戦闘結果データ
-    [Serializable]
-    public class BattleResult
-    {
-        public bool isVictory;
-        public VictoryCondition victoryCondition;
-        public int turnsUsed;
-        public int totalDamageDealt;
-        public int totalDamageTaken;
-        public int enemiesDefeated;
-        public int gatesDestroyed;
-    }
+    // BattleResultクラスはGameEventManager.csで定義されています
 
     // 基本ゲームマネージャー
     public class BattleManager : MonoBehaviour
@@ -337,7 +326,7 @@ namespace BattleSystem
             if (battleField.AreAllGatesDestroyed())
             {
                 battleResult.isVictory = true;
-                battleResult.victoryCondition = VictoryCondition.AllGatesDestroyed;
+                battleResult.victoryCondition = VictoryCondition.AllGatesDestroyed.ToString();
                 ChangeGameState(GameState.Victory);
                 return;
             }
@@ -346,7 +335,7 @@ namespace BattleSystem
             if (battleField.GetAliveEnemyCount() == 0)
             {
                 battleResult.isVictory = true;
-                battleResult.victoryCondition = VictoryCondition.AllEnemiesDefeated;
+                battleResult.victoryCondition = VictoryCondition.AllEnemiesDefeated.ToString();
                 ChangeGameState(GameState.Victory);
                 return;
             }

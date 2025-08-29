@@ -125,10 +125,10 @@ namespace BattleSystem
     }
 
     /// <summary>
-    /// プレイヤーの基本データ
+    /// プレイヤーの基本データ（武器関連）
     /// </summary>
     [Serializable]
-    public class PlayerData
+    public class PlayerWeaponStats
     {
         [Header("基本ステータス")]
         [SerializeField] public int maxHp = 15000;

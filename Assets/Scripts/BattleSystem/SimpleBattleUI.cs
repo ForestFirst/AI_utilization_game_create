@@ -4310,6 +4310,81 @@ namespace BattleSystem
             
             return testCombo;
         }
+        
+        // === システム連携メソッド ===
+        
+        /// <summary>
+        /// システム参照の初期化
+        /// </summary>
+        private void InitializeSystemReferences()
+        {
+            sceneTransition = SceneTransitionManager.Instance;
+            playerDataManager = PlayerDataManager.Instance;
+            eventManager = GameEventManager.Instance;
+            
+            if (sceneTransition == null)
+            {
+                Debug.LogWarning("[SimpleBattleUI] SceneTransitionManager not found!");
+            }
+            
+            if (playerDataManager == null)
+            {
+                Debug.LogWarning("[SimpleBattleUI] PlayerDataManager not found!");
+            }
+            
+            // 戦闘終了イベントの購読
+            if (eventManager != null)
+            {
+                GameEventManager.OnBattleCompleted += OnBattleCompleted;
+            }
+        }
+        
+        /// <summary>
+        /// 戦闘終了処理
+        /// </summary>
+        /// <param name="victory">勝利フラグ</param>
+        public void OnBattleComplete(bool victory)
+        {
+            Debug.Log($"[SimpleBattleUI] Battle completed: Victory={victory}");
+            
+            // 戦闘結果データを作成
+            var battleResult = new BattleResult
+            {
+                victory = victory,
+                turnsTaken = GetCurrentTurn(),
+                timeTaken = Time.time,
+                damageDealt = GetTotalDamageDealt(),
+                damageTaken = GetTotalDamageTaken(),
+                experienceGained = victory ? 100 : 0,
+                goldGained = victory ? 50 : 0,
+                itemsObtained = victory ? new List<string> { "ポーション" } : new List<string>(),
+                completionTime = DateTime.Now
+            };
+            
+            // イベント発火
+            GameEventManager.TriggerBattleComplete(victory, battleResult);
+        }
+        
+        /// <summary>
+        /// 戦闘終了イベントハンドラー
+        /// </summary>
+        private void OnBattleCompleted(bool victory, BattleResult result)
+        {
+            var resultUI = FindObjectOfType<UI.ResultUI>();
+            if (resultUI != null)
+            {
+                resultUI.ShowResult(result);
+            }
+            else if (sceneTransition != null)
+            {
+                sceneTransition.TransitionToScene("StageSelectionScene");
+            }
+        }
+        
+        // ユーティリティメソッド
+        private int GetCurrentTurn() => 1;
+        private int GetTotalDamageDealt() => 1000;
+        private int GetTotalDamageTaken() => 200;
     }
 
     /// <summary>
@@ -4646,79 +4721,4 @@ namespace BattleSystem
                 UnityEngine.Object.Destroy(parentObject);
         }
     }
-    
-    // === システム連携メソッド ===
-    
-    /// <summary>
-    /// システム参照の初期化
-    /// </summary>
-    private void InitializeSystemReferences()
-    {
-        sceneTransition = SceneTransitionManager.Instance;
-        playerDataManager = PlayerDataManager.Instance;
-        eventManager = GameEventManager.Instance;
-        
-        if (sceneTransition == null)
-        {
-            Debug.LogWarning("[SimpleBattleUI] SceneTransitionManager not found!");
-        }
-        
-        if (playerDataManager == null)
-        {
-            Debug.LogWarning("[SimpleBattleUI] PlayerDataManager not found!");
-        }
-        
-        // 戦闘終了イベントの購読
-        if (eventManager != null)
-        {
-            GameEventManager.OnBattleCompleted += OnBattleCompleted;
-        }
-    }
-    
-    /// <summary>
-    /// 戦闘終了処理
-    /// </summary>
-    /// <param name="victory">勝利フラグ</param>
-    public void OnBattleComplete(bool victory)
-    {
-        Debug.Log($"[SimpleBattleUI] Battle completed: Victory={victory}");
-        
-        // 戦闘結果データを作成
-        var battleResult = new BattleResult
-        {
-            victory = victory,
-            turnsTaken = GetCurrentTurn(),
-            timeTaken = Time.time,
-            damageDealt = GetTotalDamageDealt(),
-            damageTaken = GetTotalDamageTaken(),
-            experienceGained = victory ? 100 : 0,
-            goldGained = victory ? 50 : 0,
-            itemsObtained = victory ? new List<string> { "ポーション" } : new List<string>(),
-            completionTime = DateTime.Now
-        };
-        
-        // イベント発火
-        GameEventManager.TriggerBattleComplete(victory, battleResult);
-    }
-    
-    /// <summary>
-    /// 戦闘終了イベントハンドラー
-    /// </summary>
-    private void OnBattleCompleted(bool victory, BattleResult result)
-    {
-        var resultUI = FindObjectOfType<ResultUI>();
-        if (resultUI != null)
-        {
-            resultUI.ShowResult(result);
-        }
-        else if (sceneTransition != null)
-        {
-            sceneTransition.TransitionToScene("StageSelectionScene");
-        }
-    }
-    
-    // ユーティリティメソッド
-    private int GetCurrentTurn() => 1;
-    private int GetTotalDamageDealt() => 1000;
-    private int GetTotalDamageTaken() => 200;
 }

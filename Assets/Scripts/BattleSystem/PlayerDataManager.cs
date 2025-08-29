@@ -612,6 +612,56 @@ namespace BattleSystem
         public PlayerGameSettings gameSettings;
         public PlayerStatistics statistics;
         public DateTime lastPlayTime;
+        
+        // SimpleBattleUIとの互換性のためのプロパティ
+        public int maxHp 
+        { 
+            get => maxHP; 
+            set => maxHP = value; 
+        }
+        public int currentHp 
+        { 
+            get => currentHP; 
+            set => currentHP = Mathf.Clamp(value, 0, maxHP); 
+        }
+        public int baseAttackPower 
+        { 
+            get => attackPower; 
+            set => attackPower = value; 
+        }
+        
+        // 戦闘関連プロパティ
+        public float criticalDamageModifier = 1.5f;
+        public float luckModifier = 1.0f;
+        public bool IsAlive => currentHP > 0;
+        
+        /// <summary>
+        /// 回復処理
+        /// </summary>
+        public void Heal(int amount)
+        {
+            currentHP = Mathf.Clamp(currentHP + amount, 0, maxHP);
+        }
+        
+        /// <summary>
+        /// ダメージ処理
+        /// </summary>
+        public void TakeDamage(int damage)
+        {
+            currentHP = Mathf.Clamp(currentHP - damage, 0, maxHP);
+        }
+        
+        // 武器関連のプロパティ（既存コードとの互換性維持）
+        public WeaponData[] equippedWeapons = new WeaponData[0];
+        public int[] weaponCooldowns = new int[0];
+        
+        /// <summary>
+        /// 武器使用可否チェック（互換性のため）
+        /// </summary>
+        public bool CanUseWeapon(int weaponIndex)
+        {
+            return weaponIndex >= 0 && weaponIndex < weaponCooldowns.Length && weaponCooldowns[weaponIndex] <= 0;
+        }
     }
 
     /// <summary>

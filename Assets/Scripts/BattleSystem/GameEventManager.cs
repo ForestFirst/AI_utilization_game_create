@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BattleSystem
@@ -537,6 +538,26 @@ namespace BattleSystem
         public int goldGained;
         public List<string> itemsObtained;
         public DateTime completionTime;
+        
+        // 既存コードとの互換性プロパティ
+        public int totalDamageDealt 
+        { 
+            get => damageDealt; 
+            set => damageDealt = value; 
+        }
+        public int enemiesDefeated;
+        public bool isVictory 
+        { 
+            get => victory; 
+            set => victory = value; 
+        }
+        public int turnsUsed 
+        { 
+            get => turnsTaken; 
+            set => turnsTaken = value; 
+        }
+        public int gatesDestroyed;
+        public string victoryCondition = "Normal";
     }
     
     /// <summary>
