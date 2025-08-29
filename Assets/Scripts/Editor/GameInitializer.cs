@@ -45,13 +45,13 @@ public class GameInitializer : MonoBehaviour
     /// </summary>
     private void InitializeTitleScreen()
     {
-        // TitleScreenUIがない場合は作成
-        var titleScreenUI = FindObjectOfType<TitleScreenUI>();
-        if (titleScreenUI == null)
+        // SimpleTitleTestでシンプルなタイトル画面を作成
+        var simpleTitleTest = FindObjectOfType<SimpleTitleTest>();
+        if (simpleTitleTest == null)
         {
-            var titleObject = new GameObject("TitleScreenManager");
-            titleScreenUI = titleObject.AddComponent<TitleScreenUI>();
-            Debug.Log("[GameInitializer] TitleScreenUIを作成しました");
+            var titleObject = new GameObject("SimpleTitleTest");
+            simpleTitleTest = titleObject.AddComponent<SimpleTitleTest>();
+            Debug.Log("[GameInitializer] SimpleTitleTestを作成しました");
         }
     }
     
