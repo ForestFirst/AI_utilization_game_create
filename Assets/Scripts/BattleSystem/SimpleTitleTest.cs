@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 /// <summary>
-/// シンプルなタイトル画面テスト用スクリプト
+/// シンプルなタイトル画面テスト用スクリプト（ランタイム版）
 /// </summary>
 public class SimpleTitleTest : MonoBehaviour
 {

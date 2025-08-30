@@ -1,10 +1,8 @@
 using UnityEngine;
-using UnityEditor;
 using BattleSystem;
-using BattleSystem.UI;
 
 /// <summary>
-/// ゲーム初期化用エディタースクリプト
+/// ゲーム初期化用スクリプト（ランタイム版）
 /// OutdoorsSceneにゲーム開始に必要なコンポーネントを追加
 /// </summary>
 public class GameInitializer : MonoBehaviour
@@ -92,38 +90,3 @@ public class GameInitializer : MonoBehaviour
         InitializeGame();
     }
 }
-
-#if UNITY_EDITOR
-/// <summary>
-/// エディター用ヘルパー
-/// </summary>
-public class GameInitializerEditor
-{
-    [MenuItem("GameObject/AI Game/Add Game Initializer", false, 0)]
-    static void AddGameInitializer()
-    {
-        var gameObject = new GameObject("GameInitializer");
-        gameObject.AddComponent<GameInitializer>();
-        Selection.activeGameObject = gameObject;
-        
-        EditorGUIUtility.PingObject(gameObject);
-        Debug.Log("GameInitializerを追加しました");
-    }
-    
-    [MenuItem("AI Game/Initialize Current Scene")]
-    static void InitializeCurrentScene()
-    {
-        var initializer = Object.FindObjectOfType<GameInitializer>();
-        if (initializer == null)
-        {
-            AddGameInitializer();
-            initializer = Object.FindObjectOfType<GameInitializer>();
-        }
-        
-        if (initializer != null)
-        {
-            initializer.InitializeGame();
-        }
-    }
-}
-#endif
