@@ -26,11 +26,8 @@ public class GameInitializer : MonoBehaviour
     {
         Debug.Log("[GameInitializer] ゲーム初期化開始");
         
-        // タイトル画面の初期化
-        if (showTitleScreen)
-        {
-            InitializeTitleScreen();
-        }
+        // GameStateManagerの初期化
+        InitializeGameStateManager();
         
         // ゲームシステムの初期化
         InitializeGameSystems();
@@ -39,17 +36,27 @@ public class GameInitializer : MonoBehaviour
     }
     
     /// <summary>
-    /// タイトル画面の初期化
+    /// GameStateManagerの初期化
     /// </summary>
-    private void InitializeTitleScreen()
+    private void InitializeGameStateManager()
     {
-        // SimpleTitleTestでシンプルなタイトル画面を作成
-        var simpleTitleTest = FindObjectOfType<SimpleTitleTest>();
-        if (simpleTitleTest == null)
+        // GameStateManagerの確認・作成
+        var gameStateManager = GameStateManager.Instance;
+        if (gameStateManager == null)
         {
-            var titleObject = new GameObject("SimpleTitleTest");
-            simpleTitleTest = titleObject.AddComponent<SimpleTitleTest>();
-            Debug.Log("[GameInitializer] SimpleTitleTestを作成しました");
+            var gameStateObject = new GameObject("GameStateManager");
+            gameStateManager = gameStateObject.AddComponent<GameStateManager>();
+            Debug.Log("[GameInitializer] GameStateManagerを作成しました");
+        }
+        else
+        {
+            Debug.Log("[GameInitializer] GameStateManagerが既に存在します");
+        }
+        
+        // タイトル画面の表示を指示（GameStateManagerが自動で処理）
+        if (showTitleScreen)
+        {
+            Debug.Log("[GameInitializer] タイトル画面表示を開始");
         }
     }
     

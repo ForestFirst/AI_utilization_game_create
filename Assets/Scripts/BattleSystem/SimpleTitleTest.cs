@@ -104,18 +104,49 @@ public class SimpleTitleTest : MonoBehaviour
     }
     
     /// <summary>
-    /// テストボタン作成
+    /// メニューボタン作成
     /// </summary>
     private void CreateTestButton()
     {
-        var buttonObj = new GameObject("TestButton");
-        buttonObj.transform.SetParent(titleCanvas.transform, false);
+        var buttonPanelObj = new GameObject("ButtonPanel");
+        buttonPanelObj.transform.SetParent(titleCanvas.transform, false);
         
-        var buttonRect = buttonObj.AddComponent<RectTransform>();
-        buttonRect.anchorMin = new Vector2(0.5f, 0.4f);
-        buttonRect.anchorMax = new Vector2(0.5f, 0.4f);
-        buttonRect.sizeDelta = new Vector2(200, 60);
-        buttonRect.anchoredPosition = Vector2.zero;
+        var panelRect = buttonPanelObj.AddComponent<RectTransform>();
+        panelRect.anchorMin = new Vector2(0.5f, 0.3f);
+        panelRect.anchorMax = new Vector2(0.5f, 0.3f);
+        panelRect.sizeDelta = new Vector2(300, 200);
+        panelRect.anchoredPosition = Vector2.zero;
+        
+        // 縦方向レイアウト
+        var layoutGroup = buttonPanelObj.AddComponent<VerticalLayoutGroup>();
+        layoutGroup.spacing = 15f;
+        layoutGroup.childAlignment = TextAnchor.MiddleCenter;
+        layoutGroup.childControlHeight = false;
+        layoutGroup.childControlWidth = true;
+        layoutGroup.childForceExpandHeight = false;
+        layoutGroup.childForceExpandWidth = true;
+        
+        // 戦闘テストボタン
+        CreateMenuButton(buttonPanelObj.transform, "BATTLE TEST", OnBattleTestClick);
+        
+        // 通常ゲーム開始ボタン
+        CreateMenuButton(buttonPanelObj.transform, "GAME START", OnGameStartClick);
+        
+        // 設定ボタン
+        CreateMenuButton(buttonPanelObj.transform, "SETTINGS", OnSettingsClick);
+    }
+    
+    /// <summary>
+    /// 個別メニューボタン作成
+    /// </summary>
+    private Button CreateMenuButton(Transform parent, string text, System.Action action)
+    {
+        var buttonObj = new GameObject($"MenuButton_{text}");
+        buttonObj.transform.SetParent(parent, false);
+        
+        var layoutElement = buttonObj.AddComponent<LayoutElement>();
+        layoutElement.preferredHeight = 50;
+        layoutElement.minHeight = 50;
         
         var button = buttonObj.AddComponent<Button>();
         var buttonImage = buttonObj.AddComponent<Image>();
@@ -132,19 +163,78 @@ public class SimpleTitleTest : MonoBehaviour
         textRect.anchoredPosition = Vector2.zero;
         
         var buttonText = textObj.AddComponent<Text>();
-        buttonText.text = "GAME START";
+        buttonText.text = text;
         buttonText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        buttonText.fontSize = 18;
+        buttonText.fontSize = 16;
         buttonText.color = Color.white;
         buttonText.alignment = TextAnchor.MiddleCenter;
         
         button.targetGraphic = buttonImage;
-        button.onClick.AddListener(() => {
-            Debug.Log("[SimpleTitleTest] ゲーム開始ボタンが押されました！");
-        });
+        button.onClick.AddListener(() => action?.Invoke());
         
-        // 最初のボタンを選択
-        button.Select();
+        // ホバー効果
+        var colors = button.colors;
+        colors.normalColor = new Color(0f, 0.8f, 0.8f, 0.3f);
+        colors.highlightedColor = new Color(0f, 1f, 1f, 0.5f);
+        colors.pressedColor = new Color(0f, 1f, 1f, 0.7f);
+        colors.fadeDuration = 0.3f;
+        button.colors = colors;
+        
+        return button;
+    }
+    
+    /// <summary>
+    /// 戦闘テストボタンクリック処理
+    /// </summary>
+    private void OnBattleTestClick()
+    {
+        Debug.Log("[SimpleTitleTest] 戦闘テスト開始！");
+        
+        var gameStateManager = GameStateManager.Instance;
+        if (gameStateManager != null)
+        {
+            // GameStateManagerを使用して戦闘画面に遷移
+            gameStateManager.GoToBattleScreen();
+        }
+        else
+        {
+            Debug.LogWarning("[SimpleTitleTest] GameStateManagerが見つかりません。直接戦闘テストUIを作成します。");
+            CreateBattleTestDirectly();
+        }
+    }
+    
+    /// <summary>
+    /// ゲーム開始ボタンクリック処理
+    /// </summary>
+    private void OnGameStartClick()
+    {
+        Debug.Log("[SimpleTitleTest] 通常ゲーム開始（未実装）");
+        // TODO: ステージ選択画面へ遷移する処理を実装
+    }
+    
+    /// <summary>
+    /// 設定ボタンクリック処理
+    /// </summary>
+    private void OnSettingsClick()
+    {
+        Debug.Log("[SimpleTitleTest] 設定画面（未実装）");
+        // TODO: 設定画面への遷移を実装
+    }
+    
+    /// <summary>
+    /// 直接戦闘テストUI作成（GameStateManager不使用時の代替処理）
+    /// </summary>
+    private void CreateBattleTestDirectly()
+    {
+        // タイトル画面を非表示
+        if (titleCanvas != null)
+        {
+            titleCanvas.gameObject.SetActive(false);
+        }
+        
+        // 戦闘テストUIを作成
+        var battleTestObj = new GameObject("BattleTestUI");
+        battleTestObj.AddComponent<BattleTestUI>();
     }
     
     private void Update()
